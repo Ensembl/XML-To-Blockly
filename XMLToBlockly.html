@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>Generate Blockly Blocks From XML Input</title>
+		
+		<style>
+		.container{
+			top:10%;
+			height:50%;
+			width:95%;
+			position:absolute;
+			
+		}
+		
+		.xmlText{
+			position:absolute;
+			left:5%;
+		}
+		
+		.blocklyText{
+			top:0%;
+			right:0%;
+			position:absolute;
+		}
+		
+		.btnDiv{
+			left:50%;
+			top:80%;
+			position:absolute;
+		}
+		</style>
+		
+		<script>
+			var xmlData;
+			var parser=new DOMParser();
+			var xmlDoc;
+			var ans="";
+			
+			function generateData(){
+				xmlData=document.getElementById("xmlInput").value;
+				xmlDoc=parser.parseFromString(xmlData,"text/xml");
+				
+				if(xmlData==""){
+					document.getElementById("blocklyOutput").innerHTML=xmlData;
+					return;
+				}
+				
+				var rootType=xmlDoc.documentElement.tagName;
+				var ele=xmlDoc.getElementsByTagName(rootType);
+				var rootEleName=ele[0].getAttribute("name");
+				
+				ans="Blockly.Blocks['"+rootEleName+"Block']={\ninit:function(){\n";
+				getOutput(ele[0]);
+				
+				ans+="}\n};";
+				
+				document.getElementById("blocklyOutput").innerHTML=ans;
+			}
+			
+			function getOutput(elem){
+	
+				try{
+					var elementName=elem.attributes.name.value;
+				}catch(e){}
+				var children=elem.childNodes;
+				var textChild=false;
+	
+				for(var i=0;i<children.length;i++){
+		
+					if(children[i].nodeName=="#text"){
+						continue;
+					}
+					if(children[i].nodeName=="text"){
+						ans+="this.appendValueInput(\""+elementName+"\").setCheck('String').appendField(\""+elementName+"\");\n";
+						textChild=true;
+					}
+		
+				}
+	
+				if(textChild==false && children.length>0){
+					ans+="this.appendDummyInput().appendField(\""+elementName+"\");\n";
+				}
+	
+				for(var j=0;j<children.length;j++){
+					getOutput(children[j]);
+				}
+			}
+		</script>
+		
+	</head>
+	
+	<body>
+		<h3>Handles only a single, main element as of now. Handles basic elements and attributes only.</h3>
+		<div class="container">
+			<div class="xmlText">
+				<p>XML schema:</p>
+				<textarea  rows="30" cols="70" id="xmlInput"></textarea>
+			</div>
+			
+			<div class="btnDiv">
+				<button id="convertBtn" onclick="generateData();">Convert</button>
+			</div>
+			
+			<div class="blocklyText">
+				<p>Blockly Output</p>
+				<textarea rows="30" cols="70" id="blocklyOutput"></textarea>
+			</div>
+		</div>
+	</body>
+</html>
