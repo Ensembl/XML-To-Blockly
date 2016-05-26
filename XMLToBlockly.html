@@ -1,111 +1,294 @@
 <!DOCTYPE html>
 
 <html>
-	<head>
-		<title>Generate Blockly Blocks From XML Input</title>
+<head>
+	<title>Parsing xml</title>
+	<script src="blockly_compressed.js"></script>
+	<script src="blocks_compressed.js"></script>
+	<script src="javascript_compressed.js"></script>
+	<script src="./msg\js/en.js"></script>
+	
+	<style>
+	#blocklyDiv{
+		position:absolute;
+		height:100%;
+		width:100%;
+		border:1px solid black;
+	}
+	
+	</style>
+</head>
+
+<body>
+	<input type="file" id="file"></input>
+	<div id="results"></div>
+	<div id="blocklyDiv"></div>
+	<xml id="startBlocks" style="display: none">
+	</xml>
+	
+	
+	
+	<script>
+		var xmlParser=new DOMParser();
+		var xmlDoc;
+		var elements=[];
+		var blocks=[];
+		var blockNames=[];
 		
-		<style>
-		.container{
-			top:10%;
-			height:50%;
-			width:95%;
-			position:absolute;
+		//init function for initializing the Blockly block area
+		function init(){
+			var x=Blockly.inject('blocklyDiv');
+			Blockly.Xml.domToWorkspace(x,document.getElementById('startBlocks'));
+		}
+		
+		//reads the file
+		function readFile(evt){
+			var file=evt.target.files[0];
+			//console.log(file);
+			var reader=new FileReader();
+			reader.readAsText(file);
+			//console.log(reader);
+			reader.onload=function(e){
+				console.log(e.target.result);
+				xmlDoc=xmlParser.parseFromString(e.target.result,"text/xml");
+				handleXML();
+			}
+		}
+		
+		//handles xml by creating blocks as per RNG rules
+		function handleXML(){
+			var root=xmlDoc.documentElement;
+			var a;
 			
-		}
-		
-		.xmlText{
-			position:absolute;
-			left:5%;
-		}
-		
-		.blocklyText{
-			top:0%;
-			right:0%;
-			position:absolute;
-		}
-		
-		.btnDiv{
-			left:50%;
-			top:80%;
-			position:absolute;
-		}
-		</style>
-		
-		<script>
-			var xmlData;
-			var parser=new DOMParser();
-			var xmlDoc;
-			var ans="";
+			removeRedundantText(root);
 			
-			function generateData(){
-				xmlData=document.getElementById("xmlInput").value;
-				xmlDoc=parser.parseFromString(xmlData,"text/xml");
+			root=xmlDoc.getElementsByTagName("start")[0];
+			
+			createBlocks(root);
+			
+			//createBlocks(root);
+			//console.log(blocks);
+			var script=document.createElement('script');
+			script.type="text/javascript";
+			for(var i=0;i<blocks.length;i++){
+				var resultsData=document.getElementById("results");
+				resultsData.innerHTML=resultsData.innerHTML+"<p>"+blocks[i]+"</p>"
+				script.text+=blocks[i];
 				
-				if(xmlData==""){
-					document.getElementById("blocklyOutput").innerHTML=xmlData;
-					return;
+				var blocklyXml=document.getElementById('startBlocks');
+				console.log(blockNames[i]);
+				blocklyXml.innerHTML=blocklyXml.innerHTML+"<block type='"+blockNames[i]+"'></block>";
+			}
+			document.getElementsByTagName("head")[0].appendChild(script);
+			
+			init();
+			
+			//printNodes(root);
+			//getChildren(root,a);
+			/*
+			console.log("Elements:\n");
+			for(var j=0;j<elements.length;j++){
+				var resultsData=document.getElementById("results").innerHTML;
+				document.getElementById("results").innerHTML="<p>"+resultsData+elements[j].nodeName+" "+elements[j].getAttribute("name")+"</p>";
+				console.log(elements[j].nodeName+" "+elements[j].getAttribute("name"));
+			}*/
+		}
+		
+		//Removes #text nodes
+		function removeRedundantText(node){
+			var children=node.childNodes;
+			for(var i=0;i<children.length;i++){
+				if(children[i].nodeName=="#text"){
+					//console.log("found text");
+					children[i].parentNode.removeChild(children[i]);
+					i--;
+					continue;
+				}else{
+					removeRedundantText(children[i]);
 				}
-				
-				var rootType=xmlDoc.documentElement.tagName;
-				var ele=xmlDoc.getElementsByTagName(rootType);
-				var rootEleName=ele[0].getAttribute("name");
-				
-				ans="Blockly.Blocks['"+rootEleName+"Block']={\ninit:function(){\n";
-				getOutput(ele[0]);
-				
-				ans+="}\n};";
-				
-				document.getElementById("blocklyOutput").innerHTML=ans;
+			}
+		}
+		
+		function printNodes(node){
+			console.log(node.getAttribute("name"));
+			var children=node.childNodes;
+			var resultsData=document.getElementById("results").innerHTML;
+			document.getElementById("results").innerHTML="<p>"+resultsData+node.nodeName+" "+node.getAttribute("name")+"</p>";
+			for(var i=0;i<children.length;i++){
+				printNodes(children[i]);
+			}
+		}
+		
+		function createBlocks(node, parentBlockName, parentName, index, hyphen_counter){
+			if(hyphen_counter==undefined){
+				hyphen_counter=0;
+			}
+			if(node.nodeName=="start"){
+				var blockData="Blockly.Blocks['block_:']={init:function(){this.appendDummyInput('start').appendField('start');}};";
+				var parentBlock="block_:";
+				var name="start";
+				blocks.push(blockData);
+				blockNames.push('block_:');
+				index=blocks.length-1;
+				//alert("index is: "+index);
+				hyphen_counter+=2;
+				createChildrenBlocks(node,parentBlock,name,index,hyphen_counter);
 			}
 			
-			function getOutput(elem){
-	
-				try{
-					var elementName=elem.attributes.name.value;
-				}catch(e){}
-				var children=elem.childNodes;
-				var textChild=false;
-	
-				for(var i=0;i<children.length;i++){
-		
-					if(children[i].nodeName=="#text"){
-						continue;
-					}
-					if(children[i].nodeName=="text"){
-						ans+="this.appendValueInput(\""+elementName+"\").setCheck('String').appendField(\""+elementName+"\");\n";
-						textChild=true;
-					}
-		
-				}
-	
-				if(textChild==false && children.length>0){
-					ans+="this.appendDummyInput().appendField(\""+elementName+"\");\n";
-				}
-	
-				for(var j=0;j<children.length;j++){
-					getOutput(children[j]);
+			if(node.nodeName=="element"){
+				var children=node.childNodes;
+				var hyphens=get_hyphens(hyphen_counter);
+				var name=hyphens+parentName+":element-"+node.getAttribute("name");
+				if(children.length==1 && children[0].nodeName=="text"){
+					var blockData="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput('"+name+"'),'"+name+"');";
+					addToParentBlock(blockData,index);
+				}else{
+					var blockData="this.appendDummyInput('"+name+"').appendField('"+name+"');";
+					addToParentBlock(blockData,index);
+					hyphen_counter+=2;
+					createChildrenBlocks(node,parentBlockName, name, index, hyphen_counter);
 				}
 			}
-		</script>
+			
+			if(node.nodeName=="oneOrMore"){
+				var hyphens=get_hyphens(hyphen_counter);
+				var name=hyphens+parentName+":oneOrMore";
+				var appendToParent="this.appendStatementInput('"+name+"').appendField('"+name+"');"
+				addToParentBlock(appendToParent, index);
+				//name for the block of oneOrMore
+				name="block_"+parentName+":oneOrMore";
+				var blockForOneOrMore="Blockly.Blocks['"+name+"']={init:function(){this.setPreviousStatement(true); this.setNextStatement(true);}};";
+				blocks.push(blockForOneOrMore);
+				blockNames.push(name);
+				index=blocks.length-1;
+				hyphens=2;
+				parentName+=":oneOrMore";
+				createChildrenBlocks(node,name,parentName,index,hyphens);
+			}
+			
+			if(node.nodeName=="choice"){
+			
+			}
+		}
 		
-	</head>
+		
+		function createBlocksOld(node){
+			var blockData;
+			//rule for grammar nodes
+			if(node.nodeName=="grammar"){
+				console.log("in grammar node. Did nothing. Sending children for block creation");
+				createChildrenBlocks(node);
+			}
+			
+			//rule for element nodes
+			if(node.nodeName=="element"){
+				var nameAttr=node.getAttribute("name");
+				var blockName="block_"+nameAttr;
+				if(node.childNodes.length==1 && node.childNodes[0].nodeName=="text"){
+					blockData="this.appendDummyInput().appendField('"+nameAttr+"').appendField(new Blockly.FieldTextInput('Enter "+nameAttr+" here'),'"+nameAttr+"');";
+					blockData+="this.setNextStatement(true);this.setPreviousStatement(true);";
+				}else{
+					blockData="this.appendStatementInput('"+blockName+"').appendField('"+nameAttr+"');"
+					
+					var connections;
+					//have top+bottom connections only if there are blocks created previously as otherwise, this would be the first block else have only a bottom connection
+					if(blocks.length>0){
+						connections=true;
+					}else{
+						connections=false;
+					}
+					
+					if(connections==true){
+						blockData+="this.setPreviousStatement(true);\nthis.setNextStatement(true);\n";
+					}else{
+						blockData+="this.setNextStatement(true)\n";
+					}
+				}
+				
+				if(node.parentNode.nodeName=="oneOrMore"){
+					var parentBlockName=node.parentNode.getAttribute("block_name");
+					var parentBlock='';
+					var indexOfParentBlock=-1;
+					for(var i=blocks.length-1;i>=0;i--){
+						if(blocks[i].name==parentBlockName){
+							parentBlock=blocks[i].value;
+							indexOfParentBlock=i;
+							break;
+						}
+					}
+					var indexOfLastBrackets=parentBlock.indexOf("}};");
+					var firstPartOfBlock=parentBlock.substring(0,indexOfLastBrackets);
+					var finalBlock=firstPartOfBlock + blockData + "}};";
+					blocks[indexOfParentBlock].value=finalBlock;
+				}else{
+					var innerData=blockData;
+					blockData="Blockly.Blocks['"+blockName+"'] = {init:function(){"+innerData+"}};";
+					blocks.push({"name":blockName,"value":blockData});
+				}
+				
+				createChildrenBlocks(node);
+			}
+			
+			//rule for oneOrMore blocks
+			if(node.nodeName=="oneOrMore"){
+				var children=node.childNodes;
+				var parentName=node.parentNode.getAttribute("name");
+				var name="block_"+parentName+blocks.length;
+				//attach an attribute for block name to oneOrMore element so that all its immediate children can attach themselves to this block
+				node.setAttribute("block_name",name);
+				blockData="Blockly.Blocks['"+name+"'] = {init:function(){}};";
+				blocks.push({"name":name,"value":blockData});
+				console.log(node);
+				createChildrenBlocks(node);
+			}
+			
+			else{
+				console.log("rules not defined for block of type "+node.nodeName);
+			}
+		}
+		
+		function createChildrenBlocks(node, parentBlockName, parentName, index, hyphen_counter){
+			var children=node.childNodes;
+			for(var i=0;i<children.length;i++){
+				createBlocks(children[i], parentBlockName, parentName, index, hyphen_counter);
+			}
+		}
+		
+		function addToParentBlock(data,index){
+			var block=blocks[index];
+			var splitIndex=block.indexOf("}};");
+			var firstPart=block.substring(0,splitIndex);
+			var blockData=firstPart+data+"}};";
+			blocks[index]=blockData;
+		}
+		
+		function get_hyphens(count){
+			var hyphens='';
+			for(var i=0;i<count;i++){
+				hyphens+='-';
+			}
+			return hyphens;
+		}
+		
+		/*
+		//Formats all the children properly
+		function getChildren(root,parent){
+			elements.push(root);
+			var children=root.childNodes;
+			console.log("root: "+root.getAttribute("name")+" children: "+Math.floor(children.length/2));
+			
+			for(var i=0;i<children.length;i++){
+				if(children[i].nodeName=="#text"){
+					delete children[i];
+					continue;
+				}
+				getChildren(children[i],root);
+			}
+		}*/
 	
-	<body>
-		<h3>Handles only a single, main element as of now. Handles basic elements and attributes only.</h3>
-		<div class="container">
-			<div class="xmlText">
-				<p>XML schema:</p>
-				<textarea  rows="30" cols="70" id="xmlInput"></textarea>
-			</div>
-			
-			<div class="btnDiv">
-				<button id="convertBtn" onclick="generateData();">Convert</button>
-			</div>
-			
-			<div class="blocklyText">
-				<p>Blockly Output</p>
-				<textarea rows="30" cols="70" id="blocklyOutput"></textarea>
-			</div>
-		</div>
-	</body>
+		document.getElementById("file").addEventListener('change',readFile);
+	</script>
+</body>
 </html>
+
+
