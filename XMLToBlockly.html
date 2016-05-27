@@ -119,7 +119,7 @@
 			}
 		}
 		
-		function createBlocks(node, parentBlockName, parentName, index, hyphen_counter){
+		function createBlocks(node, parentBlockName, parentPath, index, hyphen_counter){
 			if(hyphen_counter==undefined){
 				hyphen_counter=0;
 			}
@@ -138,7 +138,7 @@
 			if(node.nodeName=="element"){
 				var children=node.childNodes;
 				var hyphens=get_hyphens(hyphen_counter);
-				var name=hyphens+parentName+":"+node.getAttribute("name");
+				var name=hyphens+parentPath+":"+node.getAttribute("name");
 				if(children.length==1 && children[0].nodeName=="text"){
 					var blockData="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
 					addToParentBlock(blockData,index);
@@ -152,18 +152,18 @@
 			
 			if(node.nodeName=="oneOrMore"){
 				var hyphens=get_hyphens(hyphen_counter);
-				var name=hyphens+parentName+":oneOrMore";
-				var appendToParent="this.appendStatementInput('"+name+"').appendField('"+name+"');"
+				var display_name=hyphens+parentPath+":oneOrMore";
+				var appendToParent="this.appendStatementInput('"+display_name+"').appendField('"+display_name+"');"
 				addToParentBlock(appendToParent, index);
 				//name for the block of oneOrMore
-				name="block_"+parentName+":oneOrMore";
-				var blockForOneOrMore="Blockly.Blocks['"+name+"']={init:function(){this.setPreviousStatement(true); this.setNextStatement(true);}};";
+				var this_path = parentPath + ":oneOrMore";
+				var block_name="block_" + this_path;
+				var blockForOneOrMore="Blockly.Blocks['"+block_name+"']={init:function(){this.setPreviousStatement(true); this.setNextStatement(true);}};";
 				blocks.push(blockForOneOrMore);
-				blockNames.push(name);
+				blockNames.push(block_name);
 				index=blocks.length-1;
 				hyphens=2;
-				parentName+=":oneOrMore";
-				createChildrenBlocks(node,name,parentName,index,hyphens);
+				createChildrenBlocks(node, block_name, this_path, index, hyphens);
 			}
 			
 			if(node.nodeName=="choice"){
@@ -247,10 +247,10 @@
 			}
 		}
 		
-		function createChildrenBlocks(node, parentBlockName, parentName, index, hyphen_counter){
+		function createChildrenBlocks(node, parentBlockName, parentPath, index, hyphen_counter){
 			var children=node.childNodes;
 			for(var i=0;i<children.length;i++){
-				createBlocks(children[i], parentBlockName, parentName, index, hyphen_counter);
+				createBlocks(children[i], parentBlockName, parentPath, index, hyphen_counter);
 			}
 		}
 		
