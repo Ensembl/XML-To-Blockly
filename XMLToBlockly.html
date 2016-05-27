@@ -37,8 +37,11 @@
 		
 		//init function for initializing the Blockly block area
 		function init(){
-			var x=Blockly.inject('blocklyDiv');
-			Blockly.Xml.domToWorkspace(x,document.getElementById('startBlocks'));
+// 			var x=Blockly.inject('blocklyDiv');
+// 			Blockly.Xml.domToWorkspace(x,document.getElementById('startBlocks'));
+			var x=Blockly.inject('blocklyDiv', {
+			  toolbox: document.getElementById('startBlocks')
+			});
 		}
 		
 		//reads the file
