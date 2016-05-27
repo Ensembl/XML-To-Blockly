@@ -140,7 +140,7 @@
 				var hyphens=get_hyphens(hyphen_counter);
 				var name=hyphens+parentName+":"+node.getAttribute("name");
 				if(children.length==1 && children[0].nodeName=="text"){
-					var blockData="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput('"+name+"'),'"+name+"');";
+					var blockData="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
 					addToParentBlock(blockData,index);
 				}else{
 					var blockData="this.appendDummyInput('"+name+"').appendField('"+name+"');";
