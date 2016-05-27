@@ -138,7 +138,7 @@
 			if(node.nodeName=="element"){
 				var children=node.childNodes;
 				var hyphens=get_hyphens(hyphen_counter);
-				var name=hyphens+parentName+":element-"+node.getAttribute("name");
+				var name=hyphens+parentName+":"+node.getAttribute("name");
 				if(children.length==1 && children[0].nodeName=="text"){
 					var blockData="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput('"+name+"'),'"+name+"');";
 					addToParentBlock(blockData,index);
