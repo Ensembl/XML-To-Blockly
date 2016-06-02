@@ -37,8 +37,6 @@
 		
 		//init function for initializing the Blockly block area
 		function init(){
-// 			var x=Blockly.inject('blocklyDiv');
-// 			Blockly.Xml.domToWorkspace(x,document.getElementById('startBlocks'));
 			var x=Blockly.inject('blocklyDiv', {
 			  toolbox: document.getElementById('startBlocks')
 			});
@@ -47,10 +45,8 @@
 		//reads the file
 		function readFile(evt){
 			var file=evt.target.files[0];
-			//console.log(file);
 			var reader=new FileReader();
 			reader.readAsText(file);
-			//console.log(reader);
 			reader.onload=function(e){
 				console.log(e.target.result);
 				xmlDoc=xmlParser.parseFromString(e.target.result,"text/xml");
@@ -67,10 +63,9 @@
 			
 			root=xmlDoc.getElementsByTagName("start")[0];
 			
-			createBlocks(root);
+			var colour=0;
+			createBlocks(root,"start",colour);
 			
-			//createBlocks(root);
-			//console.log(blocks);
 			var script=document.createElement('script');
 			script.type="text/javascript";
 			for(var i=0;i<blocks.length;i++){
@@ -85,16 +80,6 @@
 			document.getElementsByTagName("head")[0].appendChild(script);
 			
 			init();
-			
-			//printNodes(root);
-			//getChildren(root,a);
-			/*
-			console.log("Elements:\n");
-			for(var j=0;j<elements.length;j++){
-				var resultsData=document.getElementById("results").innerHTML;
-				document.getElementById("results").innerHTML="<p>"+resultsData+elements[j].nodeName+" "+elements[j].getAttribute("name")+"</p>";
-				console.log(elements[j].nodeName+" "+elements[j].getAttribute("name"));
-			}*/
 		}
 		
 		//Removes #text nodes
@@ -112,183 +97,93 @@
 			}
 		}
 		
-		function printNodes(node){
-			console.log(node.getAttribute("name"));
+		//The name for every child block is sent to it by its parent. The child does not need to find its place in the hierarchy. The parent node does it for all of its children and sends them their name while calling them.
+		function createBlocks(node, name, colour){
 			var children=node.childNodes;
-			var resultsData=document.getElementById("results").innerHTML;
-			document.getElementById("results").innerHTML="<p>"+resultsData+node.nodeName+" "+node.getAttribute("name")+"</p>";
-			for(var i=0;i<children.length;i++){
-				printNodes(children[i]);
-			}
-		}
-		
-		function createBlocks(node, parentBlockName, parentPath, index, hyphen_counter){
-			if(hyphen_counter==undefined){
-				hyphen_counter=0;
-			}
-			if(node.nodeName=="start"){
-				var blockData="Blockly.Blocks['block_:']={init:function(){this.appendDummyInput('start').appendField('start');}};";
-				var parentBlock="block_:";
-				var name="start";
-				blocks.push(blockData);
-				blockNames.push('block_:');
-				index=blocks.length-1;
-				//alert("index is: "+index);
-				hyphen_counter+=2;
-				createChildrenBlocks(node,parentBlock,name,index,hyphen_counter);
-			}
-			
-			if(node.nodeName=="element"){
-				var children=node.childNodes;
-				var hyphens=get_hyphens(hyphen_counter);
-				var name=hyphens+parentPath+":"+node.getAttribute("name");
-				if(children.length==1 && children[0].nodeName=="text"){
-					var blockData="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
-					addToParentBlock(blockData,index);
-				}else{
-					var blockData="this.appendDummyInput('"+name+"').appendField('"+name+"');";
-					addToParentBlock(blockData,index);
-					hyphen_counter+=2;
-					createChildrenBlocks(node,parentBlockName, name, index, hyphen_counter);
-				}
-			}
-			
-			if(node.nodeName=="oneOrMore"){
-				var hyphens=get_hyphens(hyphen_counter);
-				var display_name=hyphens+parentPath+":oneOrMore";
-				var appendToParent="this.appendStatementInput('"+display_name+"').appendField('"+display_name+"');"
-				addToParentBlock(appendToParent, index);
-				//name for the block of oneOrMore
-				var this_path = parentPath + ":oneOrMore";
-				var block_name="block_" + this_path;
-				var blockForOneOrMore="Blockly.Blocks['"+block_name+"']={init:function(){this.setPreviousStatement(true); this.setNextStatement(true);}};";
-				blocks.push(blockForOneOrMore);
-				blockNames.push(block_name);
-				index=blocks.length-1;
-				hyphens=2;
-				createChildrenBlocks(node, block_name, this_path, index, hyphens);
-			}
-			
-			if(node.nodeName=="choice"){
-			
-			}
-		}
-		
-		
-		function createBlocksOld(node){
-			var blockData;
-			//rule for grammar nodes
-			if(node.nodeName=="grammar"){
-				console.log("in grammar node. Did nothing. Sending children for block creation");
-				createChildrenBlocks(node);
-			}
-			
-			//rule for element nodes
-			if(node.nodeName=="element"){
-				var nameAttr=node.getAttribute("name");
-				var blockName="block_"+nameAttr;
-				if(node.childNodes.length==1 && node.childNodes[0].nodeName=="text"){
-					blockData="this.appendDummyInput().appendField('"+nameAttr+"').appendField(new Blockly.FieldTextInput('Enter "+nameAttr+" here'),'"+nameAttr+"');";
-					blockData+="this.setNextStatement(true);this.setPreviousStatement(true);";
-				}else{
-					blockData="this.appendStatementInput('"+blockName+"').appendField('"+nameAttr+"');"
-					
-					var connections;
-					//have top+bottom connections only if there are blocks created previously as otherwise, this would be the first block else have only a bottom connection
-					if(blocks.length>0){
-						connections=true;
-					}else{
-						connections=false;
-					}
-					
-					if(connections==true){
-						blockData+="this.setPreviousStatement(true);\nthis.setNextStatement(true);\n";
-					}else{
-						blockData+="this.setNextStatement(true)\n";
-					}
-				}
-				
-				if(node.parentNode.nodeName=="oneOrMore"){
-					var parentBlockName=node.parentNode.getAttribute("block_name");
-					var parentBlock='';
-					var indexOfParentBlock=-1;
-					for(var i=blocks.length-1;i>=0;i--){
-						if(blocks[i].name==parentBlockName){
-							parentBlock=blocks[i].value;
-							indexOfParentBlock=i;
-							break;
-						}
-					}
-					var indexOfLastBrackets=parentBlock.indexOf("}};");
-					var firstPartOfBlock=parentBlock.substring(0,indexOfLastBrackets);
-					var finalBlock=firstPartOfBlock + blockData + "}};";
-					blocks[indexOfParentBlock].value=finalBlock;
-				}else{
-					var innerData=blockData;
-					blockData="Blockly.Blocks['"+blockName+"'] = {init:function(){"+innerData+"}};";
-					blocks.push({"name":blockName,"value":blockData});
-				}
-				
-				createChildrenBlocks(node);
-			}
-			
-			//rule for oneOrMore blocks
-			if(node.nodeName=="oneOrMore"){
-				var children=node.childNodes;
-				var parentName=node.parentNode.getAttribute("name");
-				var name="block_"+parentName+blocks.length;
-				//attach an attribute for block name to oneOrMore element so that all its immediate children can attach themselves to this block
-				node.setAttribute("block_name",name);
-				blockData="Blockly.Blocks['"+name+"'] = {init:function(){}};";
-				blocks.push({"name":name,"value":blockData});
-				console.log(node);
-				createChildrenBlocks(node);
-			}
-			
-			else{
-				console.log("rules not defined for block of type "+node.nodeName);
-			}
-		}
-		
-		function createChildrenBlocks(node, parentBlockName, parentPath, index, hyphen_counter){
-			var children=node.childNodes;
-			for(var i=0;i<children.length;i++){
-				createBlocks(children[i], parentBlockName, parentPath, index, hyphen_counter);
-			}
-		}
-		
-		function addToParentBlock(data,index){
-			var block=blocks[index];
-			var splitIndex=block.indexOf("}};");
-			var firstPart=block.substring(0,splitIndex);
-			var blockData=firstPart+data+"}};";
-			blocks[index]=blockData;
-		}
-		
-		function get_hyphens(count){
-			var hyphens='';
-			for(var i=0;i<count;i++){
-				//hyphens+='-';
-			}
-			return hyphens;
-		}
-		
-		/*
-		//Formats all the children properly
-		function getChildren(root,parent){
-			elements.push(root);
-			var children=root.childNodes;
-			console.log("root: "+root.getAttribute("name")+" children: "+Math.floor(children.length/2));
+			var blockData="";	//Contains data sent by all the children merged together one after the other.
+			var childData=[];	//Keeps track of block data sent by children.
+			var childNames=[];	//Keeps track of children block names
 			
 			for(var i=0;i<children.length;i++){
-				if(children[i].nodeName=="#text"){
-					delete children[i];
+				if(children[i].nodeName=="text"){
 					continue;
 				}
-				getChildren(children[i],root);
+				var nameAttr=children[i].getAttribute("name");
+				if(nameAttr==null){
+					nameAttr=children[i].nodeName;
+				}
+				nameAttr=nameAttr.substring(0,3);	
+				
+				//The name for the child is given as <parent name/hierarchy>+<first 3 characters of the child element>+<index of the child as per its parent block>.
+				var nameForChild=name+":"+nameAttr+i;
+				
+				var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45);
+				blockData+=dataReceivedFromChild;
+				childData.push(dataReceivedFromChild);
+				childNames.push("block_"+nameForChild);
 			}
-		}*/
+			
+			var nodeType=node.nodeName;
+			
+			if(nodeType=="element"){
+				if(children.length==1 && children[0].nodeName=="text"){
+					//data contains data that the current tag will generate.
+					var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
+					blockData=data+blockData;
+				}else{
+					var data="this.appendDummyInput().appendField('"+name+"');";
+					blockData=data+blockData;
+				}
+			}
+			
+			
+			else if(nodeType=="start"){
+				var blockName="block_"+name;
+				var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.appendDummyInput().appendField('"+name+"');"+blockData+"this.setColour("+colour+");}};";
+				blocks.push(finalBlock);
+				blockNames.push(blockName);
+				return;
+			}
+			
+			
+			else if(nodeType=="oneOrMore"){
+				var childNamesInFormat="'"+childNames.join("','")+"'";
+			
+				//Every oneOrMore child has sent in its data. This loop just creates blocks for each child of the oneOrMore tag.
+				for(var i=0;i<childData.length;i++){
+					var blockName=childNames[i];
+					
+					var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+childData[i]+"this.setPreviousStatement(true,["+childNamesInFormat+"]);this.setNextStatement(true,["+childNamesInFormat+"]);this.setColour("+colour+");}};";
+					blocks.push(finalBlock);
+					blockNames.push(blockName);
+				}
+				
+				//This appends to the block which contains the oneOrMore tag and creates a notch there.
+				blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
+			}
+			
+			//for choice nodes, we ensure that only one option is selected by keeping no option for setNextStatement for its children.
+			else if(nodeType=="choice"){
+				var childNamesInFormat="'"+childNames.join("','")+"'";
 	
+				//Every choice child has sent in its data. This loop just creates blocks for each child of the oneOrMore tag.
+				for(var i=0;i<childData.length;i++){
+					var blockName=childNames[i];
+					
+					var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+childData[i]+"this.setPreviousStatement(true);this.setColour("+colour+");}};";
+					blocks.push(finalBlock);
+					blockNames.push(blockName);
+				}
+				
+				//This appends to the block which contains the choice tag and creates a notch there.
+				blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
+			}
+			
+			//returns block data to the parent node that had called it
+			return blockData;
+		}
+		
+		//Adds an event listener for detecting whether the user has provided a file as input or not.
 		document.getElementById("file").addEventListener('change',readFile);
 	</script>
 </body>
