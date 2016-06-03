@@ -4,9 +4,7 @@
 <head>
 	<title>Parsing xml</title>
 	<script src="blockly_compressed.js"></script>
-	<script src="blocks_compressed.js"></script>
-	<script src="javascript_compressed.js"></script>
-	<script src="./msg\js/en.js"></script>
+	<script src="msg/js/en.js"></script>
 	
 	<style>
 	#blocklyDiv{
@@ -38,7 +36,8 @@
 		//init function for initializing the Blockly block area
 		function init(){
 			var x=Blockly.inject('blocklyDiv', {
-			  toolbox: document.getElementById('startBlocks')
+			  toolbox: document.getElementById('startBlocks'),
+                          collapse: true
 			});
 		}
 		
