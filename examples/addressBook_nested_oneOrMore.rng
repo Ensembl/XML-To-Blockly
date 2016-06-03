@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+  <start>
+    <element name="addressBook">
+      <oneOrMore>
+        <element name="phone">
+          <element name="name">
+            <text/>
+          </element>
+          <oneOrMore>
+            <element name="home_number">
+              <text/>
+            </element>
+            <element name="office_number">
+              <text/>
+            </element>
+          </oneOrMore>
+        </element>
+        <element name="email">
+          <element name="username">
+            <text/>
+          </element>
+          <element name="hostname">
+            <text/>
+          </element>
+        </element>
+      </oneOrMore>
+    </element>
+  </start>
+</grammar>

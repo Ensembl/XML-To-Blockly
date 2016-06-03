@@ -17,7 +17,7 @@ The proposed editor would have capabilities of handling not just workflows for e
 2. Clone [Blockly](https://github.com/google/blockly)
 3. Link or copy `blockly_compressed.js` and `msg/js/en.js` from Blockly to this repo's checkout (keeping the directory structure)
 4. Open `XMLToBlockly.html` in your browser
-5. Click on the button to open an example Relax NG file. This will create a list of blocks in the toolbox.
+5. Click on the button to open an example Relax NG file from `examples/`. This will create a list of blocks in the toolbox.
 6. Play with the blocks to create a diagram that follows the specification.
 
 # Current state
