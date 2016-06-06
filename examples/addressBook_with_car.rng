@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<grammar xmlns:blockly="http://relaxng.org/ns/annotation/1.0" xmlns="http://relaxng.org/ns/structure/1.0" >
   <start>
     <element name="addressBook">
-      <oneOrMore>
+      <oneOrMore blockly:name="contact">
         <element name="name">
           <text/>
         </element>
