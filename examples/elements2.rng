@@ -1,13 +1,15 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
   <start>
-    <element name="first">
-      <element name="first_child">
+    <group>
+      <element name="first">
+        <element name="first_child">
+          <text/>
+        </element>
+      </element>
+      <element name="second">
         <text/>
       </element>
-    </element>
-    <element name="second">
-      <text/>
-    </element>
+    </group>
   </start>
 </grammar>
