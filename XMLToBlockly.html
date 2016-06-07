@@ -157,6 +157,7 @@
 					blockNames.push(blockName);
 				}
 				
+				//console.log("blockly name", node.getAttribute("blockly:name"));
 				//This appends to the block which contains the oneOrMore tag and creates a notch there.
 				blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
 			}
