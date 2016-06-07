@@ -60,6 +60,13 @@
 			
 			removeRedundantText(root);
 			
+			//get all the define blocks in the document and create blocks for them one by one.
+			var defineNodes=xmlDoc.getElementsByTagName("define");
+			for(var i=0;i<defineNodes.length;i++){
+				//fixed color - 295 for define blocks for now.
+				createBlocks(defineNodes[i],defineNodes[i].getAttribute("name"), 295);
+			}
+			
 			root=xmlDoc.getElementsByTagName("start")[0];
 			
 			var colour=0;
@@ -178,6 +185,23 @@
 				//This appends to the block which contains the choice tag and creates a notch there.
 				blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
 			}
+			
+			//creates define blocks. The define block that is created inly has a notch above and never below. It is the ref code which changes according to whether or not the ref code is in a choice or oneOrMore block.
+			else if(nodeType=="define"){
+				var blockName="block_"+name;
+				var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.appendDummyInput().appendField('"+name+"');this.setColour("+colour+");"+blockData+"this.setPreviousStatement(true);}};";
+				blocks.push(finalBlock);
+				blockNames.push(blockName);
+				return;
+			}
+			
+			//the ref block will have a notch above or below or both according to its parent element. The notch is added to it according to the code written to handle choice and oneOrMore elements.
+			else if(nodeType="ref"){
+				var correspondingDefineName=node.getAttribute("name");
+				var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('block_"+correspondingDefineName+"');";
+				return data;
+			}
+			
 			
 			//returns block data to the parent node that had called it
 			return blockData;
