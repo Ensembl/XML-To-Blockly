@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<ref name="band"/>
+	</start>
+	
+	<define name="band">
+		<element name="name">
+			<text/>
+		</element>
+		<oneOrMore>
+			<ref name="member"/>
+		</oneOrMore>
+		<element name="frontman">
+			<ref name="member"/>
+		</element>	
+	</define>
+	
+	<define name="member">
+		<element name="first_name">
+			<text/>
+		</element>
+		<element name="last_name">
+			<text/>
+		</element>
+		<element name="part_of">
+			<ref name="band"/>
+		</element>
+	</define>
+</grammar>	
