@@ -101,6 +101,10 @@ function createBlocks(node, name, colour){
 			continue;
 		}
 		
+		if(children[i].nodeName=="#comment"){
+			continue;
+		}
+
 		var nameAttr=children[i].getAttribute("name");
 		
 		if(nameAttr==null){
