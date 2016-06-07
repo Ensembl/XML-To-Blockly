@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <!--
+    Relax NG schema for LRG
+    Version $Revision: 1.9 $
+    Last modified: 2014-10-01
+  -->
+  <start>
+    <ref name="LRG"/>
+  </start>
+  <define name="LRG">
+    <element name="lrg">
+      <attribute name="schema_version">
+        <data type="decimal"/>
+      </attribute>
+      <ref name="FIXED_ANNOTATION"/>
+      <ref name="UPDATABLE_ANNOTATION"/>
+    </element>
+  </define>
+  <!-- fixed annotation section will remain unchanged for lifespan of LRG -->
+  <define name="FIXED_ANNOTATION">
+    <element name="fixed_annotation">
+      <!-- main LRG identifier e.g. LRG_1 -->
+      <element name="id">
+        <data type="string">
+          <param name="pattern">LRG_[0-9]+</param>
+        </data>
+      </element>
+      <optional>
+        <element name="hgnc_id">
+          <data type="integer"/>
+        </element>
+      </optional>
+      <optional>
+        <element name="sequence_source">
+          <text/>
+          <!-- seq-id of the sequence that LRG is based on, normally RefSeqGene -->
+        </element>
+      </optional>
+      <element name="organism">
+        <attribute name="taxon">
+          <data type="integer"/>
+        </attribute>
+        <text/>
+      </element>
+      <zeroOrMore>
+        <ref name="SOURCE"/>
+      </zeroOrMore>
+      <element name="mol_type">
+        <text/>
+      </element>
+      <element name="creation_date">
+        <data type="date"/>
+      </element>
+      <optional>
+        <ref name="COMMENT"/>
+      </optional>
+      <ref name="DNA_SEQUENCE"/>
+      <zeroOrMore>
+        <ref name="FX_TRANSCRIPT"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- /fixed_annotation -->
+  <define name="SOURCE">
+    <element name="source">
+      <element name="name">
+        <text/>
+      </element>
+      <zeroOrMore>
+        <element name="url">
+          <text/>
+        </element>
+      </zeroOrMore>
+      <zeroOrMore>
+        <!-- multiple contacts may be specified within a source -->
+        <ref name="CONTACT"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="CONTACT">
+    <element name="contact">
+      <optional>
+        <element name="name">
+          <text/>
+        </element>
+      </optional>
+      <zeroOrMore>
+        <element name="url">
+          <text/>
+        </element>
+      </zeroOrMore>
+      <optional>
+        <element name="address">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <element name="email">
+          <text/>
+        </element>
+      </optional>
+    </element>
+  </define>
+  <define name="DNA_SEQUENCE">
+    <element name="sequence">
+      <data type="string">
+        <param name="pattern">[ATGC]+</param>
+      </data>
+    </element>
+  </define>
+  <define name="FX_TRANSCRIPT">
+    <element name="transcript">
+      <attribute name="name">
+        <data type="string">
+          <param name="pattern">t[0-9]+</param>
+        </data>
+      </attribute>
+      <optional>
+        <!-- e.g. "t1", "t2" -->
+        <element name="creation_date">
+          <data type="date"/>
+        </element>
+      </optional>
+      <zeroOrMore>
+        <!-- e.g. when a new transcript is added to a public LRG -->
+        <ref name="COMMENT"/>
+      </zeroOrMore>
+      <ref name="LRG_COORDS"/>
+      <!-- location of transcript in LRG coordinates -->
+      <element name="cdna">
+        <ref name="DNA_SEQUENCE"/>
+      </element>
+      <zeroOrMore>
+        <!-- The coding region is optional to accommodate e.g. non-protein-coding genes -->
+        <ref name="CODING_REGION"/>
+      </zeroOrMore>
+      <!-- All transcripts have at least one exon -->
+      <ref name="FX_EXON"/>
+      <zeroOrMore>
+        <!-- Additional (intron)-exon blocks  -->
+        <ref name="INTRONEXON"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- LRG genomic coordinates element -->
+  <define name="LRG_COORDS">
+    <element name="coordinates">
+      <attribute name="coord_system">
+        <data type="string">
+          <param name="pattern">LRG_[0-9]+</param>
+        </data>
+      </attribute>
+      <ref name="COORD_ATTRIBS"/>
+    </element>
+  </define>
+  <!-- Common coordinate attributes -->
+  <define name="COORD_ATTRIBS">
+    <attribute name="start">
+      <data type="integer"/>
+    </attribute>
+    <attribute name="end">
+      <data type="integer"/>
+    </attribute>
+    <optional>
+      <attribute name="start_ext">
+        <data type="integer"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="end_ext">
+        <data type="integer"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="strand">
+        <choice>
+          <value>-1</value>
+          <value>1</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="mapped_from"/>
+    </optional>
+  </define>
+  <define name="CODING_REGION">
+    <element name="coding_region">
+      <optional>
+        <!-- start phase of coding sequence when coding sequence is incomplete -->
+        <attribute name="codon_start">
+          <data type="integer"/>
+        </attribute>
+      </optional>
+      <!-- location of coding region in LRG and the parent transcript coordinates -->
+      <ref name="LRG_COORDS"/>
+      <zeroOrMore>
+        <!-- amino-acid replacement, e.g. canonical stop codon read through, in p# coordinates -->
+        <element name="translation_exception">
+          <attribute name="codon">
+            <data type="integer"/>
+          </attribute>
+          <ref name="PEPTIDE_SEQUENCE"/>
+        </element>
+      </zeroOrMore>
+      <zeroOrMore>
+        <!-- ribosomal slippage -->
+        <element name="translation_frameshift">
+          <group>
+            <attribute name="cdna_position">
+              <data type="integer"/>
+            </attribute>
+            <!-- location in the parent t# coordinates -->
+            <attribute name="shift">
+              <data type="integer"/>
+            </attribute>
+          </group>
+          <!-- typically -1 or 1 -->
+        </element>
+      </zeroOrMore>
+      <ref name="TRANSLATION"/>
+    </element>
+  </define>
+  <define name="TRANSLATION">
+    <element name="translation">
+      <attribute name="name">
+        <data type="string">
+          <param name="pattern">p[0-9]+[A-Za-z]*</param>
+        </data>
+      </attribute>
+      <!-- e.g. "p1", "p2" -->
+      <ref name="PEPTIDE_SEQUENCE"/>
+    </element>
+  </define>
+  <define name="PEPTIDE_SEQUENCE">
+    <element name="sequence">
+      <data type="string">
+        <param name="pattern">[ACDEFGHIKLMNOPQRSTUVWY]+</param>
+      </data>
+    </element>
+  </define>
+  <!-- exon element - coordinates given in three systems -->
+  <define name="FX_EXON">
+    <element name="exon">
+      <attribute name="label">
+        <data type="string"/>
+      </attribute>
+      <!-- Exon number based on LRG's t# transcripts -->
+      <ref name="LRG_COORDS"/>
+      <ref name="LRG_CDNA_COORDS"/>
+      <zeroOrMore>
+        <ref name="LRG_PEPTIDE_COORDS"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- LRG cDNA coordinates element -->
+  <define name="LRG_CDNA_COORDS">
+    <element name="coordinates">
+      <attribute name="coord_system">
+        <data type="string">
+          <param name="pattern">LRG_[0-9]+t[0-9]+</param>
+        </data>
+      </attribute>
+      <ref name="COORD_ATTRIBS"/>
+    </element>
+  </define>
+  <!-- LRG peptide coordinates element -->
+  <define name="LRG_PEPTIDE_COORDS">
+    <element name="coordinates">
+      <attribute name="coord_system">
+        <data type="string">
+          <param name="pattern">LRG_[0-9]+p[0-9]+[A-Za-z]*</param>
+        </data>
+      </attribute>
+      <ref name="COORD_ATTRIBS"/>
+    </element>
+  </define>
+  <!-- Compound element containing one (optional) intron and one (required) exon -->
+  <define name="INTRONEXON">
+    <optional>
+      <ref name="FX_INTRON"/>
+    </optional>
+    <ref name="FX_EXON"/>
+  </define>
+  <define name="FX_INTRON">
+    <element name="intron">
+      <!--
+        intron phase
+         0 : intron falls between codons
+         1 : intron falls between 1st and 2nd base of codon
+         2 : intron falls between 2nd and 3rd base of codon
+      -->
+      <attribute name="phase">
+        <choice>
+          <value>0</value>
+          <value>1</value>
+          <value>2</value>
+        </choice>
+      </attribute>
+    </element>
+  </define>
+  <!-- updatable annotation can be updated with e.g. new annotations, mappings, labels etc -->
+  <define name="UPDATABLE_ANNOTATION">
+    <element name="updatable_annotation">
+      <oneOrMore>
+        <!-- an annotation set comes from one source - allows multiple sets of annotations from e.g. Ensembl/NCBI -->
+        <ref name="ANNOTATION_SET"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <!-- /updatable_annotation -->
+  <define name="ANNOTATION_SET">
+    <element name="annotation_set">
+      <optional>
+        <attribute name="type"/>
+      </optional>
+      <oneOrMore>
+        <ref name="SOURCE"/>
+      </oneOrMore>
+      <optional>
+        <ref name="COMMENT"/>
+      </optional>
+      <element name="modification_date">
+        <data type="date"/>
+      </element>
+      <zeroOrMore>
+        <!--
+          One annotation per fixed transcript
+          allows exons to be named; in fixed layer exons are defined only by their coordinates
+          allows for legacy systems of amino acid numbering
+          allows for comments on fixed layer transcripts
+        -->
+        <ref name="FIXED_TRANSCRIPT_ANNOTATION"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <!-- multiple mappings allowed e.g. to different assemblies -->
+        <ref name="MAPPING"/>
+      </zeroOrMore>
+      <optional>
+        <element name="lrg_locus">
+          <ref name="FEATURE_SOURCE"/>
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <ref name="FEATURES"/>
+      </optional>
+      <zeroOrMore>
+        <!-- Optional extra note(s)/information from the community -->
+        <ref name="NOTE"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="FIXED_TRANSCRIPT_ANNOTATION">
+    <element name="fixed_transcript_annotation">
+      <!-- fixed_id corresponding to the transcript name used in the fixed section -->
+      <attribute name="name">
+        <data type="string">
+          <param name="pattern">t[0-9]+</param>
+        </data>
+      </attribute>
+      <zeroOrMore>
+        <ref name="OTHER_EXON_NAMING"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="ALT_AA_NUMBERING"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="COMMENT">
+    <element name="comment">
+      <text/>
+    </element>
+  </define>
+  <define name="OTHER_EXON_NAMING">
+    <element name="other_exon_naming">
+      <attribute name="description"/>
+      <optional>
+        <element name="url">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <ref name="COMMENT"/>
+      </optional>
+      <oneOrMore>
+        <element name="exon">
+          <ref name="LRG_COORDS"/>
+          <element name="label">
+            <text/>
+          </element>
+        </element>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="ALT_AA_NUMBERING">
+    <element name="alternate_amino_acid_numbering">
+      <attribute name="description"/>
+      <optional>
+        <element name="url">
+          <text/>
+        </element>
+      </optional>
+      <optional>
+        <ref name="COMMENT"/>
+      </optional>
+      <oneOrMore>
+        <element name="align">
+          <attribute name="lrg_start">
+            <data type="integer"/>
+          </attribute>
+          <attribute name="lrg_end">
+            <data type="integer"/>
+          </attribute>
+          <attribute name="start">
+            <data type="integer"/>
+          </attribute>
+          <attribute name="end">
+            <data type="integer"/>
+          </attribute>
+        </element>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="MAPPING">
+    <element name="mapping">
+      <!-- Coord_system can be e.g. GRCh37, NM_000088.3 -->
+      <attribute name="coord_system"/>
+      <optional>
+        <!-- Name is typically the chromosome name -->
+        <attribute name="other_name"/>
+      </optional>
+      <!-- Id can be e.g. the NCBI accession for a chromosome -->
+      <attribute name="other_id"/>
+      <optional>
+        <attribute name="other_id_syn"/>
+      </optional>
+      <attribute name="other_start">
+        <data type="integer"/>
+      </attribute>
+      <attribute name="other_end">
+        <data type="integer"/>
+      </attribute>
+      <optional>
+        <!-- Attribute giving the information about the type of sequence aligned -->
+        <attribute name="type">
+          <choice>
+            <value>main_assembly</value>
+            <value>other_assembly</value>
+            <value>patch</value>
+            <value>haplotype</value>
+            <value>transcript</value>
+          </choice>
+        </attribute>
+      </optional>
+      <oneOrMore>
+        <!-- a mapping span corresponds to a block of the LRG sequence that aligns with an assembly -->
+        <ref name="MAPPING_SPAN"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="MAPPING_SPAN">
+    <element name="mapping_span">
+      <attribute name="lrg_start">
+        <data type="integer"/>
+      </attribute>
+      <attribute name="lrg_end">
+        <data type="integer"/>
+      </attribute>
+      <attribute name="strand">
+        <choice>
+          <value>-1</value>
+          <value>1</value>
+        </choice>
+      </attribute>
+      <attribute name="other_start">
+        <data type="integer"/>
+      </attribute>
+      <attribute name="other_end">
+        <data type="integer"/>
+      </attribute>
+      <zeroOrMore>
+        <!-- diff elements allow small-scale differences between the LRG sequence and assembly to be detailed -->
+        <ref name="DIFF"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="DIFF">
+    <element name="diff">
+      <group>
+        <attribute name="type">
+          <choice>
+            <value>mismatch</value>
+            <value>lrg_ins</value>
+            <value>other_ins</value>
+          </choice>
+        </attribute>
+        <optional>
+          <attribute name="lrg_start">
+            <data type="integer"/>
+          </attribute>
+        </optional>
+        <optional>
+          <attribute name="lrg_end">
+            <data type="integer"/>
+          </attribute>
+        </optional>
+        <optional>
+          <attribute name="other_start">
+            <data type="integer"/>
+          </attribute>
+        </optional>
+        <optional>
+          <attribute name="other_end">
+            <data type="integer"/>
+          </attribute>
+        </optional>
+        <optional>
+          <attribute name="lrg_sequence"/>
+        </optional>
+        <optional>
+          <!-- for mismatches or lrg_ins -->
+          <attribute name="other_sequence"/>
+        </optional>
+      </group>
+      <!-- for mismatches or genome_ins -->
+    </element>
+  </define>
+  <!-- Optional extra note/information from the community -->
+  <define name="NOTE">
+    <element name="note">
+      <optional>
+        <attribute name="name"/>
+      </optional>
+      <text/>
+    </element>
+  </define>
+  <define name="FEATURE_SOURCE">
+    <attribute name="source"/>
+  </define>
+  <define name="FEATURES">
+    <element name="features">
+      <zeroOrMore>
+        <ref name="UP_GENE"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="UP_GENE">
+    <element name="gene">
+      <ref name="FEATURE_SOURCE"/>
+      <ref name="FEATURE_ACCESSION"/>
+      <ref name="SYMBOL"/>
+      <!-- LRG coordinates should always be provided -->
+      <ref name="LRG_COORDS"/>
+      <zeroOrMore>
+        <!-- In addition, coordinates can be given relative to other coordinate systems as well -->
+        <ref name="COORDS"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <!-- indicates if the gene only partially overlaps the LRG -->
+        <ref name="PARTIAL"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="LONG_NAME"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="COMMENT"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="DB_XREF"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <!-- genes may contain zero or more transcripts -->
+        <ref name="UP_TRANSCRIPT"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="FEATURE_ACCESSION">
+    <attribute name="accession"/>
+  </define>
+  <!-- General coordinate element -->
+  <define name="COORDS">
+    <element name="coordinates">
+      <attribute name="coord_system"/>
+      <optional>
+        <attribute name="name"/>
+      </optional>
+      <ref name="COORD_ATTRIBS"/>
+    </element>
+  </define>
+  <define name="PARTIAL">
+    <element name="partial">
+      <choice>
+        <value>5-prime</value>
+        <value>3-prime</value>
+      </choice>
+    </element>
+  </define>
+  <define name="SYMBOL">
+    <element name="symbol">
+      <attribute name="name"/>
+      <optional>
+        <ref name="FEATURE_SOURCE"/>
+      </optional>
+      <zeroOrMore>
+        <ref name="SYNONYM"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="LONG_NAME">
+    <element name="long_name">
+      <text/>
+    </element>
+  </define>
+  <define name="DB_XREF">
+    <element name="db_xref">
+      <attribute name="source">
+        <choice>
+          <value>GeneID</value>
+          <value>HGNC</value>
+          <value>MIM</value>
+          <value>GI</value>
+          <value>RefSeq</value>
+          <value>Ensembl</value>
+          <value>CCDS</value>
+          <value>UniProtKB</value>
+          <value>RFAM</value>
+          <value>miRBase</value>
+          <value>pseudogene.org</value>
+        </choice>
+      </attribute>
+      <ref name="FEATURE_ACCESSION"/>
+      <zeroOrMore>
+        <ref name="SYNONYM"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="SYNONYM">
+    <element name="synonym">
+      <text/>
+    </element>
+  </define>
+  <define name="UP_TRANSCRIPT">
+    <element name="transcript">
+      <ref name="FEATURE_SOURCE"/>
+      <ref name="FEATURE_ACCESSION"/>
+      <optional>
+        <attribute name="fixed_id">
+          <data type="string">
+            <param name="pattern">t[0-9]+</param>
+          </data>
+        </attribute>
+      </optional>
+      <ref name="LRG_COORDS"/>
+      <zeroOrMore>
+        <ref name="COORDS"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="PARTIAL"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="LONG_NAME"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="COMMENT"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="DB_XREF"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="UP_EXON"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="UP_PROTEIN_PRODUCT"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="UP_EXON">
+    <element name="exon">
+      <ref name="FEATURE_SOURCE"/>
+      <ref name="FEATURE_ACCESSION"/>
+      <ref name="LRG_COORDS"/>
+      <zeroOrMore>
+        <ref name="COORDS"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="PARTIAL"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="COMMENT"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="UP_PROTEIN_PRODUCT">
+    <element name="protein_product">
+      <ref name="FEATURE_SOURCE"/>
+      <ref name="FEATURE_ACCESSION"/>
+      <optional>
+        <attribute name="fixed_id">
+          <data type="string">
+            <param name="pattern">p[0-9]+[A-Za-z]*</param>
+          </data>
+        </attribute>
+      </optional>
+      <optional>
+        <attribute name="codon_start">
+          <data type="integer"/>
+        </attribute>
+      </optional>
+      <ref name="LRG_COORDS"/>
+      <zeroOrMore>
+        <ref name="COORDS"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="PARTIAL"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="LONG_NAME"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="COMMENT"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="DB_XREF"/>
+      </zeroOrMore>
+    </element>
+  </define>
+</grammar>

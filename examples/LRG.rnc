@@ -1,0 +1,456 @@
+# Relax NG schema for LRG
+# Version $Revision: 1.9 $
+# Last modified: 2014-10-01
+
+start = LRG
+LRG = element lrg { 
+
+   attribute schema_version {
+      xsd:decimal
+   },
+   FIXED_ANNOTATION, 
+   UPDATABLE_ANNOTATION 
+
+}
+
+# fixed annotation section will remain unchanged for lifespan of LRG
+FIXED_ANNOTATION = element fixed_annotation {
+
+   # main LRG identifier e.g. LRG_1
+   element id {
+      xsd:string {
+         pattern = 'LRG_[0-9]+'
+      }
+   },
+   element hgnc_id {
+     xsd:integer
+   }?,
+   element sequence_source {
+      text #seq-id of the sequence that LRG is based on, normally RefSeqGene
+   }?,  
+   element organism { 
+      attribute taxon {
+         xsd:integer
+      },
+      text
+   },
+   SOURCE*,
+   element mol_type {
+      text
+   },
+   element creation_date {
+      xsd:date
+   },
+   COMMENT?,
+   DNA_SEQUENCE,
+   FX_TRANSCRIPT*
+   
+} # /fixed_annotation
+
+
+SOURCE = element source {
+   element name {
+      text
+   },
+   element url {
+      text
+   }*,
+   # multiple contacts may be specified within a source
+   CONTACT*
+}
+
+CONTACT = element contact {
+   element name {
+      text
+   }?,
+   element url {
+      text
+   }*,
+   element address {
+      text
+   }?,
+   element email {
+      text
+   }? 
+}
+
+DNA_SEQUENCE = element sequence {
+   xsd:string {
+      pattern = '[ATGC]+'
+   }
+} 
+
+FX_TRANSCRIPT = element transcript {
+
+   attribute name {
+      xsd:string {
+        pattern = 't[0-9]+'
+      }
+   }, # e.g. "t1", "t2"
+   element creation_date {
+      xsd:date
+   }?, # e.g. when a new transcript is added to a public LRG
+   COMMENT*,
+
+   LRG_COORDS, # location of transcript in LRG coordinates
+
+   element cdna {
+      DNA_SEQUENCE
+   },
+   
+   # The coding region is optional to accommodate e.g. non-protein-coding genes
+   CODING_REGION*,
+   # All transcripts have at least one exon
+   FX_EXON,
+   # Additional (intron)-exon blocks  
+   INTRONEXON* 
+   
+}
+
+# LRG genomic coordinates element
+LRG_COORDS = element coordinates {
+   attribute coord_system {
+      xsd:string {
+         pattern = 'LRG_[0-9]+'
+      }
+   },  
+   COORD_ATTRIBS
+}
+
+# Common coordinate attributes
+COORD_ATTRIBS = 
+   attribute start { xsd:integer },
+   attribute end { xsd:integer },
+   attribute start_ext { xsd:integer }?,
+   attribute end_ext { xsd:integer }?,
+   attribute strand { '-1' | '1' }?,
+   attribute mapped_from { text }?
+
+CODING_REGION = element coding_region {
+   
+   # start phase of coding sequence when coding sequence is incomplete
+   attribute codon_start { xsd:integer }?,
+   
+   # location of coding region in LRG and the parent transcript coordinates
+   LRG_COORDS,
+   
+   # amino-acid replacement, e.g. canonical stop codon read through, in p# coordinates
+   element translation_exception {
+      attribute codon { xsd:integer },
+      PEPTIDE_SEQUENCE
+   }*,
+
+   #ribosomal slippage
+   element translation_frameshift {
+      attribute cdna_position {xsd:integer}, #location in the parent t# coordinates
+      attribute shift { xsd:integer } #typically -1 or 1
+   }*,
+
+   TRANSLATION
+}
+
+TRANSLATION = element translation {
+   attribute name {
+      xsd:string {
+         pattern = 'p[0-9]+[A-Za-z]*'
+      }
+   }, # e.g. "p1", "p2"
+   PEPTIDE_SEQUENCE
+}
+
+PEPTIDE_SEQUENCE = element sequence {
+   xsd:string {
+      pattern = '[ACDEFGHIKLMNOPQRSTUVWY]+'
+   }
+}
+
+# exon element - coordinates given in three systems
+FX_EXON = element exon {
+   attribute label { xsd:string }, #Exon number based on LRG's t# transcripts
+   LRG_COORDS,
+   LRG_CDNA_COORDS,
+   LRG_PEPTIDE_COORDS*
+}
+
+# LRG cDNA coordinates element
+LRG_CDNA_COORDS = element coordinates {
+   attribute coord_system {
+      xsd:string {
+         pattern = 'LRG_[0-9]+t[0-9]+'
+      }
+   },  
+   COORD_ATTRIBS
+}
+
+# LRG peptide coordinates element
+LRG_PEPTIDE_COORDS = element coordinates {
+   attribute coord_system {
+      xsd:string {
+         pattern = 'LRG_[0-9]+p[0-9]+[A-Za-z]*'
+      }
+   },  
+   COORD_ATTRIBS
+}
+
+# Compound element containing one (optional) intron and one (required) exon
+INTRONEXON = (
+   FX_INTRON?,
+   FX_EXON
+)
+
+FX_INTRON = element intron {
+      # intron phase
+      #  0 : intron falls between codons
+      #  1 : intron falls between 1st and 2nd base of codon
+      #  2 : intron falls between 2nd and 3rd base of codon
+      attribute phase { '0' | '1' | '2' }
+}
+   
+# updatable annotation can be updated with e.g. new annotations, mappings, labels etc
+UPDATABLE_ANNOTATION = element updatable_annotation {
+   
+   # an annotation set comes from one source - allows multiple sets of annotations from e.g. Ensembl/NCBI
+   ANNOTATION_SET+   
+
+} # /updatable_annotation
+
+ANNOTATION_SET = element annotation_set {
+   attribute type { text }?,
+
+   SOURCE+,
+   
+   COMMENT?,
+   
+   element modification_date { xsd:date }, 
+   
+   # One annotation per fixed transcript
+   # allows exons to be named; in fixed layer exons are defined only by their coordinates
+   # allows for legacy systems of amino acid numbering
+   # allows for comments on fixed layer transcripts
+   FIXED_TRANSCRIPT_ANNOTATION*,
+   
+   # multiple mappings allowed e.g. to different assemblies
+   MAPPING*,
+   
+   element lrg_locus {
+      FEATURE_SOURCE,
+      text
+   }?,
+   
+   FEATURES?,
+   
+   # Optional extra note(s)/information from the community
+   NOTE*
+}
+
+FIXED_TRANSCRIPT_ANNOTATION = element fixed_transcript_annotation {
+
+   # fixed_id corresponding to the transcript name used in the fixed section 
+   attribute name {
+      xsd:string {
+         pattern = 't[0-9]+'
+      }
+   },
+
+   OTHER_EXON_NAMING*,
+   ALT_AA_NUMBERING*
+}
+
+COMMENT = element comment { text }
+
+OTHER_EXON_NAMING = element other_exon_naming {
+
+   attribute description { text },
+ 
+   element url {
+      text
+   }?,
+   COMMENT?,
+   element exon {
+      LRG_COORDS,
+      element label { text }
+   }+
+}
+
+ALT_AA_NUMBERING = element alternate_amino_acid_numbering {
+
+   attribute description { text },
+   
+   element url {
+      text
+   }?, 
+   COMMENT?,     
+   element align {
+      attribute lrg_start { xsd:integer },
+      attribute lrg_end {xsd:integer },
+      attribute start { xsd:integer },
+      attribute end { xsd:integer }
+   }+
+}
+
+               
+MAPPING = element mapping {
+
+   # Coord_system can be e.g. GRCh37, NM_000088.3
+   attribute coord_system { text },
+   
+   # Name is typically the chromosome name 
+   attribute other_name { text }?,
+   
+   # Id can be e.g. the NCBI accession for a chromosome
+   attribute other_id { text },
+   attribute other_id_syn { text }?,
+   
+   attribute other_start { xsd:integer },
+   attribute other_end { xsd:integer },
+   
+   # Attribute giving the information about the type of sequence aligned
+   attribute type { 'main_assembly' | 'other_assembly' | 'patch' | 'haplotype' | 'transcript' }?,
+   
+   # a mapping span corresponds to a block of the LRG sequence that aligns with an assembly
+   MAPPING_SPAN+
+}
+      
+MAPPING_SPAN = element mapping_span {
+   attribute lrg_start { xsd:integer },
+   attribute lrg_end { xsd:integer },
+   attribute strand { '-1' | '1' },
+   attribute other_start { xsd:integer },
+   attribute other_end { xsd:integer },
+   
+   # diff elements allow small-scale differences between the LRG sequence and assembly to be detailed
+   DIFF*
+}
+         
+DIFF = element diff {
+   attribute type {'mismatch' | 'lrg_ins' | 'other_ins' },
+   attribute lrg_start { xsd:integer }?,
+   attribute lrg_end { xsd:integer }?,
+   attribute other_start { xsd:integer }?,
+   attribute other_end { xsd:integer }?,
+   attribute lrg_sequence {text}?, #for mismatches or lrg_ins
+   attribute other_sequence {text}? #for mismatches or genome_ins
+}
+
+# Optional extra note/information from the community
+NOTE = element note {
+  attribute name { text }?,
+  text
+}
+
+FEATURE_SOURCE = attribute source {
+   text
+}
+
+FEATURES = element features {
+   UP_GENE*
+}
+
+UP_GENE = element gene {
+   
+   FEATURE_SOURCE,
+   FEATURE_ACCESSION,
+   SYMBOL,
+   
+   # LRG coordinates should always be provided
+   LRG_COORDS,
+   # In addition, coordinates can be given relative to other coordinate systems as well
+   COORDS*,
+   
+   # indicates if the gene only partially overlaps the LRG
+   PARTIAL*,
+   LONG_NAME*,
+   COMMENT*,
+   DB_XREF*,
+   
+   # genes may contain zero or more transcripts
+   UP_TRANSCRIPT* 
+}
+
+FEATURE_ACCESSION = attribute accession {
+   text
+}
+
+# General coordinate element
+COORDS = element coordinates {
+   attribute coord_system { text },
+   attribute name { text }?,  
+   COORD_ATTRIBS
+}
+
+PARTIAL = element partial {
+   '5-prime' | '3-prime'
+}
+         
+SYMBOL = element symbol {
+   attribute name { text },
+   FEATURE_SOURCE?,
+   SYNONYM*
+}
+
+LONG_NAME = element long_name {
+   text
+}
+
+DB_XREF = element db_xref { 
+   attribute source { 'GeneID' | 'HGNC' | 'MIM' | 'GI' | 'RefSeq' | 'Ensembl' | 'CCDS' | 'UniProtKB' | 'RFAM' | 'miRBase' | 'pseudogene.org' },   
+   FEATURE_ACCESSION,
+   
+   SYNONYM*
+}
+
+SYNONYM = element synonym {
+   text
+}
+
+UP_TRANSCRIPT = element transcript {
+
+   FEATURE_SOURCE,
+   FEATURE_ACCESSION,
+
+   attribute fixed_id {
+      xsd:string {
+         pattern = 't[0-9]+'
+      }
+   } ?,
+      
+   LRG_COORDS,
+   COORDS*,
+   PARTIAL*,
+   LONG_NAME*,
+   COMMENT*,
+   DB_XREF*,
+   UP_EXON*,
+   UP_PROTEIN_PRODUCT*
+}
+
+UP_EXON = element exon {
+   FEATURE_SOURCE,
+   FEATURE_ACCESSION,
+   
+   LRG_COORDS,
+   COORDS*,
+   PARTIAL*,
+   COMMENT*
+}
+  
+UP_PROTEIN_PRODUCT = element protein_product {
+   FEATURE_SOURCE,
+   FEATURE_ACCESSION,
+
+   attribute fixed_id {
+      xsd:string {
+         pattern = 'p[0-9]+[A-Za-z]*'
+      }
+   } ?,
+   
+   attribute codon_start { xsd:integer }?,
+   
+   LRG_COORDS,
+   COORDS*,
+   PARTIAL*,
+   LONG_NAME*,
+   COMMENT*,
+   DB_XREF*
+}
+
