@@ -1,0 +1,31 @@
+<grammar ns="test_data" xmlns="http://relaxng.org/ns/structure/1.0">
+	<start>	
+		<element name="bookshelf">
+			<interleave>
+				<oneOrMore>
+					<element name="notebook">
+						<interleave>
+							<attribute name="subject_name">
+								<text/>
+							</attribute>
+							<attribute name="owner_name">
+								<text/>
+							</attribute>
+						</interleave>
+					</element>
+				</oneOrMore>
+				
+				<oneOrMore>
+					<element name="book_series">
+						<attribute name="series_name">
+							<text/>
+						</attribute>
+						<attribute name="author">
+							<text/>
+						</attribute>
+					</element>
+				</oneOrMore>
+			</interleave>
+		</element>
+	</start>
+</grammar>
