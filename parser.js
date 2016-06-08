@@ -171,11 +171,11 @@ function createBlocks(node, name, colour){
 	}
 	
 	
-	/*		
-	else if(nodeType=="oneOrMore"){
+			
+	else if(nodeType=="interleave"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
 	
-		//Every oneOrMore child has sent in its data. This loop just creates blocks for each child of the oneOrMore tag.
+		//Every interleave child has sent in its data. This loop just creates blocks for each child of the interleave tag.
 		for(var i=0;i<childData.length;i++){
 			var blockName=childNames[i];
 			
@@ -184,10 +184,10 @@ function createBlocks(node, name, colour){
 			blockNames.push(blockName);
 		}
 		
-		//This appends to the block which contains the oneOrMore tag and creates a notch there.
+		//This appends to the block which contains the interleave tag and creates a notch there.
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
 	}
-	*/
+	
 	
 	
 	//for choice nodes, we ensure that only one option is selected by keeping no option for setNextStatement for its children.
