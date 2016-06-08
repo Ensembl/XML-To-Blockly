@@ -139,6 +139,7 @@ function createBlocks(node, name, colour){
 	}
 	*/
 		
+		
 	if(nodeType=="element"){
 		if(children.length==1 && children[0].nodeName=="text"){
 			//data contains data that the current tag will generate.
@@ -149,6 +150,7 @@ function createBlocks(node, name, colour){
 			blockData=data+blockData;
 		}
 	}
+	
 	
 	//attributes do not check the level below them as there is no functionality currently to handle datatypes and parameters. At the attribute node, a dummy input which has a label and an input field is generated. 
 	else if(nodeType=="attribute"){
@@ -164,8 +166,9 @@ function createBlocks(node, name, colour){
 		blockNames.push(blockName);
 		return;
 	}
-			
-			
+	
+	
+	/*		
 	else if(nodeType=="oneOrMore"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
 	
@@ -177,12 +180,13 @@ function createBlocks(node, name, colour){
 			blocks.push(finalBlock);
 			blockNames.push(blockName);
 		}
-				
-		//console.log("blockly name", node.getAttribute("blockly:name"));
+		
 		//This appends to the block which contains the oneOrMore tag and creates a notch there.
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
 	}
-			
+	*/
+	
+	
 	//for choice nodes, we ensure that only one option is selected by keeping no option for setNextStatement for its children.
 	else if(nodeType=="choice"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
@@ -198,6 +202,21 @@ function createBlocks(node, name, colour){
 		//This appends to the block which contains the choice tag and creates a notch there.
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
 	}
+	
+	
+	//get data from all children. Create a block for them. Send appendStatementInput to parent.
+	else if(nodeType=="oneOrMore"){
+		//instead of keeping just block_+name as the block name, :child has been added to the name to handle cases where the parent oneOrMore node is also supposed to be in the form of a block. eg. <choice><oneOrMore></oneOrMore>.....</choice>
+		var blockName="block_"+name+":child";
+		var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+blockData+"this.setPreviousStatement(true,['"+blockName+"','"+name+"']);this.setNextStatement(true,['"+blockName+"']);this.setColour("+colour+");}};";
+		
+		var data="this.appendStatementInput('"+name+"').setCheck(['"+blockName+"']).appendField('"+name+"');";
+		
+		blocks.push(finalBlock);
+		blockNames.push(blockName);
+		return data;
+	}
+			
 			
 	//creates define blocks. The define block that is created inly has a notch above and never below. It is the ref code which changes according to whether or not the ref code is in a choice or oneOrMore block.
 	else if(nodeType=="define"){
@@ -207,7 +226,8 @@ function createBlocks(node, name, colour){
 		blockNames.push(blockName);
 		return;
 	}
-			
+	
+	
 	//the ref block will have a notch above or below or both according to its parent element. The notch is added to it according to the code written to handle choice and oneOrMore elements.
 	else if(nodeType="ref"){
 		var correspondingDefineName=node.getAttribute("name");
