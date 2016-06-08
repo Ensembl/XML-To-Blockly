@@ -75,6 +75,9 @@ function handleXML(){
 }
 		
 //Removes #text nodes
+//These are string elements present in the XML document between tags. The
+//RNG specification only allows these strings to be composed of whitespace.
+//They don't carry any information and can be removed
 function removeRedundantText(node){
 	var children=node.childNodes;
 	for(var i=0;i<children.length;i++){
