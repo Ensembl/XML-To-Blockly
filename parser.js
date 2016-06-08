@@ -97,7 +97,8 @@ function createBlocks(node, name, colour){
 	var childNames=[];	//Keeps track of children block names
 			
 	for(var i=0;i<children.length;i++){
-		if(children[i].nodeName=="text"){
+		
+		if(children[i].nodeName=="text" || children[i].nodeName=="data"){
 			continue;
 		}
 		
@@ -123,7 +124,21 @@ function createBlocks(node, name, colour){
 	}
 			
 	var nodeType=node.nodeName;
+	
+	/*
+	//could be used to handle datatypes efficiently. But causes multiple element siblings to behave as inline inputs
+	
+	if(nodeType=="text"){
+		var data="this.appendDummyInput().appendField(new Blockly.FieldTextInput(''),'"+name+"');this.setInputsInline(true);";
+		return data;
+	}
 			
+	else if(nodeType=="element" || nodeType=="attribute"){
+		var data="this.appendDummyInput().appendField('"+name+"');";
+		blockData=data+blockData;
+	}
+	*/
+		
 	if(nodeType=="element"){
 		if(children.length==1 && children[0].nodeName=="text"){
 			//data contains data that the current tag will generate.
@@ -133,6 +148,12 @@ function createBlocks(node, name, colour){
 			var data="this.appendDummyInput().appendField('"+name+"');";
 			blockData=data+blockData;
 		}
+	}
+	
+	//attributes do not check the level below them as there is no functionality currently to handle datatypes and parameters. At the attribute node, a dummy input which has a label and an input field is generated. 
+	else if(nodeType=="attribute"){
+		var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
+		return data;
 	}
 			
 			
