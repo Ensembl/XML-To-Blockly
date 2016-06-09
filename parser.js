@@ -207,15 +207,19 @@ function createBlocks(node, name, colour){
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
 	}
 	
-	
+	//zeroOrMore and oneOrMore have almost the same structure. oneOrMore just keeps track of IDs for validation while saving.
 	//get data from all children. Create a block for them. Send appendStatementInput to parent.
-	else if(nodeType=="oneOrMore"){
+	else if(nodeType=="oneOrMore" || nodeType=="zeroOrMore"){
 		//instead of keeping just block_+name as the block name, :child has been added to the name to handle cases where the parent oneOrMore node is also supposed to be in the form of a block. eg. <choice><oneOrMore></oneOrMore>.....</choice>
 		var blockName="block_"+name+":child";
 		var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+blockData+"this.setPreviousStatement(true,['"+blockName+"','"+name+"']);this.setNextStatement(true,['"+blockName+"']);this.setColour("+colour+");}};";
 		
-		var data="this.appendStatementInput('"+name+"').setCheck(['"+blockName+"']).appendField('"+name+"');oneOrMoreBlocks.push(this.id);";
-		
+		var data;
+		if(nodeType=="oneOrMore"){
+			data="this.appendStatementInput('"+name+"').setCheck(['"+blockName+"']).appendField('"+name+"');oneOrMoreBlocks.push(this.id);";
+		}else{
+			data="this.appendStatementInput('"+name+"').setCheck(['"+blockName+"']).appendField('"+name+"');";
+		}
 		blocks.push(finalBlock);
 		blockNames.push(blockName);
 		return data;
