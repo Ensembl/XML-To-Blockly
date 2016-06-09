@@ -13,18 +13,23 @@
 		width:100%;
 		border:1px solid black;
 	}
-	
+	#id{
+		left:50%;
+	}
 	</style>
 </head>
 
 <body>
 	<input type="file" id="file"></input>
+	<button id="saveBtn" onclick="validate();">Save</button>
 	<div id="results"></div>
 	<div id="blocklyDiv"></div>
 	<xml id="startBlocks" style="display: none">
 	</xml>
 	
+	
 	<script src="parser.js"></script>
+	
 </body>
 </html>
 
