@@ -18,6 +18,7 @@ var xmlDoc;
 var elements=[];
 var blocks=[];
 var blockNames=[];
+var oneOrMoreBlocks=[];
 		
 //init function for initializing the Blockly block area
 function init(){
@@ -213,7 +214,7 @@ function createBlocks(node, name, colour){
 		var blockName="block_"+name+":child";
 		var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+blockData+"this.setPreviousStatement(true,['"+blockName+"','"+name+"']);this.setNextStatement(true,['"+blockName+"']);this.setColour("+colour+");}};";
 		
-		var data="this.appendStatementInput('"+name+"').setCheck(['"+blockName+"']).appendField('"+name+"');";
+		var data="this.appendStatementInput('"+name+"').setCheck(['"+blockName+"']).appendField('"+name+"');oneOrMoreBlocks.push(this.id);";
 		
 		blocks.push(finalBlock);
 		blockNames.push(blockName);
@@ -245,3 +246,76 @@ function createBlocks(node, name, colour){
 		
 //Adds an event listener for detecting whether the user has provided a file as input or not.
 document.getElementById("file").addEventListener('change',readFile);
+
+
+//this commented part contains a few things that were tried out(not necessarily together) to validate oneOrMore but it didn't work properly. Kept now in case some idea from here is required in future.
+/*
+function validate(){
+	var workspace=Blockly.getMainWorkspace();
+	for(var i=0;i<oneOrMoreBlocks.length;i++){
+		var currentBlock=Blockly.Block.getById(oneOrMoreBlocks[i],workspace);
+		
+		if(currentBlock==null){
+			console.log("null for id: "+oneOrMoreBlocks[i]);
+			continue;
+		}
+		
+		var numChildren=currentBlock.childBlocks_.length;
+		if(numChildren==0){
+			alert("Block "+currentBlock.type+" needs to have at least one child");
+		}else{
+			console.log(currentBlock);
+		}
+		
+		
+		var c=currentBlock.getDescendants();
+		console.log(currentBlock.type+" "+c.length);
+	}
+	
+}*/
+
+//function to check if all the oneOrMore blocks have children attached to them.
+function validate(){
+	var workspace=Blockly.getMainWorkspace();
+	var allClear=true;
+	for(var i=0;i<oneOrMoreBlocks.length;i++){
+		var currentBlock=Blockly.Block.getById(oneOrMoreBlocks[i],workspace);
+		var foundChild=false;
+		var connections=[];
+		var children=[];
+		var childBlockNames=[];	//contains all the allowed child block names
+		
+		if(currentBlock==null){
+			continue;
+		}else{
+			//get all children of the current oneOrMore block being tested
+			children=currentBlock.getChildren();
+			//get all connection types of the current block
+			connections=currentBlock.getConnections_();
+			
+			//last index of the array indicates the types of allowed connections for children blocks.
+			var childConn=connections[connections.length-1];
+			
+			//childConn contains a field check_ which is an array of the valid block types that can be the children of current block. We add these names to childBlockNames
+			var typesOfChildren=childConn.check_;
+			for (var j=0;j<typesOfChildren.length;j++){
+				childBlockNames=typesOfChildren[j];
+			}
+			
+			//now we parse through all the children of the current block being tested to check if it actually has a nested child element and not just a nextStatement. foundChild keeps track of whether currentBlock has at least one nested child attached to it.
+			for(var j=0;j<children.length;j++){
+				var currentChildBeingEvaluated=children[j].type;
+				if(childBlockNames.indexOf(currentChildBeingEvaluated)!=-1){
+					foundChild=true;
+				}
+			}
+			if(foundChild==false){
+				alert(currentBlock.type+" need to have at least one child");
+				allClear=false;
+			}
+		}
+	}
+	if(allClear==true){
+		alert("You may save this!");
+	}
+}
