@@ -101,8 +101,13 @@ function createBlocks(node, name, colour){
 	var childNames=[];	//Keeps track of children block names
 			
 	for(var i=0;i<children.length;i++){
+		if(children[i].nodeName=="text"){
+			if(children.length==1){
+				continue;
+			}
+		}
 		
-		if(children[i].nodeName=="text" || children[i].nodeName=="data"){
+		if(children[i].nodeName=="data"){
 			continue;
 		}
 		
@@ -237,13 +242,17 @@ function createBlocks(node, name, colour){
 	
 	
 	//the ref block will have a notch above or below or both according to its parent element. The notch is added to it according to the code written to handle choice and oneOrMore elements.
-	else if(nodeType="ref"){
+	else if(nodeType=="ref"){
 		var correspondingDefineName=node.getAttribute("name");
 		var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('block_"+correspondingDefineName+"');";
 		return data;
 	}
-			
-			
+	
+	else if(nodeType=="text"){
+		var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
+		return data;
+	}
+	
 	//returns block data to the parent node that had called it
 	return blockData;
 }
@@ -314,7 +323,7 @@ function validate(){
 				}
 			}
 			if(foundChild==false){
-				alert(currentBlock.type+" need to have at least one child");
+				alert(currentBlock.type+" needs to have at least one child");
 				allClear=false;
 			}
 		}
