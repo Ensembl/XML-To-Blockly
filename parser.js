@@ -19,6 +19,7 @@ var elements=[];
 var blocks=[];
 var blockNames=[];
 var oneOrMoreBlocks=[];
+var optionalNames=[];
 		
 //init function for initializing the Blockly block area
 function init(){
@@ -229,6 +230,25 @@ function createBlocks(node, name, colour){
 		blockNames.push(blockName);
 		return data;
 	}
+	
+	//add whatever we get from children nodes to the optional node and return that.
+	else if(nodeType=="optional"){
+		var childFields=[];
+		for(var i=0;i<childNames.length;i++){
+			var fieldName=childNames[i].split("block_");
+			fieldName=fieldName[1];
+			childFields.push(fieldName.toString());
+		}
+		optionalNames=[];
+		//optionalNames="'"+childFields.join("','")+"'";
+		optionalNames=childFields;
+		//var	data="this.appendDummyInput('"+name+"').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker(["+childNamesInFormat+"])), '"+name+"_checkbox').appendField('"+name+"');";
+		var	data="this.appendDummyInput('"+name+"').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox').appendField('"+name+"');";
+		blockData=data+blockData;
+		//blocks.push(finalBlock);
+		//blockNames.push(blockName);
+		//return data;
+	}
 			
 			
 	//creates define blocks. The define block that is created inly has a notch above and never below. It is the ref code which changes according to whether or not the ref code is in a choice or oneOrMore block.
@@ -331,4 +351,38 @@ function validate(){
 	if(allClear==true){
 		alert("You may save this!");
 	}
+}
+
+function checker(){
+	//alert("in");
+	var source=this.sourceBlock_;
+	console.log(optionalNames.length);
+	//get the name of the checkbox' dummyInput 
+	var checkBoxFieldName=this.name.split("_checkbox")[0];
+	
+	var it;
+	var iplist=source.inputList;
+	//find out at which position of the inputList of source block, the checkbox is present.
+	for(var it=0;it<iplist.length;it++){
+		if(iplist[it].name==checkBoxFieldName){
+			break;
+		}
+	}
+	console.log("checkbox field is at position "+it+" in iplist");
+	//now it contains the index from where we have to set values as invisible
+	
+	if(this.state_==false){
+		for(var i=it+1;i<=(it+optionalNames.length);i++){
+			iplist[i].setVisible(true);
+		}
+		//console.log(source.inputList);
+		return;
+	}else if(this.state_==true){
+		for(var i=it+1;i<=(it+optionalNames.length);i++){
+			console.log(iplist[i]);
+			iplist[i].setVisible(false);
+		}
+		return;
+		//console.log(source.inputList);
+	}	
 }
