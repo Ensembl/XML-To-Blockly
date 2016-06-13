@@ -204,13 +204,13 @@ function createBlocks(node, name, colour){
 		for(var i=0;i<childData.length;i++){
 			var blockName=childNames[i];
 			
-			var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+childData[i]+"this.setPreviousStatement(true);this.setColour("+colour+");}};";
+			var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+childData[i]+"this.setPreviousStatement(true,['"+name+"','"+blockName+"']);this.setColour("+colour+");}};";
 			blocks.push(finalBlock);
 			blockNames.push(blockName);
 		}
 				
 		//This appends to the block which contains the choice tag and creates a notch there.
-		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
+		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+",'"+name+"']).appendField('"+name+"');";
 	}
 	
 	//zeroOrMore and oneOrMore have almost the same structure. oneOrMore just keeps track of IDs for validation while saving.
@@ -328,9 +328,10 @@ function validate(){
 			
 			//last index of the array indicates the types of allowed connections for children blocks.
 			var childConn=connections[connections.length-1];
-			
+			console.log(childConn);
 			//childConn contains a field check_ which is an array of the valid block types that can be the children of current block. We add these names to childBlockNames
 			var typesOfChildren=childConn.check_;
+			console.log(typesOfChildren);
 			for (var j=0;j<typesOfChildren.length;j++){
 				childBlockNames=typesOfChildren[j];
 			}
