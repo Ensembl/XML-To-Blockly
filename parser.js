@@ -12,6 +12,7 @@
  * limitations under the License.
  */ 
 
+var blocklyWorkspace;
 var blocks;
 var blockNames;
 var oneOrMoreBlocks;
@@ -19,7 +20,7 @@ var optionalNames;
 		
 //init function for initializing the Blockly block area
 function init(){
-	var x=Blockly.inject('blocklyDiv', {
+	blocklyWorkspace = Blockly.inject('blocklyDiv', {
         toolbox: document.getElementById('toolbox'),
         collapse: true
 	});
@@ -74,8 +75,11 @@ function handleRNG( unparsedRNG ){
 	document.getElementById('toolbox_code').text = toolbox_code_accu;
     document.getElementById('toolbox').innerHTML = toolbox_data_accu;
     document.getElementById('results').innerHTML = results_data_accu;
-			
-    init();
+
+    //blocklyWorkspace.clear();
+    //blocklyWorkspace.dispose();
+    //init();
+    //blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
 }
 		
 //Removes #text nodes
