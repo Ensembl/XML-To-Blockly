@@ -76,10 +76,10 @@ function handleRNG( unparsedRNG ){
     document.getElementById('toolbox').innerHTML = toolbox_data_accu;
     document.getElementById('results').innerHTML = results_data_accu;
 
-    //blocklyWorkspace.clear();
+    blocklyWorkspace.clear();
     //blocklyWorkspace.dispose();
     //init();
-    //blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
+    blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
 }
 		
 //Removes #text nodes
