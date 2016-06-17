@@ -333,7 +333,7 @@ function validate(){
 			var typesOfChildren=childConn.check_;
 			console.log(typesOfChildren);
 			for (var j=0;j<typesOfChildren.length;j++){
-				childBlockNames=typesOfChildren[j];
+				childBlockNames.push(typesOfChildren[j]);
 			}
 			
 			//now we parse through all the children of the current block being tested to check if it actually has a nested child element and not just a nextStatement. foundChild keeps track of whether currentBlock has at least one nested child attached to it.
