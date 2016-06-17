@@ -12,11 +12,10 @@
  * limitations under the License.
  */ 
 
-var elements=[];
-var blocks=[];
-var blockNames=[];
-var oneOrMoreBlocks=[];
-var optionalNames=[];
+var blocks;
+var blockNames;
+var oneOrMoreBlocks;
+var optionalNames;
 		
 //init function for initializing the Blockly block area
 function init(){
@@ -39,6 +38,11 @@ function readFile(evt){
 //handles xml by creating blocks as per RNG rules
 function handleRNG( unparsedRNG ){
 
+    blocks=[];
+    blockNames=[];
+    oneOrMoreBlocks=[];
+    optionalNames=[];
+
     var xmlParser=new DOMParser();
     var rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
 	
@@ -56,20 +60,22 @@ function handleRNG( unparsedRNG ){
 	var colour=0;
 	createBlocks(root,"start",colour);
 	
-	var script=document.createElement('script');
-	script.type="text/javascript";
+    var toolbox_code_accu='';
+    var toolbox_data_accu='';
+    var results_data_accu='';
 	for(var i=0;i<blocks.length;i++){
-		var resultsData=document.getElementById("results");
-		resultsData.innerHTML=resultsData.innerHTML+"<p>"+blocks[i]+"</p>"
-		script.text+=blocks[i];
-			
-		var blocklyXml=document.getElementById('toolbox');
 		console.log(blockNames[i]);
-		blocklyXml.innerHTML=blocklyXml.innerHTML+"<block type='"+blockNames[i]+"'></block>";
+
+		toolbox_code_accu += blocks[i];
+        toolbox_data_accu += "<block type='"+blockNames[i]+"'></block>";
+        results_data_accu += "<p>"+blocks[i]+"</p>";
 	}
-	document.getElementsByTagName("head")[0].appendChild(script);
+
+	document.getElementById('toolbox_code').text = toolbox_code_accu;
+    document.getElementById('toolbox').innerHTML = toolbox_data_accu;
+    document.getElementById('results').innerHTML = results_data_accu;
 			
-	init();
+    init();
 }
 		
 //Removes #text nodes
