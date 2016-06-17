@@ -5,14 +5,9 @@
 	<title>Parsing xml</title>
 	<script src="blockly_compressed.js"></script>
 	<script src="msg/js/en.js"></script>
+	<script src="parser.js"></script>
 	
 	<style>
-	#blocklyDiv{
-		position:absolute;
-		height:100%;
-		width:100%;
-		border:1px solid black;
-	}
 	#id{
 		left:50%;
 	}
@@ -20,17 +15,26 @@
 </head>
 
 <body>
-	<input type="file" id="file"></input>
-	<button id="saveBtn" onclick="validate();">Save</button>
+    <div style="height: 600px">
+        <div id="blocklyDiv" style="float: left; width: 72%; height: 100%; border:1px solid black"></div>
+
+        <xml id="toolbox" style="display: none">
+        </xml>
+
+        <div style="margin-left: 74%; width: 24%; height: 100%">
+        <input type="file" id="file"/>
+        <button onclick="handleRNG( document.getElementById('rng_area').value )">interpret RNG from the textarea below</button>
+        <textarea id=rng_area style="height: 95%; width: 100%"></textarea>
+        <button id="saveBtn" onclick="validate();">Save</button>
+        </div>
+    </div>
+
 	<div id="results"></div>
-	<div id="blocklyDiv"></div>
-	<xml id="startBlocks" style="display: none">
-	</xml>
-	
-	
-	<script src="parser.js"></script>
+
+    <script>
+        //Adds an event listener for detecting whether the user has provided a file as input or not.
+        document.getElementById("file").addEventListener('change',readFile);
+    </script>
 	
 </body>
 </html>
-
-
