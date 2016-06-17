@@ -72,13 +72,12 @@ function handleRNG( unparsedRNG ){
         results_data_accu += "<p>"+blocks[i]+"</p>";
 	}
 
-	document.getElementById('toolbox_code').text = toolbox_code_accu;
+    eval( toolbox_code_accu );
+
     document.getElementById('toolbox').innerHTML = toolbox_data_accu;
     document.getElementById('results').innerHTML = results_data_accu;
 
     blocklyWorkspace.clear();
-    //blocklyWorkspace.dispose();
-    //init();
     blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
 }
 		
