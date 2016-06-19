@@ -378,6 +378,7 @@ function checker(){
 		for(var i=it+1;i<=(it+optionalNames.length);i++){
 			iplist[i].setVisible(true);
 		}
+		source.render();
 		//console.log(source.inputList);
 		return;
 	}else if(this.state_==true){
@@ -385,6 +386,7 @@ function checker(){
 			console.log(iplist[i]);
 			iplist[i].setVisible(false);
 		}
+		source.render();
 		return;
 		//console.log(source.inputList);
 	}	
