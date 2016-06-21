@@ -17,6 +17,7 @@ var blocks;
 var blockNames;
 var oneOrMoreBlocks;
 var optionalNames;
+var rngDoc;
 		
 //init function for initializing the Blockly block area
 function init(){
@@ -45,7 +46,7 @@ function handleRNG( unparsedRNG ){
     optionalNames=[];
 
     var xmlParser=new DOMParser();
-    var rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
+    rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
 	
 	removeRedundantText(rngDoc.documentElement);
 		
@@ -53,13 +54,13 @@ function handleRNG( unparsedRNG ){
 	var defineNodes=rngDoc.getElementsByTagName("define");
 	for(var i=0;i<defineNodes.length;i++){
 		//fixed color - 295 for define blocks for now.
-		createBlocks(defineNodes[i],defineNodes[i].getAttribute("name"), 295);
+		createBlocks(defineNodes[i],defineNodes[i].getAttribute("name"), 295, true, -1);
 	}
 		
 	var root=rngDoc.getElementsByTagName("start")[0];
 
 	var colour=0;
-	createBlocks(root,"start",colour);
+	createBlocks(root,"start",colour,true);
 	
     var toolbox_code_accu='';
     var toolbox_data_accu='';
@@ -100,11 +101,15 @@ function removeRedundantText(node){
 }
 		
 //The name for every child block is sent to it by its parent. The child does not need to find its place in the hierarchy. The parent node does it for all of its children and sends them their name while calling them.
-function createBlocks(node, name, colour){
+//includeInList helps in validating the RNG schema. Currently its functionality has not been implemented.
+//listOfRefs contains a list of refs that we have encountered so far.
+function createBlocks(node, name, colour, includeInList, listOfRefs){
 	var children=node.childNodes;
 	var blockData="";	//Contains data sent by all the children merged together one after the other.
 	var childData=[];	//Keeps track of block data sent by children.
 	var childNames=[];	//Keeps track of children block names
+			
+	includeInList=classifyNode(node,includeInList);		//will be used for validation. It tells us whether the current ref that we have encountered is one that will be compulsorily called(includeInList=true) or its one that's inside an optional node and won't create a loop(includeInList=false)
 			
 	for(var i=0;i<children.length;i++){
 		if(children[i].nodeName=="text"){
@@ -132,7 +137,7 @@ function createBlocks(node, name, colour){
 		//The name for the child is given as <parent name/hierarchy>+<first 3 characters of the child element>+<index of the child as per its parent block>.
 		var nameForChild=name+":"+nameAttr+i;
 				
-		var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45);
+		var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45, includeInList, listOfRefs);
 		blockData+=dataReceivedFromChild;
 		childData.push(dataReceivedFromChild);
 		childNames.push("block_"+nameForChild);
@@ -258,19 +263,72 @@ function createBlocks(node, name, colour){
 			
 	//creates define blocks. The define block that is created inly has a notch above and never below. It is the ref code which changes according to whether or not the ref code is in a choice or oneOrMore block.
 	else if(nodeType=="define"){
-		var blockName="block_"+name;
-		var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.appendDummyInput().appendField('"+name+"');this.setColour("+colour+");"+blockData+"this.setPreviousStatement(true);}};";
-		blocks.push(finalBlock);
-		blockNames.push(blockName);
-		return;
+		if(listOfRefs==-1){//when blocks are being created before we start parsing the xml tree
+			var blockName="block_"+name;
+			var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.appendDummyInput().appendField('"+name+"');this.setColour("+colour+");"+blockData+"this.setPreviousStatement(true);}};";
+			blocks.push(finalBlock);
+			blockNames.push(blockName);
+			return;
+		}else{//if call is from a ref node
+			var data="this.appendDummyInput().appendField('"+name+"');";
+			blockData=data+blockData;
+		}
 	}
 	
 	
 	//the ref block will have a notch above or below or both according to its parent element. The notch is added to it according to the code written to handle choice and oneOrMore elements.
 	else if(nodeType=="ref"){
 		var correspondingDefineName=node.getAttribute("name");
+		try{
+			//if ref is encountered while creating define blocks
+			if(listOfRefs==-1){	
+				var correspondingDefineName=node.getAttribute("name");
+				var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('block_"+correspondingDefineName+"');";
+				return data;
+			}
+			//if we encounter a ref for the first time while parsing XML tree
+			else if(listOfRefs==undefined || listOfRefs.indexOf(correspondingDefineName)==-1){
+				if(listOfRefs==undefined){
+					listOfRefs=[];
+				}
+				listOfRefs.push(correspondingDefineName);
+			
+				var defs=rngDoc.getElementsByTagName("define");
+				var corrDef;
+				for(var i=0;i<defs.length;i++){
+					if(defs[i].getAttribute("name")==correspondingDefineName){
+						corrDef=defs[i];
+						break;
+					}
+				}
+				blockData=createBlocks(corrDef, name, colour, includeInList, listOfRefs);
+				console.log("from ref:");
+				console.log(corrDef);
+			}
+			//if we encounter a ref for the second time while parsing the tree
+			else if(listOfRefs.indexOf(correspondingDefineName)!=-1){
+				//if the block is repeated inside an optional statement, then we can create blocks for it.
+				var correspondingDefineName=node.getAttribute("name");
+				var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('block_"+correspondingDefineName+"');";
+				return data;
+				/*
+				if(includeInList==false){
+					alert("found "+correspondingDefineName+" again. Will create a block for it");
+				}else{
+					alert("Please check this RNG schema");
+				}
+				*/
+			}
+		}catch(e){
+			console.log(e);
+		}
+		
+	
+		/*
+		var correspondingDefineName=node.getAttribute("name");
 		var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('block_"+correspondingDefineName+"');";
 		return data;
+		*/
 	}
 	
 	else if(nodeType=="text"){
@@ -392,3 +450,20 @@ function checker(){
 	}	
 }
 
+
+//function to classify whether the node is on an optional path(inside optional, zeroOrMore tags) or a compulsory path
+function classifyNode(node, include){
+	var ans;
+	var type=node.nodeName;
+	if(type=="optional" || type=="zeroOrMore"){
+		ans=false;	//if its an optional node, don't keep track of it.
+	}else{
+		if(include!=false){
+			ans=true;	//keep track of a node only if it isn't optional and its parent also is not optional
+		}else{
+			ans=false;
+		}
+	}
+	console.log("include is set to "+ans+" for node "+type);
+	return ans;
+}
