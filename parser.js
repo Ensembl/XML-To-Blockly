@@ -66,8 +66,6 @@ function handleRNG( unparsedRNG ){
     var toolbox_data_accu='';
     var results_data_accu='';
 	for(var i=0;i<blocks.length;i++){
-		console.log(blockNames[i]);
-
 		toolbox_code_accu += blocks[i];
         toolbox_data_accu += "<block type='"+blockNames[i]+"'></block>";
         results_data_accu += "<p>"+blocks[i]+"</p>";
@@ -90,7 +88,6 @@ function removeRedundantText(node){
 	var children=node.childNodes;
 	for(var i=0;i<children.length;i++){
 		if(children[i].nodeName=="#text"){
-			//console.log("found text");
 			children[i].parentNode.removeChild(children[i]);
 			i--;
 			continue;
@@ -252,12 +249,8 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 		optionalNames=[];
 		//optionalNames="'"+childFields.join("','")+"'";
 		optionalNames=childFields;
-		//var	data="this.appendDummyInput('"+name+"').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker(["+childNamesInFormat+"])), '"+name+"_checkbox').appendField('"+name+"');";
 		var	data="this.appendDummyInput('"+name+"').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox').appendField('"+name+"');";
 		blockData=data+blockData;
-		//blocks.push(finalBlock);
-		//blockNames.push(blockName);
-		//return data;
 	}
 			
 			
@@ -302,8 +295,6 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 					}
 				}
 				blockData=createBlocks(corrDef, name, colour, includeInList, listOfRefs);
-				console.log("from ref:");
-				console.log(corrDef);
 			}
 			//if we encounter a ref for the second time while parsing the tree
 			else if(listOfRefs.indexOf(correspondingDefineName)!=-1){
@@ -340,32 +331,6 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 	return blockData;
 }
 		
-
-//this commented part contains a few things that were tried out(not necessarily together) to validate oneOrMore but it didn't work properly. Kept now in case some idea from here is required in future.
-/*
-function validate(){
-	var workspace=Blockly.getMainWorkspace();
-	for(var i=0;i<oneOrMoreBlocks.length;i++){
-		var currentBlock=Blockly.Block.getById(oneOrMoreBlocks[i],workspace);
-		
-		if(currentBlock==null){
-			console.log("null for id: "+oneOrMoreBlocks[i]);
-			continue;
-		}
-		
-		var numChildren=currentBlock.childBlocks_.length;
-		if(numChildren==0){
-			alert("Block "+currentBlock.type+" needs to have at least one child");
-		}else{
-			console.log(currentBlock);
-		}
-		
-		
-		var c=currentBlock.getDescendants();
-		console.log(currentBlock.type+" "+c.length);
-	}
-	
-}*/
 
 //function to check if all the oneOrMore blocks have children attached to them.
 function validate(){
@@ -415,9 +380,7 @@ function validate(){
 }
 
 function checker(){
-	//alert("in");
 	var source=this.sourceBlock_;
-	console.log(optionalNames.length);
 	//get the name of the checkbox' dummyInput 
 	var checkBoxFieldName=this.name.split("_checkbox")[0];
 	
@@ -429,7 +392,6 @@ function checker(){
 			break;
 		}
 	}
-	console.log("checkbox field is at position "+it+" in iplist");
 	//now it contains the index from where we have to set values as invisible
 	
 	if(this.state_==false){
@@ -437,16 +399,13 @@ function checker(){
 			iplist[i].setVisible(true);
 		}
 		source.render();
-		//console.log(source.inputList);
 		return;
 	}else if(this.state_==true){
 		for(var i=it+1;i<=(it+optionalNames.length);i++){
-			console.log(iplist[i]);
 			iplist[i].setVisible(false);
 		}
 		source.render();
 		return;
-		//console.log(source.inputList);
 	}	
 }
 
@@ -464,6 +423,5 @@ function classifyNode(node, include){
 			ans=false;
 		}
 	}
-	console.log("include is set to "+ans+" for node "+type);
 	return ans;
 }
