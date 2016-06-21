@@ -1,30 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
 	<start>
-		<ref name="band"/>
+		<ref name="A"/>
 	</start>
 	
-	<define name="band">
-		<element name="name">
-			<text/>
-		</element>
-		<oneOrMore>
-			<ref name="member"/>
-		</oneOrMore>
-		<element name="frontman">
-			<ref name="member"/>
-		</element>	
+	<define name="A">
+		<ref name="B"/>
+		<ref name="C"/>
 	</define>
 	
-	<define name="member">
-		<element name="first_name">
+	<define name="B">
+		<element name="B_child">
 			<text/>
 		</element>
-		<element name="last_name">
+		<ref name="C"/>
+	</define>
+	
+	<define name="C">
+		<element name="C_child">
 			<text/>
 		</element>
-		<element name="part_of">
-			<ref name="band"/>
-		</element>
+		<optional>
+			<ref name="A"/>
+		</optional>	
 	</define>
 </grammar>	
