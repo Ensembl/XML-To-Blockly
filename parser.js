@@ -49,18 +49,19 @@ function handleRNG( unparsedRNG ){
     rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
 	
 	removeRedundantText(rngDoc.documentElement);
-		
+	
+	/*
 	//get all the define blocks in the document and create blocks for them one by one.
 	var defineNodes=rngDoc.getElementsByTagName("define");
 	for(var i=0;i<defineNodes.length;i++){
 		//fixed color - 295 for define blocks for now.
 		createBlocks(defineNodes[i],defineNodes[i].getAttribute("name"), 295, true, -1);
 	}
-		
+	*/
 	var root=rngDoc.getElementsByTagName("start")[0];
 
 	var colour=0;
-	createBlocks(root,"start",colour,true);
+	createBlocks(root,"start",colour,false);
 	
     var toolbox_code_accu='';
     var toolbox_data_accu='';
@@ -100,13 +101,13 @@ function removeRedundantText(node){
 //The name for every child block is sent to it by its parent. The child does not need to find its place in the hierarchy. The parent node does it for all of its children and sends them their name while calling them.
 //includeInList helps in validating the RNG schema. Currently its functionality has not been implemented.
 //listOfRefs contains a list of refs that we have encountered so far.
-function createBlocks(node, name, colour, includeInList, listOfRefs){
+function createBlocks(node, name, colour, creatingBlock, listOfRefs){
 	var children=node.childNodes;
 	var blockData="";	//Contains data sent by all the children merged together one after the other.
 	var childData=[];	//Keeps track of block data sent by children.
 	var childNames=[];	//Keeps track of children block names
 			
-	includeInList=classifyNode(node,includeInList);		//will be used for validation. It tells us whether the current ref that we have encountered is one that will be compulsorily called(includeInList=true) or its one that's inside an optional node and won't create a loop(includeInList=false)
+	//includeInList=classifyNode(node,includeInList);		//will be used for validation. It tells us whether the current ref that we have encountered is one that will be compulsorily called(includeInList=true) or its one that's inside an optional node and won't create a loop(includeInList=false)
 			
 	for(var i=0;i<children.length;i++){
 		if(children[i].nodeName=="text"){
@@ -134,7 +135,7 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 		//The name for the child is given as <parent name/hierarchy>+<first 3 characters of the child element>+<index of the child as per its parent block>.
 		var nameForChild=name+":"+nameAttr+i;
 				
-		var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45, includeInList, listOfRefs);
+		var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45, creatingBlock, listOfRefs);
 		blockData+=dataReceivedFromChild;
 		childData.push(dataReceivedFromChild);
 		childNames.push("block_"+nameForChild);
@@ -256,16 +257,16 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 			
 	//creates define blocks. The define block that is created inly has a notch above and never below. It is the ref code which changes according to whether or not the ref code is in a choice or oneOrMore block.
 	else if(nodeType=="define"){
-		if(listOfRefs==-1){//when blocks are being created before we start parsing the xml tree
-			var blockName="block_"+name;
+		//if(listOfRefs==-1){//when blocks are being created before we start parsing the xml tree
+			/*var blockName="block_"+name;
 			var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.appendDummyInput().appendField('"+name+"');this.setColour("+colour+");"+blockData+"this.setPreviousStatement(true);}};";
 			blocks.push(finalBlock);
 			blockNames.push(blockName);
-			return;
-		}else{//if call is from a ref node
+			return;*/
+		//}else{//if call is from a ref node
 			var data="this.appendDummyInput().appendField('"+name+"');";
 			blockData=data+blockData;
-		}
+		//}
 	}
 	
 	
@@ -273,6 +274,104 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 	else if(nodeType=="ref"){
 		var correspondingDefineName=node.getAttribute("name");
 		try{
+			if(creatingBlock==false){//if we are not creating a block but just parsing start
+				if(listOfRefs==undefined){
+					listOfRefs=[];
+					listOfRefs.push(correspondingDefineName);
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs);
+				}else if(listOfRefs.indexOf(correspondingDefineName)==0){//we meet the starting ref again
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					if(blockNames.indexOf("block_"+correspondingDefineName)==-1){
+						listOfRefs=[];
+						listOfRefs.push(correspondingDefineName);
+						blockData=createBlocks(corrDef, correspondingDefineName, colour, true, listOfRefs);
+						var blockName="block_"+correspondingDefineName;
+						var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.setColour("+colour+");"+blockData+"this.setPreviousStatement(true);}};";
+						blocks.push(finalBlock);
+						blockNames.push(blockName);
+					}
+					var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('"+blockName+"');";
+					return data;
+				}else{
+					if(listOfRefs.indexOf(correspondingDefineName)==-1){//meet a ref for the first time
+						listOfRefs.push(correspondingDefineName);
+					}
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs);
+				}
+			}else{//when we are creating a block
+				if(listOfRefs==undefined){//first call for creating block
+					listOfRefs=[];
+					listOfRefs.push(name)
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					blockData=createBlocks(corrDef, correspondingDefineName, colour, creatingBlock, listOfRefs);
+				}else if(listOfRefs.indexOf(correspondingDefineName)==0){//meet the ref that we are creating a block for
+					var blockName="block_"+correspondingDefineName;
+					var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('"+blockName+"');";
+					return data;
+				}else{
+					if(listOfRefs.indexOf(correspondingDefineName)==-1){
+						listOfRefs.push(correspondingDefineName);
+					}
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs);
+				}
+				
+					
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			/*
+			
 			//if ref is encountered while creating define blocks
 			if(listOfRefs==-1){	
 				var correspondingDefineName=node.getAttribute("name");
@@ -294,7 +393,7 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 						break;
 					}
 				}
-				blockData=createBlocks(corrDef, name, colour, includeInList, listOfRefs);
+				blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs);
 			}
 			//if we encounter a ref for the second time while parsing the tree
 			else if(listOfRefs.indexOf(correspondingDefineName)!=-1){
@@ -309,7 +408,7 @@ function createBlocks(node, name, colour, includeInList, listOfRefs){
 					alert("Please check this RNG schema");
 				}
 				*/
-			}
+			//}
 		}catch(e){
 			console.log(e);
 		}
