@@ -101,7 +101,7 @@ function removeRedundantText(node){
 //The name for every child block is sent to it by its parent. The child does not need to find its place in the hierarchy. The parent node does it for all of its children and sends them their name while calling them.
 //includeInList helps in validating the RNG schema. Currently its functionality has not been implemented.
 //listOfRefs contains a list of refs that we have encountered so far.
-function createBlocks(node, name, colour, creatingBlock, listOfRefs){
+function createBlocks(node, name, colour, creatingBlock, listOfRefs, indexSpecifier){
 	var children=node.childNodes;
 	var blockData="";	//Contains data sent by all the children merged together one after the other.
 	var childData=[];	//Keeps track of block data sent by children.
@@ -135,7 +135,7 @@ function createBlocks(node, name, colour, creatingBlock, listOfRefs){
 		//The name for the child is given as <parent name/hierarchy>+<first 3 characters of the child element>+<index of the child as per its parent block>.
 		var nameForChild=name+":"+nameAttr+i;
 				
-		var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45, creatingBlock, listOfRefs);
+		var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45, creatingBlock, listOfRefs, indexSpecifier);
 		blockData+=dataReceivedFromChild;
 		childData.push(dataReceivedFromChild);
 		childNames.push("block_"+nameForChild);
@@ -273,6 +273,128 @@ function createBlocks(node, name, colour, creatingBlock, listOfRefs){
 	//the ref block will have a notch above or below or both according to its parent element. The notch is added to it according to the code written to handle choice and oneOrMore elements.
 	else if(nodeType=="ref"){
 		var correspondingDefineName=node.getAttribute("name");
+		if(listOfRefs==undefined){
+			listOfRefs=[];
+		}
+		var occurrences=getOccurrences(correspondingDefineName,listOfRefs);	//is a set
+		console.log(occurrences);
+		listOfRefs.push(correspondingDefineName);
+		//alert(listOfRefs);
+		
+		
+		if(creatingBlock==false){//start traversing from the start
+			
+			
+			if(occurrences.size==0){//never met this ref before!
+				var defs=rngDoc.getElementsByTagName("define");
+				var corrDef;
+				for(var i=0;i<defs.length;i++){
+					if(defs[i].getAttribute("name")==correspondingDefineName){
+						corrDef=defs[i];
+						break;
+					}
+				}
+				blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs, indexSpecifier);
+			}else{//there are previous occurrences of this ref
+				occurrences=Array.from(occurrences);
+				
+				var recursionFound=false;
+				for(var i=0;i<occurrences.length;i++){
+					if(occurrences[i]==0){
+						recursionFound=true;
+						//alert("reached starting ref again. found recursion.\ncreating new block for "+correspondingDefineName);
+						break;
+					}
+					
+					if(listOfRefs[occurrences[i]-1]==listOfRefs[listOfRefs.length-2]){//if parent of occurrence that is found==parent of current ref
+						recursionFound=true;
+						//alert("in the complicated if statement. found recursion.\ncreating new block for "+correspondingDefineName);
+						break;
+					}
+				}
+				
+				if(recursionFound==true){//send for block creation
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					if(blockNames.indexOf("block_"+correspondingDefineName)==-1){//if a block has not already been created for this ref
+						//listOfRefs=[];
+						//listOfRefs.push(correspondingDefineName);
+						//listOfRefs.push("breaker");
+						blockData=createBlocks(corrDef, correspondingDefineName, colour, true, listOfRefs, listOfRefs.length-1);
+						var blockName="block_"+correspondingDefineName;
+						var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.setColour("+colour+");"+blockData+"this.setPreviousStatement(true);}};";
+						blocks.push(finalBlock);
+						blockNames.push(blockName);
+					}
+					var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('"+blockName+"');";
+					return data;
+				}else{//continue like a normal ref
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs, indexSpecifier);
+				}
+			}
+		}else{//in the midst of creating a block for a ref
+			if(correspondingDefineName==listOfRefs[indexSpecifier]){//reached the starting ref again
+				console.log(listOfRefs);
+				console.log("at indexSpecifier-1: "+listOfRefs[indexSpecifier-1]+" and this one's parent: "+listOfRefs[listOfRefs.length-2]);
+				if(indexSpecifier==0 || listOfRefs[indexSpecifier-1]==listOfRefs[listOfRefs.length-2]){//get exact same pattern again
+					console.log('ahoy');
+					var blockName="block_"+correspondingDefineName;
+					var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('"+blockName+"');";
+					return data;
+				}else{
+					var defs=rngDoc.getElementsByTagName("define");
+					var corrDef;
+					for(var i=0;i<defs.length;i++){
+						if(defs[i].getAttribute("name")==correspondingDefineName){
+							corrDef=defs[i];
+							break;
+						}
+					}
+					blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs, indexSpecifier);
+				}	
+			}else if(blockNames.indexOf("block_"+correspondingDefineName)!=-1){
+				var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('"+blockName+"');";
+				return data;			
+			}else{
+				var defs=rngDoc.getElementsByTagName("define");
+				var corrDef;
+				for(var i=0;i<defs.length;i++){
+					if(defs[i].getAttribute("name")==correspondingDefineName){
+						corrDef=defs[i];
+						break;
+					}
+				}
+				blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs, indexSpecifier);
+			}
+		}
+		
+		
+		
+		/*
+		var defs=rngDoc.getElementsByTagName("define");
+		var corrDef;
+		for(var i=0;i<defs.length;i++){
+			if(defs[i].getAttribute("name")==correspondingDefineName){
+				corrDef=defs[i];
+				break;
+			}
+		}
+		blockData=createBlocks(corrDef, name, colour, creatingBlock, listOfRefs);
+		/*
 		try{
 			if(creatingBlock==false){//if we are not creating a block but just parsing start
 				if(listOfRefs==undefined){
@@ -296,7 +418,7 @@ function createBlocks(node, name, colour, creatingBlock, listOfRefs){
 							break;
 						}
 					}
-					if(blockNames.indexOf("block_"+correspondingDefineName)==-1){
+					if(blockNames.indexOf("block_"+correspondingDefineName)==-1){//if a block has not already been created for this ref
 						listOfRefs=[];
 						listOfRefs.push(correspondingDefineName);
 						blockData=createBlocks(corrDef, correspondingDefineName, colour, true, listOfRefs);
@@ -409,7 +531,7 @@ function createBlocks(node, name, colour, creatingBlock, listOfRefs){
 				}
 				*/
 			//}
-		}catch(e){
+		/*}catch(e){
 			console.log(e);
 		}
 		
@@ -520,6 +642,18 @@ function classifyNode(node, include){
 			ans=true;	//keep track of a node only if it isn't optional and its parent also is not optional
 		}else{
 			ans=false;
+		}
+	}
+	return ans;
+}
+
+
+function getOccurrences(name, list){
+	var ans=new Set();
+	for(var i=0;i<list.length;i++){
+		var index=list.indexOf(name,i);
+		if(index!=-1){
+			ans.add(index);
 		}
 	}
 	return ans;
