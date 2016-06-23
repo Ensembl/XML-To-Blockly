@@ -295,26 +295,12 @@ function createBlocks(node, name, colour, listOfRefs){
 		
 		if(creatingBlock==false){
 			if(occurrences.size==0){//not creating a block and this ref has never occurred before.
-				var defs=rngDoc.getElementsByTagName("define");
-				var corrDef;
-				for(var i=0;i<defs.length;i++){
-					if(defs[i].getAttribute("name")==correspondingDefineName){
-						corrDef=defs[i];
-						break;
-					}
-				}
+				var corrDef = findOneNodeByTagAndName(rngDoc, "define", correspondingDefineName);
 				blockData=createBlocks(corrDef, name, colour, listOfRefs);
 			}else{//this ref has occurred before
 				//if there's no block for this ref already, then create a block first
 				if(blockNames.indexOf("block_"+correspondingDefineName)==-1){//if a block has not already been created for this ref
-					var defs=rngDoc.getElementsByTagName("define");
-					var corrDef;
-					for(var i=0;i<defs.length;i++){
-						if(defs[i].getAttribute("name")==correspondingDefineName){
-							corrDef=defs[i];
-							break;
-						}
-					}
+					var corrDef = findOneNodeByTagAndName(rngDoc, "define", correspondingDefineName);
 					creatingBlock=true;
 					indexSpecifier=listOfRefs.length-1;
 					blockData=createBlocks(corrDef, correspondingDefineName, colour, listOfRefs);
@@ -336,14 +322,7 @@ function createBlocks(node, name, colour, listOfRefs){
 				var data="this.appendStatementInput('"+name+"').appendField('"+name+"').setCheck('"+blockName+"');";
 				return data;
 			}else{
-				var defs=rngDoc.getElementsByTagName("define");
-				var corrDef;
-				for(var i=0;i<defs.length;i++){
-					if(defs[i].getAttribute("name")==correspondingDefineName){
-						corrDef=defs[i];
-						break;
-					}
-				}
+				var corrDef = findOneNodeByTagAndName(rngDoc, "define", correspondingDefineName);
 				blockData=createBlocks(corrDef, name, colour, listOfRefs);
 			}
 		}
@@ -563,6 +542,26 @@ function classifyNode(node, include){
 		}
 	}
 	return ans;
+}
+
+function findNodesByTagAndName(doc, tag, name) {
+    var nodes = doc.getElementsByTagName(tag);
+    var matching_nodes = [];
+    for (var i=0; i<nodes.length; i++){
+        if (nodes[i].getAttribute("name") == name){
+            matching_nodes.push( nodes[i] );
+        }
+    }
+    return nodes;
+}
+
+function findOneNodeByTagAndName(doc, tag, name) {
+    var matching_nodes = findNodesByTagAndName(doc, tag, name);
+    if (matching_nodes.length >= 1) {
+        return matching_nodes[0];
+    } else {
+        alert("There are no '" + tag + "' nodes with the name '" + name + "'");
+    }
 }
 
 
