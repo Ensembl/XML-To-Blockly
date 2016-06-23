@@ -552,7 +552,7 @@ function findNodesByTagAndName(doc, tag, name) {
             matching_nodes.push( nodes[i] );
         }
     }
-    return nodes;
+    return matching_nodes;
 }
 
 function findOneNodeByTagAndName(doc, tag, name) {
