@@ -53,6 +53,7 @@ function handleRNG( unparsedRNG ){
     rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
 	
 	removeRedundantText(rngDoc.documentElement);
+	removeXMLComments(rngDoc.documentElement);
 	
 	/*
 	//get all the define blocks in the document and create blocks for them one by one.
@@ -89,15 +90,25 @@ function handleRNG( unparsedRNG ){
 //These are string elements present in the XML document between tags. The
 //RNG specification only allows these strings to be composed of whitespace.
 //They don't carry any information and can be removed
-function removeRedundantText(node){
+function removeRedundantText(node) {
+	_removeNodeNameRecursively(node, "#text");
+}
+
+// Remove #comment nodes because they we want to exclude them from children.length
+function removeXMLComments(node) {
+	_removeNodeNameRecursively(node, "#comment");
+}
+
+// Generic method to remove all the nodes with a given name
+function _removeNodeNameRecursively(node, name) {
 	var children=node.childNodes;
 	for(var i=0;i<children.length;i++){
-		if(children[i].nodeName=="#text"){
+		if(children[i].nodeName == name){
 			children[i].parentNode.removeChild(children[i]);
 			i--;
 			continue;
 		}else{
-			removeRedundantText(children[i]);
+			_removeNodeNameRecursively(children[i], name);
 		}
 	}
 }
@@ -124,10 +135,6 @@ function createBlocks(node, name, colour, listOfRefs){
 			continue;
 		}
 		
-		if(children[i].nodeName=="#comment"){
-			continue;
-		}
-
 		var nameAttr=children[i].getAttribute("name");
 		
 		if(nameAttr==null){
