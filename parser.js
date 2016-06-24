@@ -125,12 +125,6 @@ function createBlocks(node, name, colour, listOfRefs){
 	//includeInList=classifyNode(node,includeInList);		//will be used for validation. It tells us whether the current ref that we have encountered is one that will be compulsorily called(includeInList=true) or its one that's inside an optional node and won't create a loop(includeInList=false)
 			
 	for(var i=0;i<children.length;i++){
-		if(children[i].nodeName=="text"){
-			if(children.length==1){
-				continue;
-			}
-		}
-		
 		if(children[i].nodeName=="data"){
 			continue;
 		}
@@ -441,8 +435,17 @@ function createBlocks(node, name, colour, listOfRefs){
 	}
 	
 	else if(nodeType=="text"){
-		var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
-		return data;
+		var parent=node.parentNode;
+		var children=parent.childNodes;
+		if(parent.nodeName=="element" || parent.nodeName=="attribute"){
+			if(children.length>1){
+				var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
+				return data;
+			}
+		}else{	
+			var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
+			return data;
+		}
 	}
 	
 	//returns block data to the parent node that had called it
