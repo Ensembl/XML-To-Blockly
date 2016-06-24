@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+
+<start>
+	<ref name="first"/>
+</start>
+
+<define name="first">
+    <ref name="first_child"/>
+	<ref name="first_child"/>
+</define>
+
+<define name="first_child">
+	<element name="child_property">
+		<text/>
+	</element>
+</define>	
+
+</grammar>
