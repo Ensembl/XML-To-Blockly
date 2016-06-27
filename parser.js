@@ -22,6 +22,8 @@ var rngDoc;
 var creatingBlock=false;
 var indexSpecifier=-1;
 var seen=false;
+
+var magicBlocks=['oneOrMore','optional','zeroOrMore','choice'];
 		
 //init function for initializing the Blockly block area
 function init(){
@@ -123,7 +125,16 @@ function createBlocks(node, name, colour, listOfRefs){
 	var childNames=[];	//Keeps track of children block names
 			
 	//includeInList=classifyNode(node,includeInList);		//will be used for validation. It tells us whether the current ref that we have encountered is one that will be compulsorily called(includeInList=true) or its one that's inside an optional node and won't create a loop(includeInList=false)
-			
+	var isVisited=node.getAttribute("visited");
+	if(isVisited!=null || isVisited!=undefined){
+		var data="this.appendStatementInput().appendField('"+name+"');";
+		return data;
+		}
+	if(magicBlocks.indexOf(node.nodeName)!=-1){
+		node.setAttribute("visited","true");
+	}
+	
+	
 	for(var i=0;i<children.length;i++){
 		if(children[i].nodeName=="data"){
 			continue;
@@ -246,6 +257,7 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 	//add whatever we get from children nodes to the optional node and return that.
 	else if(nodeType=="optional"){
+		/*
 		var childFields=[];
 		for(var i=0;i<childNames.length;i++){
 			var fieldName=childNames[i].split("block_");
@@ -255,8 +267,19 @@ function createBlocks(node, name, colour, listOfRefs){
 		optionalNames=[];
 		//optionalNames="'"+childFields.join("','")+"'";
 		optionalNames=childFields;
-		var	data="this.appendDummyInput('"+name+"').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox').appendField('"+name+"');";
+		var	data="this.appendDummyInput('"+name+"').appendField(new Blockly.FieldCheckbox(\"FALSE\", checker), '"+name+"_checkbox').appendField('"+name+"');";
 		blockData=data+blockData;
+		*/
+		var childNamesInFormat="'"+childNames.join("','")+"'";
+		for(var i=0;i<childData.length;i++){
+			var blockName=childNames[i];
+			
+			var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+childData[i]+"this.setPreviousStatement(true,['"+name+"','"+blockName+"']);this.setColour("+colour+");}};";
+			blocks.push(finalBlock);
+			blockNames.push(blockName);
+		}
+				
+		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+",'"+name+"']).appendField('"+name+"');";
 	}
 			
 			
@@ -277,15 +300,21 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 	//the ref block will have a notch above or below or both according to its parent element. The notch is added to it according to the code written to handle choice and oneOrMore elements.
 	else if(nodeType=="ref"){
+		
+		
 		var correspondingDefineName=node.getAttribute("name");
+		console.log(correspondingDefineName);
 		if(listOfRefs==undefined){
 			listOfRefs=[];
 		}
-		var occurrences=getOccurrences(correspondingDefineName,listOfRefs);	//is a set
-		console.log(occurrences);
+		//var occurrences=getOccurrences(correspondingDefineName,listOfRefs);	//is a set
+		//console.log(occurrences);
 		listOfRefs.push(correspondingDefineName);
 		//alert(listOfRefs);
+		var corrDef = findOneNodeByTagAndName(rngDoc, "define", correspondingDefineName);
+				blockData=createBlocks(corrDef, name, colour, listOfRefs);
 		
+		/*
 		
 		if(creatingBlock==false){
 			if(occurrences.size==0){//not creating a block and this ref has never occurred before.
@@ -319,7 +348,7 @@ function createBlocks(node, name, colour, listOfRefs){
 				var corrDef = findOneNodeByTagAndName(rngDoc, "define", correspondingDefineName);
 				blockData=createBlocks(corrDef, name, colour, listOfRefs);
 			}
-		}
+		}*/
 		//alert("current: "+correspondingDefineName+" creating:"+creatingBlock);
 		
 		/*
