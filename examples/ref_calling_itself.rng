@@ -8,6 +8,8 @@
 		<element name="page">
 			<text/>
 		</element>	
-		<ref name="book"/>
+		<optional>
+			<ref name="book"/>
+		</optional>	
 	</define>
 </grammar>	
