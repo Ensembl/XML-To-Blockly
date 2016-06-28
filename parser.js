@@ -56,30 +56,110 @@ function handleRNG( unparsedRNG ){
 	
 	removeRedundantText(rngDoc.documentElement);
 	removeXMLComments(rngDoc.documentElement);
-	
-	var root=rngDoc.getElementsByTagName("start")[0];
+
+	var startNode=rngDoc.getElementsByTagName("start")[0];
 
 	var colour=0;
-	createBlocks(root,"start",colour);
-	
-    var toolbox_code_accu='';
-    var toolbox_data_accu='';
-    var results_data_accu='';
-	for(var i=0;i<blocks.length;i++){
-		toolbox_code_accu += blocks[i];
-        toolbox_data_accu += "<block type='"+blockNames[i]+"'></block>";
-        results_data_accu += "<p>"+blocks[i]+"</p>";
-	}
+	//createBlocks(startNode, "start", colour);
 
-    eval( toolbox_code_accu );
+    var codeDict    = {};    // maps block names to the code (to be reviewed)
+    createOneBlock(codeDict, startNode.childNodes, "start", colour, false, false);
 
-    document.getElementById('toolbox').innerHTML = toolbox_data_accu;
-    document.getElementById('results').innerHTML = results_data_accu;
+    var toolboxXML  = "";
+    var allCode     = "";
+    for (var blockName in codeDict) {
+        toolboxXML  += "<block type='" + blockName + "'></block>";
+        allCode     += "Blockly.Blocks['" + blockName+"']=" + codeDict[blockName];
+    }
+    document.getElementById('toolbox').innerHTML = toolboxXML;
+    document.getElementById('results').innerHTML = allCode;
+
+    eval(allCode);
 
     blocklyWorkspace.clear();
     blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
 }
-		
+
+
+var hue = new function() {      // maintain a closure around nextHue
+    var hueStep = 211;
+    var nextHue = 0;
+
+    this.generate = function() { var currHue=nextHue; nextHue = (currHue+hueStep)%360; return currHue; }
+}
+
+
+function createOneBlock(codeDict, children, path, colour, top, bottom) {
+
+	var blocklyCode = "";   // Contains data sent by all the children merged together one after the other.
+
+	for(var i=0;i<children.length;i++){
+        blocklyCode += goDeeper(codeDict, children[i], {}, path + '_' + i );
+    }
+
+    codeDict[path] = "{ init:function() {"
+            + "this.appendDummyInput().appendField('" + name + "');"
+            + blocklyCode
+            + "this.setPreviousStatement(" + top + ");"
+            + "this.setNextStatement(" + bottom + ");"
+            + "this.setColour(" + hue.generate() + ");"
+            + "}};";
+}
+
+
+function goDeeper(codeDict, node, haveAlreadySeen, path) {
+
+    var nodeType = node.nodeName;
+
+	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
+
+    if(nodeType == "ref") {
+        var nodeName = node.getAttribute("name");
+
+        if(haveAlreadySeen[nodeName]++) {
+            alert("A definition loop detected in the RNG, therefore the corresponding system of Blocks is not constructable");
+            return "this.appendDummyInput().appendField('*** CIRCULAR REFERENCE in " + nodeName + " ***');"; // FIXME: can we escape directly out of the recursion in JS?
+        }
+                
+        var children = findOneNodeByTagAndName(rngDoc, "define", nodeName).childNodes;
+
+        for(var i=0;i<children.length;i++){
+            blocklyCode += goDeeper(codeDict, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), path+"_DEF_"+nodeName);
+        }
+    } else if(nodeType == "text") {
+
+        var name = path + "TXT";
+
+        blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');\n";
+
+    } else if(nodeType == "element") {
+        var nodeName = node.getAttribute("name");
+
+        var name = path + "ELM_" + nodeName;
+        var children = node.childNodes;
+
+        if(! (children.length==1 && children[0].nodeName=="text") ) {               // FIXME: won't work under ref/define substitution
+            blocklyCode += "this.appendDummyInput().appendField('"+name+"');\n";  // a label for the (non-empty) parent
+        }
+
+        for(var i=0;i<children.length;i++){
+            blocklyCode += goDeeper(codeDict, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), name + '_' + i );
+        }
+    } else if(nodeType == "choice") {
+        var children = node.childNodes;
+        var name = path + "CHO_";
+
+		// blocklyCode = "this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+",'"+name+"']).appendField('"+name+"');";
+		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
+
+        for(var i=0;i<children.length;i++){
+            createOneBlock(codeDict, [ children[i] ], name + '_' + i, 180, true, false);
+        }
+    }
+
+    return blocklyCode;
+}
+
 //Removes #text nodes
 //These are string elements present in the XML document between tags. The
 //RNG specification only allows these strings to be composed of whitespace.
@@ -106,7 +186,7 @@ function _removeNodeNameRecursively(node, name) {
 		}
 	}
 }
-		
+
 //The name for every child block is sent to it by its parent. The child does not need to find its place in the hierarchy. The parent node does it for all of its children and sends them their name while calling them.
 function createBlocks(node, name, colour, listOfRefs){
 	var children=node.childNodes;
