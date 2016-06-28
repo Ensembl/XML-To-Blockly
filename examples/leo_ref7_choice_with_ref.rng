@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+  <define name="top_bottom">
+          <element name="top">
+                <text/>
+          </element>
+          <element name="bottom">
+                <text/>
+          </element>
+  </define>
+
+  <start>
+      <choice>
+          <element name="left">
+                <ref name="top_bottom"/>
+          </element>
+          
+           <ref name="top_bottom"/>
+         
+      </choice>
+
+      <element name="first">
+          <element name="before">
+                <text/>
+          </element>
+      </element>
+  </start>
+</grammar>
