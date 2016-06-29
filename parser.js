@@ -57,13 +57,19 @@ function handleRNG( unparsedRNG ){
 	removeRedundantText(rngDoc.documentElement);
 	removeXMLComments(rngDoc.documentElement);
 
+    hue.reset();    // start each batch of hues from 0
 	var startNode=rngDoc.getElementsByTagName("start")[0];
 
-	var colour=0;
-	//createBlocks(startNode, "start", colour);
+    var codeDict            = {};   // maps block names to the code (to be reviewed)
+    var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
 
-    var codeDict    = {};    // maps block names to the code (to be reviewed)
-    createOneBlock(codeDict, startNode.childNodes, "start", colour, false, false);
+    blockRequestQueue.push( [codeDict, blockRequestQueue, "start", startNode.childNodes, false, false] );  // initialize the queue
+
+    while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
+        var blockRequest = blockRequestQueue.shift();
+
+        createOneBlock.apply(this, blockRequest);
+    }
 
     var toolboxXML  = "";
     var allCode     = "";
@@ -85,29 +91,34 @@ var hue = new function() {      // maintain a closure around nextHue
     var hueStep = 211;
     var nextHue = 0;
 
+    this.reset    = function() { nextHue = 0; }
     this.generate = function() { var currHue=nextHue; nextHue = (currHue+hueStep)%360; return currHue; }
 }
 
 
-function createOneBlock(codeDict, children, path, colour, top, bottom) {
+function createOneBlock(codeDict, blockRequestQueue, context, children, top, bottom) {
 
-	var blocklyCode = "";   // Contains data sent by all the children merged together one after the other.
+    if(codeDict.hasOwnProperty(context)){
+        alert("Block '"+context+"' has already been created by another branch, skipping");
+    } else {
+        var blocklyCode = "";   // Contains data sent by all the children merged together one after the other.
 
-	for(var i=0;i<children.length;i++){
-        blocklyCode += goDeeper(codeDict, children[i], {}, path + '_' + i );
+        for(var i=0;i<children.length;i++){
+            blocklyCode += goDeeper(codeDict, blockRequestQueue, context, children[i], {}, context + '_' + i );
+        }
+
+        codeDict[context] = "{ init:function() {"
+                + "this.appendDummyInput().appendField('" + name + "');"
+                + blocklyCode
+                + "this.setPreviousStatement(" + top + ");"
+                + "this.setNextStatement(" + bottom + ");"
+                + "this.setColour(" + hue.generate() + ");"
+                + "}};";
     }
-
-    codeDict[path] = "{ init:function() {"
-            + "this.appendDummyInput().appendField('" + name + "');"
-            + blocklyCode
-            + "this.setPreviousStatement(" + top + ");"
-            + "this.setNextStatement(" + bottom + ");"
-            + "this.setColour(" + hue.generate() + ");"
-            + "}};";
 }
 
 
-function goDeeper(codeDict, node, haveAlreadySeen, path) {
+function goDeeper(codeDict, blockRequestQueue, context, node, haveAlreadySeen, path) {
 
     var nodeType = node.nodeName;
 
@@ -119,12 +130,13 @@ function goDeeper(codeDict, node, haveAlreadySeen, path) {
         if(haveAlreadySeen[nodeName]++) {
             alert("A definition loop detected in the RNG, therefore the corresponding system of Blocks is not constructable");
             return "this.appendDummyInput().appendField('*** CIRCULAR REFERENCE in " + nodeName + " ***');"; // FIXME: can we escape directly out of the recursion in JS?
-        }
-                
-        var children = findOneNodeByTagAndName(rngDoc, "define", nodeName).childNodes;
 
-        for(var i=0;i<children.length;i++){
-            blocklyCode += goDeeper(codeDict, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), path+"_DEF_"+nodeName);
+        } else {
+            var children = findOneNodeByTagAndName(rngDoc, "define", nodeName).childNodes;
+
+            for(var i=0;i<children.length;i++){
+                blocklyCode += goDeeper(codeDict, blockRequestQueue, nodeName, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), path+"_DEF_"+nodeName);
+            }
         }
     } else if(nodeType == "text") {
 
@@ -143,17 +155,16 @@ function goDeeper(codeDict, node, haveAlreadySeen, path) {
         }
 
         for(var i=0;i<children.length;i++){
-            blocklyCode += goDeeper(codeDict, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), name + '_' + i );
+            blocklyCode += goDeeper(codeDict, blockRequestQueue, context, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), name + '_' + i );
         }
     } else if(nodeType == "choice") {
         var children = node.childNodes;
         var name = path + "CHO_";
 
-		// blocklyCode = "this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+",'"+name+"']).appendField('"+name+"');";
 		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
 
         for(var i=0;i<children.length;i++){
-            createOneBlock(codeDict, [ children[i] ], name + '_' + i, 180, true, false);
+            blockRequestQueue.push( [codeDict, blockRequestQueue, context + '_C' + i, [ children[i] ], true, false] );
         }
     }
 
