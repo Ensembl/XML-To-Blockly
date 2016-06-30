@@ -115,7 +115,7 @@ function createBlocks(node, name, colour, listOfRefs){
 	var childNames=[];	//Keeps track of children block names
 			
 	var isVisited=node.getAttribute("visited");
-	if(isVisited!=null || isVisited!=undefined){
+	if(isVisited!=null){
 		var data="this.appendStatementInput().appendField('"+name+"');";
 		return data;
 		}
@@ -162,6 +162,10 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 	//attributes do not check the level below them as there is no functionality currently to handle datatypes and parameters. At the attribute node, a dummy input which has a label and an input field is generated. 
 	else if(nodeType=="attribute"){
+		if( children.length==0 || ( children.length==1 && children[0].nodeName=="text" ) ){
+			var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
+			return data;
+		}
 		var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
 		return data;
 	}
