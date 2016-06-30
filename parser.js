@@ -108,7 +108,7 @@ function createOneBlock(codeDict, blockRequestQueue, context, children, top, bot
         }
 
         codeDict[context] = "{ init:function() {"
-                + "this.appendDummyInput().appendField('" + name + "');"
+                + "this.appendDummyInput().appendField('====[ " + context + " ]====');"
                 + blocklyCode
                 + "this.setPreviousStatement(" + top + ");"
                 + "this.setNextStatement(" + bottom + ");"
