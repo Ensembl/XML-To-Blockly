@@ -97,7 +97,7 @@ function removeXMLComments(node) {
 function _removeNodeNameRecursively(node, name) {
 	var children=node.childNodes;
 	for(var i=0;i<children.length;i++){
-		if(children[i].nodeName == name){
+		if(children[i].nodeName == name && children[i].nodeValue.trim()==""){
 			children[i].parentNode.removeChild(children[i]);
 			i--;
 			continue;
@@ -125,10 +125,14 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 	
 	for(var i=0;i<children.length;i++){
+		if(node.nodeName=="value"){
+			break;
+		}
+	
 		if(children[i].nodeName=="data"){
 			continue;
 		}
-		
+
 		var nameAttr=children[i].getAttribute("name");
 		
 		if(nameAttr==null){
@@ -157,6 +161,11 @@ function createBlocks(node, name, colour, listOfRefs){
 			var data="this.appendDummyInput().appendField('"+name+"');";
 			blockData=data+blockData;
 		}
+	}
+	
+	
+	else if(nodeType=="value"){
+		console.log(children[0]);
 	}
 	
 	
