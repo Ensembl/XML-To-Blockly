@@ -135,7 +135,7 @@ function goDeeper(codeDict, blockRequestQueue, context, node, haveAlreadySeen, p
             var children = findOneNodeByTagAndName(rngDoc, "define", nodeName).childNodes;
 
             for(var i=0;i<children.length;i++){
-                blocklyCode += goDeeper(codeDict, blockRequestQueue, nodeName, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), path+"_DEF_"+nodeName);
+                blocklyCode += goDeeper(codeDict, blockRequestQueue, nodeName, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), path);
             }
         }
     } else if(nodeType == "text") {
