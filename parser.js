@@ -212,7 +212,13 @@ function createBlocks(node, name, colour, listOfRefs){
 		
 	}
 	
-			
+	
+	else if(nodeType=="group"){
+		var data="this.appendDummyInput().appendField('"+name+"');";
+		blockData=data+blockData;
+	}
+	
+	
 	else if(nodeType=="start"){
 		var blockName="block_"+name;
 		var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.appendDummyInput().appendField('"+name+"');"+blockData+"this.setColour("+colour+");}};";
