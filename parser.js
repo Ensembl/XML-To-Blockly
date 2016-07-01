@@ -93,13 +93,13 @@ function removeXMLComments(node) {
 function _removeNodeNameRecursively(node, name) {
 	var children=node.childNodes;
 	for(var i=0;i<children.length;i++){
-		if(children[i].nodeName == name && children[i].nodeValue.trim()==""){
+		if( (name == "#comment" && children[i].nodeName == name) || (children[i].nodeName == name && children[i].nodeValue.trim()=="") ){
 			children[i].parentNode.removeChild(children[i]);
 			i--;
 			continue;
 		}else{
 			_removeNodeNameRecursively(children[i], name);
-		}
+		}	
 	}
 }
 		
