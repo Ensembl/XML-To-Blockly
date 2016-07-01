@@ -19,10 +19,6 @@ var oneOrMoreBlocks;
 var optionalNames;
 var rngDoc;
 
-var creatingBlock=false;
-var indexSpecifier=-1;
-var seen=false;
-
 var magicBlocks=['oneOrMore','optional','zeroOrMore','choice'];
 		
 //init function for initializing the Blockly block area
@@ -113,6 +109,7 @@ function createBlocks(node, name, colour, listOfRefs){
 	var blockData="";	//Contains data sent by all the children merged together one after the other.
 	var childData=[];	//Keeps track of block data sent by children.
 	var childNames=[];	//Keeps track of children block names
+	var allChildrenValues=true;	//boolean to keep track of whether all children of a node are <value> tags
 			
 	var isVisited=node.getAttribute("visited");
 	if(isVisited!=null){
@@ -125,6 +122,10 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 	
 	for(var i=0;i<children.length;i++){
+		if(children[i].nodeName!="value"){
+			allChildrenValues=false;
+		}
+		
 		if(node.nodeName=="value"){
 			break;
 		}
@@ -152,20 +153,24 @@ function createBlocks(node, name, colour, listOfRefs){
 			
 	var nodeType=node.nodeName;
 		
-		
+	if(allChildrenValues==true && nodeType!="choice" && children.length>0){
+		var data="this.appendDummyInput().appendField('"+name+"').appendField('"+blockData+"');";
+		return data;
+	}
+
+
+	
 	if(nodeType=="element"){
 		if(children.length==1 && children[0].nodeName=="text"){
 			var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
-			blockData=data+blockData;
-		}else{
-			var data="this.appendDummyInput().appendField('"+name+"');";
+			return data;
+		}
+		var data="this.appendDummyInput().appendField('"+name+"');";
+		
+		//if the parent realizes that child has NOT added a field for it, then it adds its data by itself.
+		if(blockData.indexOf("appendField('"+name+"')")==-1){
 			blockData=data+blockData;
 		}
-	}
-	
-	
-	else if(nodeType=="value"){
-		console.log(children[0]);
 	}
 	
 	
@@ -175,10 +180,20 @@ function createBlocks(node, name, colour, listOfRefs){
 			var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
 			return data;
 		}
-		var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
-		return data;
+		var data="this.appendDummyInput().appendField('"+name+"');";
+		
+		//if the parent realizes that child has NOT added a field for it, then it adds its data by itself.
+		if(blockData.indexOf("appendField('"+name+"')")==-1){
+			blockData=data+blockData;
+		}
 	}
-			
+	
+
+	else if(nodeType=="value"){
+		var val=node.textContent;
+		return val;
+	}
+	
 			
 	else if(nodeType=="start"){
 		var blockName="block_"+name;
@@ -206,13 +221,33 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 	else if(nodeType=="choice"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
+		console.log(childNamesInFormat);
+		var allValues="";
 		for(var i=0;i<childData.length;i++){
+			//for cases where choice tag only contains a choice between values
+			if(allChildrenValues==true){
+				var value=children[i].textContent;
+				if(allValues==""){
+					allValues="['"+value+"','"+value+"']";
+				}else{
+					allValues=allValues+",['"+value+"','"+value+"']";
+				}
+				continue;
+			}
 			var blockName=childNames[i];
 			var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+childData[i]+"this.setPreviousStatement(true,['"+name+"','"+blockName+"']);this.setColour("+colour+");}};";
 			blocks.push(finalBlock);
 			blockNames.push(blockName);
 		}
-				
+		
+		
+		//if choice contains only values, it sends data to its parent which includes creating a dummyInput on behalf of its parent and labelling it with its parent's name
+		if(allChildrenValues==true){
+			var parentName=getParentName(name);
+			var data="this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+allValues+"]),'"+name+"');";
+			return data;
+		}
+		
 		//This appends to the block which contains the choice tag and creates a notch there.
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+",'"+name+"']).appendField('"+name+"');";
 	}
@@ -389,4 +424,16 @@ function findOneNodeByTagAndName(doc, tag, name) {
     } else {
         alert("There are no '" + tag + "' nodes with the name '" + name + "'");
     }
+}
+
+
+function getParentName(name){
+	var parentName="";
+	for(var i=name.length-1;i>=0;i--){
+		if(name.charAt(i)==':'){
+			parentName=name.substring(0,i);
+			break;
+		}
+	}
+	return parentName;
 }
