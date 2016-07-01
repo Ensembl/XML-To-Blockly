@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
 	<start>
+	   <element name="X">
 		<attribute name="program">
 			<value>GSoC</value>
-			<text/>
 		</attribute>	
+		<text/>
+	   </element>
 	</start>
 </grammar>

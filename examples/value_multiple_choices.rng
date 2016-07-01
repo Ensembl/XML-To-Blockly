@@ -8,7 +8,9 @@
 					<value>val1</value>
 					<value>val2</value>
 				</choice>
+			</attribute>
 				
+			<attribute name="attr2">
 				<choice>
 					<value>a</value>
 					<value>b</value>
