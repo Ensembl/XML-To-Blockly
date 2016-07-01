@@ -190,8 +190,26 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 
 	else if(nodeType=="value"){
-		var val=node.textContent;
-		return val;
+		var parent=node.parentNode;
+		var siblings=parent.childNodes;
+		var allSiblingsAreValues=true;
+		
+		for(var i=0;i<siblings.length;i++){
+			if(siblings[i].nodeName!="value"){
+				allSiblingsAreValues=false;
+				break;
+			}
+		}
+		
+		//if all siblings are values, it probably is part of a choice and hence only the value is to be sent back otherwise a dummyINput is added to the parent block to denote this value
+		if(allSiblingsAreValues==true){
+			var val=node.textContent;
+			return val;
+		}else{
+			var data="this.appendDummyInput().appendField('"+node.textContent+"');";
+			return data;
+		}
+		
 	}
 	
 			
