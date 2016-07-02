@@ -19,7 +19,8 @@ var oneOrMoreBlocks;
 var optionalNames;
 var rngDoc;
 
-var magicBlocks=['oneOrMore','optional','zeroOrMore','choice'];
+var magicBlocks=[ 'oneOrMore' , 'optional' , 'zeroOrMore' , 'choice' ];
+var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 		
 //init function for initializing the Blockly block area
 function init(){
@@ -130,7 +131,7 @@ function createBlocks(node, name, colour, listOfRefs){
 			break;
 		}
 	
-		if(children[i].nodeName=="data"){
+		if(children[i].nodeName=="param"){
 			continue;
 		}
 
@@ -188,6 +189,21 @@ function createBlocks(node, name, colour, listOfRefs){
 		}
 	}
 	
+	
+	else if(nodeType=="data"){
+		var parentName=getParentName(name);
+		var type=node.getAttribute("type");
+		if(type!=null){
+			if(numberTypes.indexOf(type)!=-1){
+				type="Blockly.FieldTextInput.numberValidator";
+			}else{
+				type=null;
+			}
+		}
+		var data="this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+parentName+"');";
+		blockData=data+blockData;
+	}
+	
 
 	else if(nodeType=="value"){
 		var parent=node.parentNode;
@@ -227,7 +243,6 @@ function createBlocks(node, name, colour, listOfRefs){
 		return;
 	}
 	
-	
 			
 	else if(nodeType=="interleave"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
@@ -245,7 +260,6 @@ function createBlocks(node, name, colour, listOfRefs){
 	
 	else if(nodeType=="choice"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
-		console.log(childNamesInFormat);
 		var allValues="";
 		for(var i=0;i<childData.length;i++){
 			//for cases where choice tag only contains a choice between values
@@ -268,7 +282,7 @@ function createBlocks(node, name, colour, listOfRefs){
 		//if choice contains only values, it sends data to its parent which includes creating a dummyInput on behalf of its parent and labelling it with its parent's name
 		if(allChildrenValues==true){
 			var parentName=getParentName(name);
-			var data="this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+allValues+"]),'"+name+"');";
+			var data="this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+allValues+"]),'"+parentName+"');";
 			return data;
 		}
 		
