@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<element name="personal_details">
+		
+			<attribute name="name">
+				<data type="string" />
+			</attribute>
+			
+			<attribute name="age">
+				<data type="int" />
+			</attribute>
+			
+		</element>
+	</start>
+</grammar>
