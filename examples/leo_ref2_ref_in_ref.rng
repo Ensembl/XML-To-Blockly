@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+  <define name="simple_text">
+       <text/>
+  </define>
+
+  <define name="two_children">
+        <element name="first_child">
+            <ref name="simple_text"/>
+        </element>
+        <ref name="simple_text"/>
+        <element name="second_child">
+            <ref name="simple_text"/>
+        </element>
+  </define>
+
+  <start>
+      <element name="first">
+          <element name="before">
+                <ref name="simple_text"/>
+          </element>
+          <ref name="two_children"/>
+      </element>
+      <element name="second">
+          <ref name="two_children"/>
+          <element name="after">
+                <ref name="simple_text"/>
+          </element>
+      </element>
+  </start>
+</grammar>
