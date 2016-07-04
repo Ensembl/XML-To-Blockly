@@ -59,11 +59,12 @@ function handleRNG( unparsedRNG ){
 
     hue.reset();    // start each batch of hues from 0
 	var startNode=rngDoc.getElementsByTagName("start")[0];
+    var children = substitutedNodeList(startNode.childNodes, "{}", "START");
 
     var codeDict            = {};   // maps block names to the code (to be reviewed)
     var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
 
-    blockRequestQueue.push( [codeDict, blockRequestQueue, "start", startNode.childNodes, false, false] );  // initialize the queue
+    blockRequestQueue.push( [codeDict, blockRequestQueue, "start", children, false, false] );  // initialize the queue
 
     while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest = blockRequestQueue.shift();
@@ -96,19 +97,19 @@ var hue = new function() {      // maintain a closure around nextHue
 }
 
 
-function createOneBlock(codeDict, blockRequestQueue, context, children, top, bottom) {
+function createOneBlock(codeDict, blockRequestQueue, blockName, children, top, bottom) {
 
-    if(codeDict.hasOwnProperty(context)){
-        alert("Block '"+context+"' has already been created by another branch, skipping");
+    if(codeDict.hasOwnProperty(blockName)) {
+        alert("Block '"+blockName+"' has already been created by another branch, skipping");
     } else {
         var blocklyCode = "";   // Contains data sent by all the children merged together one after the other.
 
         for(var i=0;i<children.length;i++){
-            blocklyCode += goDeeper(codeDict, blockRequestQueue, context, children[i], {}, context + '_' + i );
+            blocklyCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", blockName + '_' + i );
         }
 
-        codeDict[context] = "{ init:function() {"
-                + "this.appendDummyInput().appendField('====[ " + context + " ]====');"
+        codeDict[blockName] = "{ init:function() {"
+                + "this.appendDummyInput().appendField('====[ " + blockName + " ]====');"
                 + blocklyCode
                 + "this.setPreviousStatement(" + top + ");"
                 + "this.setNextStatement(" + bottom + ");"
@@ -118,26 +119,54 @@ function createOneBlock(codeDict, blockRequestQueue, context, children, top, bot
 }
 
 
-function goDeeper(codeDict, blockRequestQueue, context, node, haveAlreadySeen, path) {
+function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
+    var substChildren = [];
 
-    var nodeType = node.nodeName;
+    for(var i=0;i<children.length;i++) {
+        var currChild           = children[i];
+        var currChildHasSeen    = JSON.parse(haveAlreadySeenStr);
+
+        if(currChild.nodeName == "ref") {
+            var nodeName = currChild.getAttribute("name");
+
+            if(currChildHasSeen.hasOwnProperty(nodeName)) {
+                alert("A definition loop detected in the RNG ("+nodeName+"), therefore the corresponding system of Blocks is not constructable");
+                return [null];     // need to find a way to return nicely
+
+            } else {
+                currChildHasSeen[nodeName] = true;
+                var defKids = findOneNodeByTagAndName(rngDoc, "define", nodeName).childNodes;
+
+                var substKids = substitutedNodeList(defKids, JSON.stringify(currChildHasSeen), nodeName);
+                Array.prototype.push.apply( substChildren, substKids);
+            }
+        } else {
+            currChild.setAttribute("context", substContext);                                // magic tags will use this to propagate the context
+
+            if(currChild.nodeName == "choice") {    // FIXME: change this for a generic test for all magic tags
+                currChild.setAttribute("context_child_idx", i.toString());                      // magic tags will need this to create a block
+            } else {
+                currChild.setAttribute("haveAlreadySeen", haveAlreadySeenStr);                  // non-magic tags will need this to support loop detection
+            }
+
+            substChildren.push( currChild );
+        }
+    }
+
+    return substChildren;   // all you get in the end is a merged list of non-ref children with some of the tags set (grandchildren may contain refs)
+}
+
+
+function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
+
+    var nodeType = (node == null) ? "null" : node.nodeName;
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
 
-    if(nodeType == "ref") {
-        var nodeName = node.getAttribute("name");
+    if(nodeType == "null") {
 
-        if(haveAlreadySeen[nodeName]++) {
-            alert("A definition loop detected in the RNG, therefore the corresponding system of Blocks is not constructable");
-            return "this.appendDummyInput().appendField('*** CIRCULAR REFERENCE in " + nodeName + " ***');"; // FIXME: can we escape directly out of the recursion in JS?
+        blocklyCode = "this.appendDummyInput().appendField('*** CIRCULAR REFERENCE ***');"; // FIXME: can we escape directly out of the recursion in JS?
 
-        } else {
-            var children = findOneNodeByTagAndName(rngDoc, "define", nodeName).childNodes;
-
-            for(var i=0;i<children.length;i++){
-                blocklyCode += goDeeper(codeDict, blockRequestQueue, nodeName, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), path);
-            }
-        }
     } else if(nodeType == "text") {
 
         var name = path + "TXT";
@@ -148,17 +177,20 @@ function goDeeper(codeDict, blockRequestQueue, context, node, haveAlreadySeen, p
         var nodeName = node.getAttribute("name");
 
         var name = path + "ELM_" + nodeName;
-        var children = node.childNodes;
+        var context = node.getAttribute("context");
+        haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
+        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
-        if(! (children.length==1 && children[0].nodeName=="text") ) {               // FIXME: won't work under ref/define substitution
+        if(! (children.length==1 && children[0]!= null && children[0].nodeName=="text") ) {
             blocklyCode += "this.appendDummyInput().appendField('"+name+"');\n";  // a label for the (non-empty) parent
         }
 
         for(var i=0;i<children.length;i++){
-            blocklyCode += goDeeper(codeDict, blockRequestQueue, context, children[i], JSON.parse(JSON.stringify(haveAlreadySeen)), name + '_' + i );
+            blocklyCode += goDeeper(codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
         }
     } else if(nodeType == "choice") {
-        var children = node.childNodes;
+        var context = node.getAttribute("context");
+        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
         var name = path + "CHO_";
 
 		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
