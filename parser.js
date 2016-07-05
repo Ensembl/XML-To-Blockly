@@ -78,36 +78,38 @@ function handleRNG( unparsedRNG ){
         var top          = blockRequest.top;
         var bottom       = blockRequest.bottom;
 
-        if(codeDict.hasOwnProperty(blockName)) {
-            alert("Block '"+blockName+"' has already been created by another branch, skipping");
-        } else {
-            var blockCode = "";   // Contains data sent by all the children merged together one after the other.
+        var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
-            for(var i=0;i<children.length;i++){
-                blockCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", i );
-            }
-
-            codeDict[blockName] = { "blockCode" : blockCode, "top" : top, "bottom" : bottom };
+        for(var i=0;i<children.length;i++){
+            blockCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", i );
         }
+
+        codeDict[blockCode] = {
+            "blockName" : blockName,
+            "blockCode" : blockCode,
+            "top"       : top,
+            "bottom"    : bottom
+        };
     }
 
     var toolboxXML  = "";
     var allCode     = "";
-    for (var blockName in codeDict) {
+    for (var key in codeDict) {
+        var dictEntry   = codeDict[key];
+        var blockName   = dictEntry.blockName;
+
         toolboxXML  += "<block type='" + blockName + "'></block>";
 
-        var dictEntry   = codeDict[blockName];
-
-        allCode    += "Blockly.Blocks['" + blockName+"']={ init:function() {"
-                    + "this.appendDummyInput().appendField('====[ " + blockName + " ]====');"
+        allCode    += "\nBlockly.Blocks['" + blockName+"']={ init:function() {"
+                    + "this.appendDummyInput().appendField('====[ " + blockName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + dictEntry.top + ");"
                     + "this.setNextStatement(" + dictEntry.bottom + ");"
                     + "this.setColour(" + hue.generate() + ");"
-                    + "}};";
+                    + "}};\n";
     }
     document.getElementById('toolbox').innerHTML = toolboxXML;
-    document.getElementById('results').innerHTML = allCode;
+    document.getElementById('results').innerHTML = "<pre>" + allCode + "</pre>";
 
     eval(allCode);
 
@@ -177,7 +179,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 
         var name = path + "TXT";
 
-        blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');\n";
+        blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 
     } else if(nodeType == "element") {
         var nodeName = node.getAttribute("name");
@@ -188,7 +190,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
         var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         if(! (children.length==1 && children[0]!= null && children[0].nodeName=="text") ) {
-            blocklyCode += "this.appendDummyInput().appendField('"+name+"');\n";  // a label for the (non-empty) parent
+            blocklyCode += "this.appendDummyInput().appendField('"+name+"');";  // a label for the (non-empty) parent
         }
 
         for(var i=0;i<children.length;i++){
@@ -202,17 +204,25 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 
 		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
 
-        for(var i=0;i<children.length;i++){
-            blockRequestQueue.push( {
-                "blockName"         : context + "_ch" + context_child_idx + "_cse" + i,
-                "children"          : [ children[i] ],
-                "top"               : true,
-                "bottom"            : false
-            } );
+        if(! node.hasAttribute("visited") ) {
+            for(var i=0;i<children.length;i++){
+                var choiceChildNode = children[i];
+                var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || (path + "_ch" + context_child_idx + "_cse" + i);
+                blockRequestQueue.push( {
+                    "blockName"         : childBlockName,
+                    "children"          : [ choiceChildNode ],
+                    "top"               : true,
+                    "bottom"            : false
+                } );
+            }
+
+            node.setAttribute("visited", "true");
+        } else {
+            alert("Choice "+context+"_ch"+context_child_idx+" has been visited already, skipping");
         }
     }
 
-    return blocklyCode;
+    return blocklyCode + "\n";
 }
 
 //Removes #text nodes
