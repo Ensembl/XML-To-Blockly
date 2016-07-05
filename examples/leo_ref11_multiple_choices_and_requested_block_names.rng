@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data" xmlns:blockly="http://blockly.com/">
+<start>
+<element name="A">
+    <choice>
+        <element name="ax" blockly:blockName="AX">
+            <text/>
+         </element>    
+           <element name="by" blockly:blockName="BY1" >
+                <text/>
+            </element>
+        <element name="ay">
+            <text/>
+        </element>
+
+    </choice>
+    
+   <element name="B">   
+        <choice>
+            <element name="bx">
+                <text/>
+            </element>
+            <element name="by" blockly:blockName="BY2" >
+                <text/>
+            </element>
+            <element name="bx">
+                <text/>
+            </element>
+        </choice>
+    </element>  
+
+</element>
+</start>
+</grammar>
