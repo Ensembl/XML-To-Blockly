@@ -34,10 +34,10 @@ function init(){
 }
 
 // loads the file into RNG textarea and leaves it there for potential manual edit
-function readFile(evt){
-    var file=evt.target.files[0];
+function readFile(event) {
+    var filename=event.target.files[0];
     var reader=new FileReader();
-    reader.readAsText(file);
+    reader.readAsText(filename);
     reader.onload=function(e){
         document.getElementById('rng_area').value = e.target.result;
     }
