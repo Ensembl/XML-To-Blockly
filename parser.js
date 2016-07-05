@@ -59,24 +59,52 @@ function handleRNG( unparsedRNG ){
 
     hue.reset();    // start each batch of hues from 0
 	var startNode=rngDoc.getElementsByTagName("start")[0];
-    var children = substitutedNodeList(startNode.childNodes, "{}", "START");
 
     var codeDict            = {};   // maps block names to the code (to be reviewed)
     var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
 
-    blockRequestQueue.push( [codeDict, blockRequestQueue, "start", children, false, false] );  // initialize the queue
+    blockRequestQueue.push( {
+        "blockName"         : "start",
+        "children"          : substitutedNodeList(startNode.childNodes, "{}", "START"),
+        "top"               : false,
+        "bottom"            : false
+    } );  // initialize the queue
 
     while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest = blockRequestQueue.shift();
 
-        createOneBlock.apply(this, blockRequest);
+        var blockName    = blockRequest.blockName;
+        var children     = blockRequest.children;
+        var top          = blockRequest.top;
+        var bottom       = blockRequest.bottom;
+
+        if(codeDict.hasOwnProperty(blockName)) {
+            alert("Block '"+blockName+"' has already been created by another branch, skipping");
+        } else {
+            var blockCode = "";   // Contains data sent by all the children merged together one after the other.
+
+            for(var i=0;i<children.length;i++){
+                blockCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", i );
+            }
+
+            codeDict[blockName] = { "blockCode" : blockCode, "top" : top, "bottom" : bottom };
+        }
     }
 
     var toolboxXML  = "";
     var allCode     = "";
     for (var blockName in codeDict) {
         toolboxXML  += "<block type='" + blockName + "'></block>";
-        allCode     += "Blockly.Blocks['" + blockName+"']=" + codeDict[blockName];
+
+        var dictEntry   = codeDict[blockName];
+
+        allCode    += "Blockly.Blocks['" + blockName+"']={ init:function() {"
+                    + "this.appendDummyInput().appendField('====[ " + blockName + " ]====');"
+                    + dictEntry.blockCode
+                    + "this.setPreviousStatement(" + dictEntry.top + ");"
+                    + "this.setNextStatement(" + dictEntry.bottom + ");"
+                    + "this.setColour(" + hue.generate() + ");"
+                    + "}};";
     }
     document.getElementById('toolbox').innerHTML = toolboxXML;
     document.getElementById('results').innerHTML = allCode;
@@ -94,28 +122,6 @@ var hue = new function() {      // maintain a closure around nextHue
 
     this.reset    = function() { nextHue = 0; }
     this.generate = function() { var currHue=nextHue; nextHue = (currHue+hueStep)%360; return currHue; }
-}
-
-
-function createOneBlock(codeDict, blockRequestQueue, blockName, children, top, bottom) {
-
-    if(codeDict.hasOwnProperty(blockName)) {
-        alert("Block '"+blockName+"' has already been created by another branch, skipping");
-    } else {
-        var blocklyCode = "";   // Contains data sent by all the children merged together one after the other.
-
-        for(var i=0;i<children.length;i++){
-            blocklyCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", blockName + '_' + i );
-        }
-
-        codeDict[blockName] = "{ init:function() {"
-                + "this.appendDummyInput().appendField('====[ " + blockName + " ]====');"
-                + blocklyCode
-                + "this.setPreviousStatement(" + top + ");"
-                + "this.setNextStatement(" + bottom + ");"
-                + "this.setColour(" + hue.generate() + ");"
-                + "}};";
-    }
 }
 
 
@@ -190,13 +196,19 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
         }
     } else if(nodeType == "choice") {
         var context = node.getAttribute("context");
+        var context_child_idx = node.getAttribute("context_child_idx");
         var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
         var name = path + "CHO_";
 
 		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
 
         for(var i=0;i<children.length;i++){
-            blockRequestQueue.push( [codeDict, blockRequestQueue, context + '_C' + i, [ children[i] ], true, false] );
+            blockRequestQueue.push( {
+                "blockName"         : context + "_ch" + context_child_idx + "_cse" + i,
+                "children"          : [ children[i] ],
+                "top"               : true,
+                "bottom"            : false
+            } );
         }
     }
 
