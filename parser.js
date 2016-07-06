@@ -58,14 +58,18 @@ function handleRNG( unparsedRNG ){
 	removeXMLComments(rngDoc.documentElement);
 
     hue.reset();    // start each batch of hues from 0
-	var startNode=rngDoc.getElementsByTagName("start")[0];
+
+    var rootElement = rngDoc.documentElement;
+    var startContent = (rootElement.nodeName == "grammar")
+        ? rngDoc.getElementsByTagName("start")[0].childNodes
+        : [ rootElement ];
 
     var codeDict            = {};   // maps block names to the code (to be reviewed)
     var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
 
     blockRequestQueue.push( {
         "blockName"         : "start",
-        "children"          : substitutedNodeList(startNode.childNodes, "{}", "START"),
+        "children"          : substitutedNodeList(startContent, "{}", "START"),
         "top"               : false,
         "bottom"            : false
     } );  // initialize the queue
