@@ -22,6 +22,7 @@ var failed = 0;
 var inputFolderName = "rng files";
 var resultsDirectory = "expected results";
 var failedTestNames = [];
+var invalidFiles = 0;
 
 if(system.args.length > 1){					//system.args[0] is the filename itself
 	inputFolderName = system.args[1];
@@ -43,15 +44,22 @@ if(fileList.length == 0){
 			break;
 		}
 	}
-}else{
-	fileList.splice(0,2);	//remove first two entries in the list as they are "." and ".."
 }
+/*
+else{
+	//fileList.splice(0,1);	//remove first two entries in the list as they are "." and ".."
+}
+*/
 
 var page = webPage.create();
-page.open("http://anujk14.github.io/XML-To-Blockly/", function(status){
+page.open("index.html", function(status){
 	if(status=="success"){
 		console.log("success");
 		for(var i=0; i<fileList.length; i++){
+			if(fileList[i]=="." || fileList[i]==".."){
+				invalidFiles++;
+				continue;
+			}
 			console.log("Input file: "+fileList[i]);
 			
 			var expectedOutput = getExpectedOutput( fileList[i] );	//get expected output for current file
@@ -63,7 +71,7 @@ page.open("http://anujk14.github.io/XML-To-Blockly/", function(status){
 			var printedPrettyStatement=false;		//pretty statement here refers to statements like "Didn't find expected blocks or Found unexpected blocks"
 			
 			for(var j=0; j<expectedOutput.length; j++){
-				expectedOutput[j]=expectedOutput[j].trim();
+				expectedOutput[j] = expectedOutput[j].trim();
 				if(expectedOutput[j]==""){
 					continue;
 				}
@@ -76,13 +84,17 @@ page.open("http://anujk14.github.io/XML-To-Blockly/", function(status){
 					console.log(expectedOutput[j]);
 					console.log("\n");
 				}else{
-					results.splice(index, 1);	//remove matching entries from results
+					//Array.prototype.splice.apply(results, index, 1);
+					results[index] = -1 	//remove matching entries from results			
 				}
 			}
 			
 			if(results.length>0){
-				printedPrettyStatement=false;
+				printedPrettyStatement = false;
 				for(var j=0; j<results.length; j++){
+					if(results[j] == -1){
+						continue;
+					}	
 					if(printedPrettyStatement == false){
 						console.log("Found these unexpected blocks:\n");
 						printedPrettyStatement = true;
@@ -99,8 +111,8 @@ page.open("http://anujk14.github.io/XML-To-Blockly/", function(status){
 				passed++;
 			}
 		}
-		console.log("\nPassed: "+passed+"/"+fileList.length);
-		console.log("Failed: "+failed+"/"+fileList.length);
+		console.log("\nPassed: " + passed + "/" + (fileList.length - invalidFiles));
+		console.log("Failed: " + failed + "/" + (fileList.length - invalidFiles));
 		if(failedTestNames.length>0){
 			console.log("\nFailed for the following files:");
 			for(var i=0; i<failedTestNames.length; i++){
@@ -113,7 +125,6 @@ page.open("http://anujk14.github.io/XML-To-Blockly/", function(status){
 		phantom.exit(0);
 	}
 });
-
 
 function performPageOperations(input){
 	document.getElementById('rng_area').value = input;
