@@ -1,1 +1,0 @@
-Blockly.Blocks['block_start']={init:function(){this.appendDummyInput().appendField('start');this.appendDummyInput().appendField('start:ele0');this.appendDummyInput().appendField('start:ele0:att0').appendField(new Blockly.FieldDropdown([['val1','val1'],['val2','val2']]),'start:ele0:att0');this.setColour(0);}};
