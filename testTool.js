@@ -38,7 +38,7 @@ if(fileList.length == 0){
 	var i=inputFolderName.indexOf(".rng");
 	for(; i>=0; i--){
 		var c=inputFolderName.charAt(i);
-		if(c == "\\" || c=="/"){					
+		if(c == fs.separator){
 			var x = inputFolderName.substring(i+1);
 			fileList.push(x);
 			break;
@@ -140,7 +140,7 @@ function performPageOperations(input){
 
 function getExpectedOutput(fileNameWithExtension){
 	var fileName = fileNameWithExtension.split(".rng")[0];
-	var expectedOutput = fs.read(resultsDirectory + "/" + fileName + ".txt");
+	var expectedOutput = fs.read(resultsDirectory + fs.separator + fileName + ".txt");
 	expectedOutput = expectedOutput.split("\n");
 	return expectedOutput;
 }
@@ -148,7 +148,7 @@ function getExpectedOutput(fileNameWithExtension){
 function getInputForParser(fileName){
 	var input = "";
 	if(inputFolderName.indexOf(".rng") == -1){
-		input = fs.read(inputFolderName+"/"+fileName);
+		input = fs.read(inputFolderName+fs.separator+fileName);
 	}else{
 		input = fs.read(inputFolderName);
 	}
