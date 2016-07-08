@@ -119,10 +119,10 @@ page.open("index.html", function(status){
 				console.log(failedTestNames[i]);
 			}
 		}
-		phantom.exit(1);
+		phantom.exit(0);
 	}else{
 		console.log("Failed to open page");
-		phantom.exit(0);
+		phantom.exit(1);
 	}
 });
 
