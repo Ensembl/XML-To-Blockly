@@ -114,7 +114,7 @@ page.open("index.html", function(status){
 				console.log(failedTestNames[i]);
 			}
 		}
-		phantom.exit(0);
+		phantom.exit(failed ? 1 : 0);
 	}else{
 		console.log("Failed to open page");
 		phantom.exit(1);
