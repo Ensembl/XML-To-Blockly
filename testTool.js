@@ -22,44 +22,39 @@ var failed = 0;
 var inputFolderName = "rng files";
 var resultsDirectory = "expected results";
 var failedTestNames = [];
-var invalidFiles = 0;
+
+var fileList;
 
 if(system.args.length > 1){					//system.args[0] is the filename itself
-	inputFolderName = system.args[1];
+
+      // system.args[1] is the file / directory to test
+      if (fs.isDirectory(system.args[1])) {
+	    inputFolderName = system.args[1];
+	    fileList = getDirectoryListing(system.args[1]);
+
+      } else if (fs.isFile(system.args[1])) {
+	    var x = splitFileName(system.args[1]);
+	    inputFolderName = x[0];
+	    fileList = [x[1]];
+
+      } else if (fs.isFile(inputFolderName + fs.separator + system.args[1])) {
+	    fileList = [system.args[1]];
+
+      }
+
 	if(system.args.length == 3){
 		resultsDirectory = system.args[2];
 	}
-}
 
-var fileList = fs.list(inputFolderName);
-
-//if the user has entered a file name, fileList's length will be 0
-if(fileList.length == 0){
-	var i=inputFolderName.indexOf(".rng");
-	for(; i>=0; i--){
-		var c=inputFolderName.charAt(i);
-		if(c == fs.separator){
-			var x = inputFolderName.substring(i+1);
-			fileList.push(x);
-			break;
-		}
-	}
+} else {
+      fileList = getDirectoryListing(inputFolderName);	  // default location
 }
-/*
-else{
-	//fileList.splice(0,1);	//remove first two entries in the list as they are "." and ".."
-}
-*/
 
 var page = webPage.create();
 page.open("index.html", function(status){
 	if(status=="success"){
 		console.log("success");
 		for(var i=0; i<fileList.length; i++){
-			if(fileList[i]=="." || fileList[i]==".."){
-				invalidFiles++;
-				continue;
-			}
 			console.log("Input file: "+fileList[i]);
 			
 			var expectedOutput = getExpectedOutput( fileList[i] );	//get expected output for current file
@@ -111,8 +106,8 @@ page.open("index.html", function(status){
 				passed++;
 			}
 		}
-		console.log("\nPassed: " + passed + "/" + (fileList.length - invalidFiles));
-		console.log("Failed: " + failed + "/" + (fileList.length - invalidFiles));
+		console.log("\nPassed: " + passed + "/" + fileList.length);
+		console.log("Failed: " + failed + "/" + fileList.length);
 		if(failedTestNames.length>0){
 			console.log("\nFailed for the following files:");
 			for(var i=0; i<failedTestNames.length; i++){
@@ -146,11 +141,31 @@ function getExpectedOutput(fileNameWithExtension){
 }
 
 function getInputForParser(fileName){
-	var input = "";
-	if(inputFolderName.indexOf(".rng") == -1){
-		input = fs.read(inputFolderName+fs.separator+fileName);
-	}else{
-		input = fs.read(inputFolderName);
-	}
-	return input;
+      return fs.read(inputFolderName+fs.separator+fileName);
 }
+
+function getDirectoryListing(dirName) {
+      var tmpFileList = fs.list(dirName);
+      var fileList = [];
+      for(var i=0; i<tmpFileList.length; i++){
+	    var fileName = inputFolderName + fs.separator + tmpFileList[i];
+	    if (fs.isFile(fileName)) {
+		  fileList.push(tmpFileList[i]);
+	    }
+      }
+      return fileList;
+}
+
+function splitFileName(fileName) {
+      var i = fileName.indexOf(".rng");
+      for(; i>=0; i--){
+	    var c = fileName.charAt(i);
+	    if (c == fs.separator){
+		  return [fileName.substring(0,i), fileName.substring(i+1)];
+	    }
+      }
+      // If we arrive here it means that fileName does not contain any
+      // directory separator, so it is in the current directory
+      return [ '.', fileName];
+}
+
