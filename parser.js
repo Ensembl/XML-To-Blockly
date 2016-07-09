@@ -88,7 +88,9 @@ function handleRNG( unparsedRNG ){
             blockCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", i );
         }
 		
-		if( ! (codeDict[blockCode] ==undefined && codeDict[blockCode]==null)){
+		//If there is already a block like the current one and that block's name is start, then we create a separate block for current one in order to compulsorily have a start block.
+		if( (! (codeDict[blockCode] ==undefined && codeDict[blockCode]==null)) && codeDict[blockCode].blockName == "start" ){
+			console.log((codeDict[blockCode]).blockName);
 			blockCode+="this.appendDummyInput();";
 		}
 		
