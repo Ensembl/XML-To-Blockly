@@ -13,7 +13,7 @@ The proposed editor would have capabilities of handling not just workflows for e
 
 # How to use
 
-1. Open https://ens-lg4.github.io/XML-To-Blockly/ in your web browser.
+1. Open https://anujk14.github.io/XML-To-Blockly/ in your web browser.
 5. Click on the 'Choose file' and open a Relax NG file. This will create a list of blocks in the toolbox.
 6. Play with the blocks to create a diagram that follows the specification.
 
@@ -22,4 +22,4 @@ The proposed editor would have capabilities of handling not just workflows for e
 We are still working on the conversion of Relax NG rules to Blockly blocks and constraints.
 Once this is done, we'll add the ability to import / export XML files (that follow the specification).
 
-Navigate to https://ens-lg4.github.io/XML-To-Blockly/ to use the graphical XML editor.
+Navigate to https://anujk14.github.io/XML-To-Blockly/ to use the graphical XML editor.
