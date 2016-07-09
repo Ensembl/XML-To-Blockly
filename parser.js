@@ -10,7 +10,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
 
 var blocklyWorkspace;
 var blocks;
@@ -24,7 +24,7 @@ var indexSpecifier=-1;
 var seen=false;
 
 var magicBlocks=['oneOrMore','optional','zeroOrMore','choice'];
-		
+
 //init function for initializing the Blockly block area
 function init(){
 	blocklyWorkspace = Blockly.inject('blocklyDiv', {
@@ -42,7 +42,7 @@ function readFile(event) {
         document.getElementById('rng_area').value = e.target.result;
     }
 }
-		
+
 //handles xml by creating blocks as per RNG rules
 function handleRNG( unparsedRNG ){
 
@@ -53,7 +53,7 @@ function handleRNG( unparsedRNG ){
 
     var xmlParser=new DOMParser();
     rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
-	
+
 	removeRedundantText(rngDoc.documentElement);
 	removeXMLComments(rngDoc.documentElement);
 
@@ -87,7 +87,11 @@ function handleRNG( unparsedRNG ){
         for(var i=0;i<children.length;i++){
             blockCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", i );
         }
-
+		
+		if( ! (codeDict[blockCode] ==undefined && codeDict[blockCode]==null)){
+			blockCode+="this.appendDummyInput();";
+		}
+		
         codeDict[blockCode] = {
             "blockName" : blockName,
             "blockCode" : blockCode,
@@ -133,7 +137,6 @@ var hue = new function() {      // maintain a closure around nextHue
 
 function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
     var substChildren = [];
-
     for(var i=0;i<children.length;i++) {
         var currChild           = children[i];
         var currChildHasSeen    = JSON.parse(haveAlreadySeenStr);
@@ -155,7 +158,7 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
         } else {
             currChild.setAttribute("context", substContext);                                // magic tags will use this to propagate the context
 
-            if(currChild.nodeName == "choice") {    // FIXME: change this for a generic test for all magic tags
+            if( magicBlocks.indexOf(currChild.nodeName)!=-1 ) {    // FIXME: change this for a generic test for all magic tags
                 currChild.setAttribute("context_child_idx", i.toString());                      // magic tags will need this to create a block
             } else {
                 currChild.setAttribute("haveAlreadySeen", haveAlreadySeenStr);                  // non-magic tags will need this to support loop detection
@@ -170,7 +173,6 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 
 
 function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
-
     var nodeType = (node == null) ? "null" : node.nodeName;
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
@@ -224,7 +226,27 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
         } else {
             alert("Choice "+context+"_ch"+context_child_idx+" has been visited already, skipping");
         }
-    }
+    } else if(nodeType == "optional"){
+			var context = node.getAttribute("context");
+			var context_child_idx = node.getAttribute("context_child_idx");
+			var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+			var name = path + "OPT_";
+
+			blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
+
+			if(! node.hasAttribute("visited") ){
+					blockRequestQueue.push( {
+							"blockName"					:name,
+							"children"					:children,
+							"top"						:true,
+							"bottom"					:false
+						} );
+
+					node.setAttribute("visited", "true");
+			} else{
+					alert("optional already created. Skipping");
+			}
+	}
 
     return blocklyCode + "\n";
 }
@@ -262,7 +284,7 @@ function createBlocks(node, name, colour, listOfRefs){
 	var blockData="";	//Contains data sent by all the children merged together one after the other.
 	var childData=[];	//Keeps track of block data sent by children.
 	var childNames=[];	//Keeps track of children block names
-			
+
 	var isVisited=node.getAttribute("visited");
 	if(isVisited!=null || isVisited!=undefined){
 		var data="this.appendStatementInput().appendField('"+name+"');";
@@ -271,33 +293,33 @@ function createBlocks(node, name, colour, listOfRefs){
 	if(magicBlocks.indexOf(node.nodeName)!=-1){
 		node.setAttribute("visited","true");
 	}
-	
-	
+
+
 	for(var i=0;i<children.length;i++){
 		if(children[i].nodeName=="data"){
 			continue;
 		}
-		
+
 		var nameAttr=children[i].getAttribute("name");
-		
+
 		if(nameAttr==null){
 			nameAttr=children[i].nodeName;
 		}
-		
-		nameAttr=nameAttr.substring(0,3);	
-				
+
+		nameAttr=nameAttr.substring(0,3);
+
 		//The name for the child is given as <parent name/hierarchy>+<first 3 characters of the child element>+<index of the child as per its parent block>.
 		var nameForChild=name+":"+nameAttr+i;
-				
+
 		var dataReceivedFromChild=createBlocks(children[i], nameForChild, colour+45, listOfRefs);
 		blockData+=dataReceivedFromChild;
 		childData.push(dataReceivedFromChild);
 		childNames.push("block_"+nameForChild);
 	}
-			
+
 	var nodeType=node.nodeName;
-		
-		
+
+
 	if(nodeType=="element"){
 		if(children.length==1 && children[0].nodeName=="text"){
 			var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
@@ -307,15 +329,15 @@ function createBlocks(node, name, colour, listOfRefs){
 			blockData=data+blockData;
 		}
 	}
-	
-	
-	//attributes do not check the level below them as there is no functionality currently to handle datatypes and parameters. At the attribute node, a dummy input which has a label and an input field is generated. 
+
+
+	//attributes do not check the level below them as there is no functionality currently to handle datatypes and parameters. At the attribute node, a dummy input which has a label and an input field is generated.
 	else if(nodeType=="attribute"){
 		var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
 		return data;
 	}
-			
-			
+
+
 	else if(nodeType=="start"){
 		var blockName="block_"+name;
 		var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){this.appendDummyInput().appendField('"+name+"');"+blockData+"this.setColour("+colour+");}};";
@@ -323,9 +345,9 @@ function createBlocks(node, name, colour, listOfRefs){
 		blockNames.push(blockName);
 		return;
 	}
-	
-	
-			
+
+
+
 	else if(nodeType=="interleave"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
 
@@ -335,11 +357,11 @@ function createBlocks(node, name, colour, listOfRefs){
 			blocks.push(finalBlock);
 			blockNames.push(blockName);
 		}
-		
+
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+"]).appendField('"+name+"');";
 	}
-	
-	
+
+
 	else if(nodeType=="choice"){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
 		for(var i=0;i<childData.length;i++){
@@ -348,18 +370,18 @@ function createBlocks(node, name, colour, listOfRefs){
 			blocks.push(finalBlock);
 			blockNames.push(blockName);
 		}
-				
+
 		//This appends to the block which contains the choice tag and creates a notch there.
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+",'"+name+"']).appendField('"+name+"');";
 	}
-	
+
 
 	//get data from all children. Create a block for them. Send appendStatementInput to parent.
 	else if(nodeType=="oneOrMore" || nodeType=="zeroOrMore"){
 		//instead of keeping just block_+name as the block name, :child has been added to the name to handle cases where the parent oneOrMore node is also supposed to be in the form of a block. eg. <choice><oneOrMore></oneOrMore>.....</choice>
 		var blockName="block_"+name+":child";
 		var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+blockData+"this.setPreviousStatement(true,['"+blockName+"','"+name+"']);this.setNextStatement(true,['"+blockName+"']);this.setColour("+colour+");}};";
-		
+
 		var data;
 		if(nodeType=="oneOrMore"){
 			data="this.appendStatementInput('"+name+"').setCheck(['"+blockName+"']).appendField('"+name+"');oneOrMoreBlocks.push(this.id);";
@@ -370,8 +392,8 @@ function createBlocks(node, name, colour, listOfRefs){
 		blockNames.push(blockName);
 		return data;
 	}
-	
-	
+
+
 	else if(nodeType=="optional"){
 		/*
 		var childFields=[];
@@ -389,28 +411,28 @@ function createBlocks(node, name, colour, listOfRefs){
 		var childNamesInFormat="'"+childNames.join("','")+"'";
 		for(var i=0;i<childData.length;i++){
 			var blockName=childNames[i];
-			
+
 			var finalBlock="Blockly.Blocks['"+blockName+"']={init:function(){"+childData[i]+"this.setPreviousStatement(true,['"+name+"','"+blockName+"']);this.setColour("+colour+");}};";
 			blocks.push(finalBlock);
 			blockNames.push(blockName);
 		}
-				
+
 		blockData="this.appendStatementInput('"+name+"').setCheck(["+childNamesInFormat+",'"+name+"']).appendField('"+name+"');";
 	}
-			
-			
+
+
 	else if(nodeType=="define"){
 			var data="this.appendDummyInput().appendField('"+name+"');";
 			blockData=data+blockData;
 	}
-	
-	
+
+
 	else if(nodeType=="ref"){
 		var correspondingDefineName=node.getAttribute("name");
 		var corrDef = findOneNodeByTagAndName(rngDoc, "define", correspondingDefineName);
 		blockData=createBlocks(corrDef, name, colour, listOfRefs);
 	}
-	
+
 	else if(nodeType=="text"){
 		var parent=node.parentNode;
 		var children=parent.childNodes;
@@ -419,16 +441,16 @@ function createBlocks(node, name, colour, listOfRefs){
 				var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
 				return data;
 			}
-		}else{	
+		}else{
 			var data="this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'"+name+"');";
 			return data;
 		}
 	}
-	
+
 	//returns block data to the parent node that had called it
 	return blockData;
 }
-		
+
 
 //function to check if all the oneOrMore blocks have children attached to them.
 function validate(){
@@ -440,7 +462,7 @@ function validate(){
 		var connections=[];
 		var children=[];
 		var childBlockNames=[];	//contains all the allowed child block names
-		
+
 		if(currentBlock==null){
 			continue;
 		}else{
@@ -448,7 +470,7 @@ function validate(){
 			children=currentBlock.getChildren();
 			//get all connection types of the current block
 			connections=currentBlock.getConnections_();
-			
+
 			//last index of the array indicates the types of allowed connections for children blocks.
 			var childConn=connections[connections.length-1];
 			console.log(childConn);
@@ -458,7 +480,7 @@ function validate(){
 			for (var j=0;j<typesOfChildren.length;j++){
 				childBlockNames.push(typesOfChildren[j]);
 			}
-			
+
 			//parse through all the children of the current block being tested to check if it actually has a nested child element and not just a nextStatement. foundChild keeps track of whether currentBlock has at least one nested child attached to it.
 			for(var j=0;j<children.length;j++){
 				var currentChildBeingEvaluated=children[j].type;
@@ -479,9 +501,9 @@ function validate(){
 
 function checker(){
 	var source=this.sourceBlock_;
-	//get the name of the checkbox's dummyInput 
+	//get the name of the checkbox's dummyInput
 	var checkBoxFieldName=this.name.split("_checkbox")[0];
-	
+
 	var it;
 	var iplist=source.inputList;
 	//find out at which position of the inputList of source block, the checkbox is present.
@@ -490,7 +512,7 @@ function checker(){
 			break;
 		}
 	}
-	
+
 	if(this.state_==false){
 		for(var i=it+1;i<=(it+optionalNames.length);i++){
 			iplist[i].setVisible(true);
@@ -503,7 +525,7 @@ function checker(){
 		}
 		source.render();
 		return;
-	}	
+	}
 }
 
 
