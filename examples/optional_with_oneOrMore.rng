@@ -1,7 +1,6 @@
 <grammar ns="test_data" xmlns="http://relaxng.org/ns/structure/1.0">
 	<start>
 	
-	  <element name="super">
 		<element name="first">
 			<element name="first_child">
 				<text/>
@@ -33,6 +32,5 @@
 				</element>
 			</oneOrMore>
 		</element>	
-	  </element>
 	</start>
 </grammar>

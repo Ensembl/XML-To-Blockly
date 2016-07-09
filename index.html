@@ -22,9 +22,9 @@
         </xml>
 
         <div style="margin-left: 74%; width: 24%; height: 100%">
-        <input type="file" id="file"/>
-        <button id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">interpret RNG from the textarea below</button>
-        <textarea id=rng_area style="height: 95%; width: 100%"></textarea>
+        <input type="file" id="file" onchange="javascript:readFile(event)"/>
+        <button onclick="handleRNG( document.getElementById('rng_area').value )">interpret RNG from the textarea below</button>
+        <textarea id=rng_area onchange="javascript:document.getElementById('file').value=''" style="height: 95%; width: 100%"></textarea>
         <button id="saveBtn" onclick="validate();">Save</button>
         </div>
     </div>
@@ -32,9 +32,6 @@
 	<div id="results"></div>
 
     <script>
-        //Adds an event listener for detecting whether the user has provided a file as input or not.
-        document.getElementById("file").addEventListener('change',readFile);
-
         init();
     </script>
 	

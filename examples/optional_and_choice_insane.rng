@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<ref name="book"/>
+	</start>
+	
+	<define name="book">
+		<optional>
+		
+			<choice>
+				
+				<optional>
+					<element name="novel">
+						<text/>
+					</element>
+					
+					<element name="journal">
+						<text/>
+					</element>
+				</optional>
+				
+			</choice>
+			
+			<text/>
+		
+		</optional>	
+	</define>
+
+</grammar>
