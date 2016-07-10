@@ -161,8 +161,8 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
             currChild.setAttribute("context", substContext);                                // magic tags will use this to propagate the context
 
             if( magicBlocks.indexOf(currChild.nodeName)!=-1 ) {    // FIXME: change this for a generic test for all magic tags
-                currChild.setAttribute("context_child_idx", i.toString());                      // magic tags will need this to create a block
-            } else {
+                currChild.setAttribute("context_child_idx", "("+currChild.getAttribute("context")+"_"+i.toString()+")");                      // magic tags will need this to create a block
+			} else {
                 currChild.setAttribute("haveAlreadySeen", haveAlreadySeenStr);                  // non-magic tags will need this to support loop detection
             }
 
@@ -175,6 +175,7 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 
 
 function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
+	console.log(node.getAttribute("context_child_idx"));
     var nodeType = (node == null) ? "null" : node.nodeName;
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
@@ -229,25 +230,49 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
             alert("Choice "+context+"_ch"+context_child_idx+" has been visited already, skipping");
         }
     } else if(nodeType == "optional"){
-			var context = node.getAttribute("context");
-			var context_child_idx = node.getAttribute("context_child_idx");
-			var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-			var name = path + "OPT_";
+		var context = node.getAttribute("context");
+		var context_child_idx = node.getAttribute("context_child_idx");
+		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+		var name = path + "OPT_";
 
-			blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
+		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
+		
+		var childBlockName = path + "opt" + context_child_idx;
 
-			if(! node.hasAttribute("visited") ){
-					blockRequestQueue.push( {
-							"blockName"					:name,
-							"children"					:children,
-							"top"						:true,
-							"bottom"					:false
-						} );
+		if(! node.hasAttribute("visited") ){
+			blockRequestQueue.push( {
+				"blockName"					:childBlockName,
+				"children"					:children,
+				"top"						:true,
+				"bottom"					:false
+			} );
 
-					node.setAttribute("visited", "true");
-			} else{
-					alert("optional already created. Skipping");
-			}
+			node.setAttribute("visited", "true");
+		} else{
+			alert("optional already created. Skipping");
+		}
+	} else if(nodeType == "zeroOrMore"){
+		var context = node.getAttribute("context");
+		var context_child_idx = node.getAttribute("context_child_idx");
+		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+		var name = path + "ZER_";
+		
+		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"')";
+		
+		var childBlockName = path + "zer" + context_child_idx;
+		
+		if(! node.hasAttribute("visited") ){
+			blockRequestQueue.push( {
+				"blockName"					:childBlockName,
+				"children"					:children,
+				"top"						:true,
+				"bottom"					:true
+			} );
+
+			node.setAttribute("visited", "true");
+		} else{
+			alert("zeroOrMore already created. Skipping");
+		}
 	}
 
     return blocklyCode + "\n";
