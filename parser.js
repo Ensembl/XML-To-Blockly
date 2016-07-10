@@ -23,7 +23,7 @@ var creatingBlock=false;
 var indexSpecifier=-1;
 var seen=false;
 
-var magicBlocks=['oneOrMore','optional','zeroOrMore','choice'];
+var magicBlocks=['oneOrMore', 'optional', 'zeroOrMore', 'choice', 'interleave'];
 
 //init function for initializing the Blockly block area
 function init(){
@@ -175,7 +175,7 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 
 
 function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
-	console.log(node.getAttribute("context_child_idx"));
+	//console.log(node.getAttribute("context_child_idx"));
     var nodeType = (node == null) ? "null" : node.nodeName;
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
@@ -184,13 +184,17 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 
         blocklyCode = "this.appendDummyInput().appendField('*** CIRCULAR REFERENCE ***');"; // FIXME: can we escape directly out of the recursion in JS?
 
-    } else if(nodeType == "text") {
+    } 
+	
+	else if(nodeType == "text") {
 
         var name = path + "TXT";
 
         blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 
-    } else if(nodeType == "element") {
+    } 
+	
+	else if(nodeType == "element") {
         var nodeName = node.getAttribute("name");
 
         var name = path + "ELM_" + nodeName;
@@ -205,78 +209,104 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
         for(var i=0;i<children.length;i++){
             blocklyCode += goDeeper(codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
         }
-    } else if(nodeType == "choice") {
-        var context = node.getAttribute("context");
-        var context_child_idx = node.getAttribute("context_child_idx");
-        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-        var name = path + "CHO_";
+    }
 
-		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
-
-        if(! node.hasAttribute("visited") ) {
-            for(var i=0;i<children.length;i++){
-                var choiceChildNode = children[i];
-                var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || (path + "_ch" + context_child_idx + "_cse" + i);
-                blockRequestQueue.push( {
-                    "blockName"         : childBlockName,
-                    "children"          : [ choiceChildNode ],
-                    "top"               : true,
-                    "bottom"            : false
-                } );
-            }
-
-            node.setAttribute("visited", "true");
-        } else {
-            alert("Choice "+context+"_ch"+context_child_idx+" has been visited already, skipping");
-        }
-    } else if(nodeType == "optional"){
-		var context = node.getAttribute("context");
-		var context_child_idx = node.getAttribute("context_child_idx");
-		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-		var name = path + "OPT_";
-
-		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
-		
-		var childBlockName = path + "opt" + context_child_idx;
-
-		if(! node.hasAttribute("visited") ){
-			blockRequestQueue.push( {
-				"blockName"					:childBlockName,
-				"children"					:children,
-				"top"						:true,
-				"bottom"					:false
-			} );
-
-			node.setAttribute("visited", "true");
-		} else{
-			alert("optional already created. Skipping");
-		}
-	} else if(nodeType == "zeroOrMore"){
-		var context = node.getAttribute("context");
-		var context_child_idx = node.getAttribute("context_child_idx");
-		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-		var name = path + "ZER_";
-		
-		blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"')";
-		
-		var childBlockName = path + "zer" + context_child_idx;
-		
-		if(! node.hasAttribute("visited") ){
-			blockRequestQueue.push( {
-				"blockName"					:childBlockName,
-				"children"					:children,
-				"top"						:true,
-				"bottom"					:true
-			} );
-
-			node.setAttribute("visited", "true");
-		} else{
-			alert("zeroOrMore already created. Skipping");
-		}
+	else if(nodeType == "choice") {
+        blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path);
+    } 
+	
+	else if(nodeType == "interleave"){
+		blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path);
+	} 
+	
+	else if(nodeType == "optional"){
+		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path);
+	} 
+	
+	else if(nodeType == "zeroOrMore"){
+		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path);
 	}
+
+	else if(nodeType == "oneOrMore"){
+		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path);
+	}	
 
     return blocklyCode + "\n";
 }
+
+
+//creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
+function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path){
+	var context = node.getAttribute("context");
+    var context_child_idx = node.getAttribute("context_child_idx");
+    var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
+
+	var blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
+	
+	var bottomNotch="";			//denotes whether the children need to have notches at the bottom.
+	if(node.nodeName == "choice"){
+		bottomNotch = false;
+	} else{
+		bottomNotch = true;
+	}
+
+    if(! node.hasAttribute("visited") ) {
+        for(var i=0;i<children.length;i++){
+            var choiceChildNode = children[i];
+            var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || (path + "_" + node.nodeName.substring(0,3) + context_child_idx + "_cse" + i);
+            blockRequestQueue.push( {
+                "blockName"         : childBlockName,
+                "children"          : [ choiceChildNode ],
+                "top"               : true,
+                "bottom"            : bottomNotch
+            } );
+        }
+
+        node.setAttribute("visited", "true");
+    } else {
+        alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+    }
+	
+	return blocklyCode;
+}
+
+
+//creates a notch in its parent block with a label for the magic block that has called it. Then creates a SINGLE block for all its children.
+function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path){
+	var context = node.getAttribute("context");
+	var context_child_idx = node.getAttribute("context_child_idx");
+	var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");
+
+	var blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
+	
+	var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
+
+	var bottomNotch = "";
+	if(node.nodeName == "optional"){
+		bottomNotch = false;
+	} else{
+		bottomNotch = true;
+	}
+	
+	if(! node.hasAttribute("visited") ){
+		blockRequestQueue.push( {
+			"blockName"					:childBlockName,
+			"children"					:children,
+			"top"						:true,
+			"bottom"					:bottomNotch
+		} );
+
+		node.setAttribute("visited", "true");
+	} else{
+		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+	}
+	
+	return blocklyCode;
+}
+
+
 
 //Removes #text nodes
 //These are string elements present in the XML document between tags. The
