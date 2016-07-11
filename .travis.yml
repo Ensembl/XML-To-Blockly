@@ -1,0 +1,4 @@
+language: javascript
+javascript:
+  - 1.8.5
+script: phanomjs testTool.js
