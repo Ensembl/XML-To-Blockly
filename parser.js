@@ -90,7 +90,6 @@ function handleRNG( unparsedRNG ){
 		
 		//If there is already a block like the current one and that block's name is start, then we create a separate block for current one in order to compulsorily have a start block.
 		if( (! (codeDict[blockCode] ==undefined && codeDict[blockCode]==null)) && codeDict[blockCode].blockName == "start" ){
-			console.log((codeDict[blockCode]).blockName);
 			blockCode+="this.appendDummyInput();";
 		}
 		
@@ -161,7 +160,7 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
             currChild.setAttribute("context", substContext);                                // magic tags will use this to propagate the context
 
             if( magicBlocks.indexOf(currChild.nodeName)!=-1 ) {    // FIXME: change this for a generic test for all magic tags
-                currChild.setAttribute("context_child_idx", "("+currChild.getAttribute("context")+"_"+i.toString()+")");                      // magic tags will need this to create a block
+                currChild.setAttribute("context_child_idx", "("+currChild.getAttribute("context")+"_"+i.toString()+")");  // magic tags will need this to create a block
 			} else {
                 currChild.setAttribute("haveAlreadySeen", haveAlreadySeenStr);                  // non-magic tags will need this to support loop detection
             }
@@ -264,9 +263,12 @@ function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, pat
         }
 
         node.setAttribute("visited", "true");
-    } else {
-        alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
-    }
+    } else if(node.nodeName == "interleave") {
+		alert("circular ref loop detected because of "+node.nodeName);
+		blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
+    } else{
+		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+	}
 	
 	return blocklyCode;
 }
@@ -299,7 +301,10 @@ function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlready
 		} );
 
 		node.setAttribute("visited", "true");
-	} else{
+	} else if(node.nodeName == "oneOrMore") {
+		alert("circular ref loop detected because of oneOrMore");
+		blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
+	} else {
 		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 	}
 	
