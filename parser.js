@@ -253,7 +253,7 @@ function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, pat
     if(! node.hasAttribute("visited") ) {
         for(var i=0;i<children.length;i++){
             var choiceChildNode = children[i];
-            var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || (path + "_" + node.nodeName.substring(0,3) + context_child_idx + "_cse" + i);
+            var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
             blockRequestQueue.push( {
                 "blockName"         : childBlockName,
                 "children"          : [ choiceChildNode ],
