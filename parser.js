@@ -210,6 +210,25 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
         }
     }
 
+	
+	else if(nodeType == "attribute") {
+        var nodeName = node.getAttribute("name");
+
+        var name = path + "ATT_" + nodeName;
+        var context = node.getAttribute("context");
+        haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
+        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+
+        if( children.length == 0 ){
+			blocklyCode += "this.appendDummyInput().appendField('" + name + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+		} else{
+			for(var i=0;i<children.length;i++){
+				blocklyCode += goDeeper(codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+			}
+		}
+    }
+	
+	
 	else if(nodeType == "choice") {
         blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path);
     } 
