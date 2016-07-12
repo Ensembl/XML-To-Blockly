@@ -206,7 +206,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
         }
 
         for(var i=0;i<children.length;i++){
-            blocklyCode += goDeeper(codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+            blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
         }
     }
 
@@ -223,10 +223,23 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 			blocklyCode += "this.appendDummyInput().appendField('" + name + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 		} else{
 			for(var i=0;i<children.length;i++){
-				blocklyCode += goDeeper(codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+				blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			}
 		}
     }
+	
+	
+	else if(nodeType == "group"){
+		var context = node.getAttribute("context");
+		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+		var name = path + "GRO_";	
+
+		var blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"');";
+		
+		for(var i=0;i<children.length;i++){
+			blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+		}
+	}
 	
 	
 	else if(nodeType == "choice") {
