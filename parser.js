@@ -202,12 +202,20 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
-        if(! (children.length==1 && children[0]!= null && children[0].nodeName=="text") ) {
+        var singleChild = ['text', 'data', 'value'];
+		if(! (children.length == 1 && singleChild.indexOf(children[0].nodeName)!=-1) ) {
             blocklyCode += "this.appendDummyInput().appendField('"+name+"');";  // a label for the (non-empty) parent
         }
 
+		var childData="";
         for(var i=0;i<children.length;i++){
-            blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+            childData += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+			
+			if(childData.indexOf("'"+name+"'")!=-1){	//if element has choice which has value
+				blocklyCode = childData;
+			}else{
+				blocklyCode += childData;
+			}
         }
     }
 
@@ -259,7 +267,21 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 	
 	
 	else if(nodeType == "choice") {
-        blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path);
+		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
+		if(values == false){
+			blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path);
+		} else{
+			var lastUnderscore = -1;
+			for(var i=path.length-1;i>=0;i--){
+				if(path.charAt(i) == "_"){
+					lastUnderscore = i;
+					break;
+				}
+			}
+			var parentName = path.substring(0 , lastUnderscore);
+			blocklyCode = "this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
+		}
+        
     } 
 	
 	else if(nodeType == "interleave"){
@@ -359,6 +381,26 @@ function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlready
 	return blocklyCode;
 }
 
+
+function allChildrenValueTags(node){
+	var allValues = "";
+	var children = node.childNodes;
+	
+	for(var i=0;i<children.length;i++){
+		if(children[i].nodeName == "value"){
+			var value=children[i].textContent;
+			if(allValues==""){
+				allValues="['"+value+"','"+value+"']";
+			}else{
+				allValues=allValues+",['"+value+"','"+value+"']";
+			}
+		}else{
+			return false;
+		}
+	}
+	
+	return allValues;
+}
 
 
 //Removes #text nodes
