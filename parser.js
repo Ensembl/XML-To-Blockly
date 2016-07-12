@@ -23,7 +23,8 @@ var creatingBlock=false;
 var indexSpecifier=-1;
 var seen=false;
 
-var magicBlocks=['oneOrMore', 'optional', 'zeroOrMore', 'choice', 'interleave'];
+var magicBlocks=[ 'oneOrMore' , 'optional' , 'zeroOrMore' , 'choice' , 'interleave' ];
+var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
 //init function for initializing the Blockly block area
 function init(){
@@ -234,11 +235,26 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";	
 
-		var blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"');";
+		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"');";
 		
 		for(var i=0;i<children.length;i++){
 			blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 		}
+	}
+	
+	//currently data ignores any <param> tags that it may contain
+	else if(nodeType == "data"){
+		var type=node.getAttribute("type");
+		if(type!=null){
+			if(numberTypes.indexOf(type)!=-1){
+				type="Blockly.FieldTextInput.numberValidator";
+			}else{
+				type=null;
+			}
+		}
+		var name = path + "DAT_";
+		
+		blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
 	}
 	
 	
