@@ -86,7 +86,7 @@ function handleRNG( unparsedRNG ){
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
         for(var i=0;i<children.length;i++){
-            blockCode += goDeeper(codeDict, blockRequestQueue, children[i], "{}", i );
+            blockCode += goDeeper( blockRequestQueue, children[i], "{}", i );
         }
 		
 		//If there is already a block like the current one and that block's name is start, then we create a separate block for current one in order to compulsorily have a start block.
@@ -174,7 +174,7 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 }
 
 
-function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
+function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 	//console.log(node.getAttribute("context_child_idx"));
     var nodeType = (node == null) ? "null" : node.nodeName;
 
@@ -211,7 +211,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 		
 		var childData="";
 		if(children.length == 1){
-			childData = goDeeper( codeDict, blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0 );
+			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0 );
 			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
 			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
 			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
@@ -222,13 +222,13 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 			}
 		}else{
 			for(var i=0;i<children.length;i++){
-				blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			}
 		}
 		
 		/*
         for(var i=0;i<children.length;i++){
-            childData = goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+            childData = goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			
 			if(childData.indexOf("'"+name+"'")!=-1){	//if element has choice which has value
 				blocklyCode = childData;
@@ -251,7 +251,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 			blocklyCode += "this.appendDummyInput().appendField('" + name + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 		} else{
 			for(var i=0;i<children.length;i++){
-				blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			}
 		}
     }
@@ -265,7 +265,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"');";
 		
 		for(var i=0;i<children.length;i++){
-			blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 		}
 	}
 	/*
