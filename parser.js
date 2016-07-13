@@ -209,7 +209,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 
 		var childData="";
         for(var i=0;i<children.length;i++){
-            childData += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+            childData = goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			
 			if(childData.indexOf("'"+name+"'")!=-1){	//if element has choice which has value
 				blocklyCode = childData;
@@ -249,6 +249,14 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 			blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 		}
 	}
+	/*
+	//we'll reach here only if a node has value as one child and has some other types of children along with it(unlikely situation)
+	else if(nodeType == "value"){
+		var name = path + "VAL_";
+		var content = node.textContent;
+		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"').appendField('\t"+content+"');";
+	}
+	*/
 	
 	//currently data ignores any <param> tags that it may contain
 	else if(nodeType == "data"){
@@ -269,7 +277,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 	else if(nodeType == "choice") {
 		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
 		if(values == false){
-			blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path);
+			blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path, false, true);
 		} else{
 			var lastUnderscore = -1;
 			for(var i=path.length-1;i>=0;i--){
@@ -285,19 +293,19 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
     } 
 	
 	else if(nodeType == "interleave"){
-		blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path);
+		blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path, true, false);
 	} 
 	
 	else if(nodeType == "optional"){
-		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path);
+		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path, false, true);
 	} 
 	
 	else if(nodeType == "zeroOrMore"){
-		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path);
+		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path, true, true);
 	}
 
 	else if(nodeType == "oneOrMore"){
-		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path);
+		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path, true, false);
 	}	
 
     return blocklyCode + "\n";
@@ -305,7 +313,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 
 
 //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path){
+function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotch, sensitive){
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
     var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
@@ -313,13 +321,6 @@ function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, pat
 
 	var blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
 	
-	var bottomNotch="";			//denotes whether the children need to have notches at the bottom.
-	if(node.nodeName == "choice"){
-		bottomNotch = false;
-	} else{
-		bottomNotch = true;
-	}
-
     if(! node.hasAttribute("visited") ) {
         for(var i=0;i<children.length;i++){
             var choiceChildNode = children[i];
@@ -333,11 +334,11 @@ function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, pat
         }
 
         node.setAttribute("visited", "true");
-    } else if(node.nodeName == "interleave") {
+    } else if(sensitive) {
+		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+    } else{
 		alert("circular ref loop detected because of "+node.nodeName);
 		blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
-    } else{
-		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 	}
 	
 	return blocklyCode;
@@ -345,7 +346,7 @@ function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, pat
 
 
 //creates a notch in its parent block with a label for the magic block that has called it. Then creates a SINGLE block for all its children.
-function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path){
+function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotch, sensitive){
 	var context = node.getAttribute("context");
 	var context_child_idx = node.getAttribute("context_child_idx");
 	var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
@@ -354,13 +355,6 @@ function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlready
 	var blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
 	
 	var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
-
-	var bottomNotch = "";
-	if(node.nodeName == "optional"){
-		bottomNotch = false;
-	} else{
-		bottomNotch = true;
-	}
 	
 	if(! node.hasAttribute("visited") ){
 		blockRequestQueue.push( {
@@ -371,11 +365,11 @@ function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlready
 		} );
 
 		node.setAttribute("visited", "true");
-	} else if(node.nodeName == "oneOrMore") {
+	} else if(sensitive) {
+		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+	} else {
 		alert("circular ref loop detected because of oneOrMore");
 		blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
-	} else {
-		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 	}
 	
 	return blocklyCode;
