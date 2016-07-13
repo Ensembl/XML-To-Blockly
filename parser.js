@@ -222,7 +222,7 @@ function goDeeper(codeDict, blockRequestQueue, node, haveAlreadySeenStr, path) {
 			}
 		}else{
 			for(var i=0;i<children.length;i++){
-				blocklyCode = goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+				blocklyCode += goDeeper( codeDict, blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			}
 		}
 		
