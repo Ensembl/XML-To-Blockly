@@ -89,9 +89,9 @@ function handleRNG( unparsedRNG ){
             blockCode += goDeeper( blockRequestQueue, children[i], "{}", i );
         }
 		
-		//If there is already a block like the current one and that block's name is start, then we create a separate block for current one in order to compulsorily have a start block.
-		if( (! (codeDict[blockCode] ==undefined && codeDict[blockCode]==null)) && codeDict[blockCode].blockName == "start" ){
-			blockCode+="this.appendDummyInput();";
+		// We want to always have a start block and here we force its blockCode to be unique
+		if (blockName == "start") {
+			blockCode += " ";
 		}
 		
         codeDict[blockCode] = {
