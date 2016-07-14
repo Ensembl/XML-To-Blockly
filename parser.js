@@ -68,6 +68,7 @@ function handleRNG( unparsedRNG ){
 
     var codeDict            = {};   // maps block names to the code (to be reviewed)
     var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
+    var blockOrder          = [];   // the block descriptions, ordered by their position in the queue
 
     blockRequestQueue.push( {
         "blockName"         : "start",
@@ -107,6 +108,7 @@ function handleRNG( unparsedRNG ){
                 "topList"       : topList,
                 "bottomList"    : bottomList
             };
+            blockOrder.push( codeDict[blockCode] );   // this is a reference to the same object, so that further modifications of topList and bottomList are seen
         }
     }
 
@@ -115,8 +117,8 @@ function handleRNG( unparsedRNG ){
     var blockCounter    = 0;
     var blockCode;
 
-    for (var key in codeDict) {
-        var dictEntry   = codeDict[key];
+    for (var i=0;i<blockOrder.length;i++){
+        var dictEntry   = blockOrder[i];
         var blockName   = dictEntry.blockName;
         var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
         var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
