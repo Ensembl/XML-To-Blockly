@@ -113,6 +113,7 @@ function handleRNG( unparsedRNG ){
     var toolboxXML      = "";
     var allCode         = "";
     var blockCounter    = 0;
+    var blockCode;
 
     for (var key in codeDict) {
         var dictEntry   = codeDict[key];
@@ -122,7 +123,7 @@ function handleRNG( unparsedRNG ){
 
         toolboxXML  += "<block type='block_" + blockCounter + "'></block>";
 
-        allCode    += "\nBlockly.Blocks['block_" + blockCounter+"']={ init:function() {"
+        blockCode   = "\nBlockly.Blocks['block_" + blockCounter+"']={ init:function() {"
                     + "this.appendDummyInput().appendField('====[ " + blockCounter + ": " + blockName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
@@ -130,6 +131,8 @@ function handleRNG( unparsedRNG ){
                     + "this.setColour(" + hue.generate() + ");"
                     + "}};\n";
 
+        blockCode = blockCode.replace(/\n{2,}/g, "\n");
+        allCode += blockCode;
         blockCounter++;
     }
     document.getElementById('toolbox').innerHTML = toolboxXML;
