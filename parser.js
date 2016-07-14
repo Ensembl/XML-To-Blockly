@@ -72,18 +72,17 @@ function handleRNG( unparsedRNG ){
     blockRequestQueue.push( {
         "blockName"         : "start",
         "children"          : substitutedNodeList(startContent, "{}", "START"),
-        "top"               : [],
-        "bottom"            : []
+        "topList"           : [],
+        "bottomList"        : []
     } );  // initialize the queue
 
-		var blockCounter = 0;
     while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest = blockRequestQueue.shift();
 
-        var blockName    = blockCounter++;
         var children     = blockRequest.children;
-        var top          = blockRequest.top;
-        var bottom       = blockRequest.bottom;
+        var blockName    = blockRequest.blockName;
+        var topList      = blockRequest.topList;
+        var bottomList   = blockRequest.bottomList;
 
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
@@ -91,79 +90,47 @@ function handleRNG( unparsedRNG ){
             blockCode += goDeeper( blockRequestQueue, children[i], "{}", i );
         }
 
-				// We want to always have a start block and here we force its blockCode to be unique
-				if (blockName == "0") {
-					blockCode += " ";
-				}
+            // We want to always have a start block and here we force its blockCode to be unique
+        if( blockName == "start" ) {
+            blockCode += " ";
+        }
 
-				if(codeDict[blockCode] != undefined){
-					if(codeDict[blockCode].top == "false"){
-						if(top.length == 0){
-							top = "false";
-						} else{
-							top = "true, ["+ top +"]";
-						}
-					} else{
-						if(top.length == 0){
-							top = codeDict[blockCode].top;
-						} else{
-							top = top.concat(codeDict[blockCode].top);
-							top = "true, ["+ top +"]";
-						}
-					}
+        if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created this block already, just merge the compatibility lists
+            codeDict[blockCode].topList.push( topList );
+            codeDict[blockCode].bottomList.push( bottomList );
 
-					if(codeDict[blockCode].bottom == "false"){
-						if(bottom.length == 0){
-							bottom = "false";
-						} else{
-							bottom = "true, ["+ bottom +"]";
-						}
-					} else{
-						if(bottom.length == 0){
-							bottom = codeDict[blockCode].bottom;
-						} else{
-							bottom = bottom.concat(codeDict[blockCode].bottom);
-							bottom = "true, ["+ bottom +"]";
-						}
-					}
-				} else{
-					if(top.length ==0){
-						top = "false";
-					}else{
-						top = "true, ["+top+"]";
-					}
+        } else {    // otherwise create a new block
 
-					if(bottom.length ==0){
-						bottom = "false";
-					}else{
-						bottom = "true, ["+bottom+"]";
-					}
-				}
-
-
-        codeDict[blockCode] = {
-            "blockName" : blockName,
-            "blockCode" : blockCode,
-            "top"       : top,
-            "bottom"    : bottom
-        };
+            codeDict[blockCode] = {
+                "blockName"     : blockName,    // it is only a "suggested display name", we use numbers internally
+                "blockCode"     : blockCode,
+                "topList"       : topList,
+                "bottomList"    : bottomList
+            };
+        }
     }
 
-    var toolboxXML  = "";
-    var allCode     = "";
+    var toolboxXML      = "";
+    var allCode         = "";
+    var blockCounter    = 0;
+
     for (var key in codeDict) {
         var dictEntry   = codeDict[key];
         var blockName   = dictEntry.blockName;
+        var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
+        var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
 
-        toolboxXML  += "<block type='" + blockName + "'></block>";
+        toolboxXML  += "<block type='block_" + blockCounter + "'></block>";
 
-        allCode    += "\nBlockly.Blocks['" + blockName+"']={ init:function() {"
-                    + "this.appendDummyInput().appendField('====[ " + blockName + " ]====');\n"
+        allCode    += "\nBlockly.Blocks['block_" + blockCounter+"']={ init:function() {"
+                    + "this.appendDummyInput().appendField('====[ " + blockCounter + ": " + blockName + " ]====');\n"
                     + dictEntry.blockCode
-                    + "this.setPreviousStatement(" + dictEntry.top + ");"
-                    + "this.setNextStatement(" + dictEntry.bottom + ");"
+                    + "this.setPreviousStatement(" + topText + ");"
+                    + "this.setNextStatement(" + bottomText + ");"
                     + "this.setColour(" + hue.generate() + ");"
                     + "}};\n";
+
+        blockCounter++;
     }
     document.getElementById('toolbox').innerHTML = toolboxXML;
     document.getElementById('results').innerHTML = "<pre>" + allCode + "</pre>";
@@ -386,12 +353,8 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
 	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(['"+slotNumber+"']).appendField('"+name+"');";
 	//each block will have a topnotch. It may or may not have a bottom notch depending on the value of bottomNotch passed by the user.
-	var topNotch = ["'"+slotNumber.toString()+"'"];
-	if(bottomNotch == true){
-		bottomNotch = ["'"+slotNumber.toString()+"'"];
-	} else{
-		bottomNotch = [];
-	}
+	var topList     = ["'"+slotNumber.toString()+"'"];
+    var bottomList  = bottomNotch ? topList : [];
 	slotNumber++;
 
     if(! node.hasAttribute("visited") ) {
@@ -402,24 +365,24 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             blockRequestQueue.push( {
                 "blockName"         : childBlockName,
                 "children"          : [ choiceChildNode ],
-                "top"               : topNotch,
-                "bottom"            : bottomNotch
+                "topList"           : topList,
+                "bottomList"        : bottomList
             } );
         }
 			} else{
 				var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
 				blockRequestQueue.push( {
-					"blockName"					:childBlockName,
-					"children"					:children,
-					"top"								:topNotch,
-					"bottom"						:bottomNotch
+					"blockName"     : childBlockName,
+					"children"      : children,
+					"topList"       : topList,
+					"bottomList"    : bottomList
 				} );
 			}
 
         node.setAttribute("visited", "true");
     } else if(sensitive) {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
-			blocklyCode = "this.appendStatementInput('"+(slotNumber-1)+"').appendField('"+name+"');";
+			// blocklyCode = "this.appendStatementInput('"+(slotNumber-1)+"').appendField('"+name+"');";
     } else{
 			alert("circular ref loop detected because of "+node.nodeName);
 			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
