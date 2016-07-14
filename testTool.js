@@ -52,6 +52,9 @@ if(system.args.length > 1){					//system.args[0] is the filename itself
 }
 
 var page = webPage.create();
+page.onConsoleMessage = function(msg, lineNum, sourceId) {
+  console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")\n');
+};
 page.open("index.html", function(status){
 	if(status=="success"){
 		console.log("success");
