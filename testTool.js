@@ -81,7 +81,7 @@ page.open("index.html", function(status){
 				}
 				var index = results.indexOf(expectedOutput[j]);
 				if(index == -1){
-					if(printedPrettyStatement == false){
+					if(!printedPrettyStatement){
 						console.log("\nDidn't find the following blocks:\n");
 						printedPrettyStatement = true;
 					}
@@ -99,7 +99,7 @@ page.open("index.html", function(status){
 					if(results[j] == -1){
 						continue;
 					}	
-					if(printedPrettyStatement == false){
+					if(!printedPrettyStatement){
 						console.log("Found these unexpected blocks:\n");
 						printedPrettyStatement = true;
 					}
@@ -108,7 +108,7 @@ page.open("index.html", function(status){
 				}
 			}
 			
-			if(printedPrettyStatement == true){
+			if(printedPrettyStatement){
 				failedTestNames.push(fileList[i]);
 				failed++;
 			}else{
