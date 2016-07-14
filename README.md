@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/anujk14/XML-To-Blockly.svg?branch=master)](https://travis-ci.org/anujk14/XML-To-Blockly)
+
 # Introduction
 
 This [project](https://anujk14.github.io/XML-To-Blockly/) is funded by the 2016 edition of the [Google Summer of Code program](https://summerofcode.withgoogle.com/).
