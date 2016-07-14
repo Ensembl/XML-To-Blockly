@@ -6,8 +6,8 @@
  *
  *	phantomjs testTool.js   <file name (optional)>   <results folder path(optional)>
  *
- *	If input folder path isn't specified, "rng files" folder in the repo is used as default folder for input files
- * 	If output folder path isn't specified, "expected results" folder in the repo is used as default folder to look for expected results
+ *	If input folder path isn't specified, "examples" folder in the repo is used as default folder for input files
+ * 	If output folder path isn't specified, "output_examples" folder in the repo is used as default folder to look for expected results
  *
  */
  
@@ -18,9 +18,10 @@ var webPage = require('webpage');
 
 var passed = 0;
 var failed = 0;
+var skipped = 0;
 
-var inputFolderName = "rng files";
-var resultsDirectory = "expected results";
+var inputFolderName = "examples";
+var resultsDirectory = "output_examples";
 var failedTestNames = [];
 
 var fileList;
@@ -56,6 +57,11 @@ page.open("index.html", function(status){
 		console.log("success");
 		for(var i=0; i<fileList.length; i++){
 			console.log("Input file: "+fileList[i]);
+			if (!checkIfExpectedOutput(fileList[i])) {
+			      console.log("No expected output, skipping");
+			      skipped++;
+			      continue;
+			}
 			
 			var expectedOutput = getExpectedOutput( fileList[i] );	//get expected output for current file
 			
@@ -104,10 +110,12 @@ page.open("index.html", function(status){
 				failed++;
 			}else{
 				passed++;
+				console.log("passed");
 			}
 		}
 		console.log("\nPassed: " + passed + "/" + fileList.length);
 		console.log("Failed: " + failed + "/" + fileList.length);
+		console.log("Skipped: " + skipped + "/" + fileList.length);
 		if(failedTestNames.length>0){
 			console.log("\nFailed for the following files:");
 			for(var i=0; i<failedTestNames.length; i++){
@@ -126,17 +134,22 @@ function performPageOperations(input){
 	var btn = document.getElementById('interpretBtn');
 	btn.click();
 	var results = document.getElementById('results').innerHTML;
-	results = results.replace(new RegExp('<p>', 'g'), '');
-	results = results.split('</p>');
+	results = results.replace(new RegExp('<pre>', 'g'), '');
+	results = results.split('</pre>');
 	results.splice(results.length-1, 1);	//after splitting, the last tag is an empty one, so remove it
 	return results;
 }
 
 
+function checkIfExpectedOutput(fileNameWithExtension){
+	var fileName = fileNameWithExtension.split(".rng")[0];
+	return fs.isReadable(resultsDirectory + fs.separator + fileName + ".txt");
+}
+
 function getExpectedOutput(fileNameWithExtension){
 	var fileName = fileNameWithExtension.split(".rng")[0];
 	var expectedOutput = fs.read(resultsDirectory + fs.separator + fileName + ".txt");
-	expectedOutput = expectedOutput.split("\n");
+	expectedOutput = expectedOutput.split(/\n{2,}/);
 	return expectedOutput;
 }
 

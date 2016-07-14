@@ -113,7 +113,7 @@ function handleRNG( unparsedRNG ){
     }
 
     var toolboxXML      = "";
-    var allCode         = "";
+    var allCode         = [];
     var blockCounter    = 0;
     var blockCode;
 
@@ -126,22 +126,22 @@ function handleRNG( unparsedRNG ){
 
         toolboxXML  += "<block type='" + blockName + "'></block>";
 
-        blockCode   = "\nBlockly.Blocks['" + blockName + "']={ init:function() {"
+        blockCode   = "Blockly.Blocks['" + blockName + "']={ init:function() {"
                     + "this.appendDummyInput().appendField('====[ " + blockCounter + ": " + blockName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
                     + "this.setNextStatement(" + bottomText + ");"
                     + "this.setColour(" + hue.generate() + ");"
-                    + "}};\n";
+                    + "}};";
 
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
-        allCode += blockCode;
+        allCode.push(blockCode);
         blockCounter++;
     }
     document.getElementById('toolbox').innerHTML = toolboxXML;
-    document.getElementById('results').innerHTML = "<pre>" + allCode + "</pre>";
+    document.getElementById('results').innerHTML = "<pre>" + allCode.join("</pre><pre>") + "</pre>";
 
-    eval(allCode);
+    eval(allCode.join(""));
 
     blocklyWorkspace.clear();
     blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
