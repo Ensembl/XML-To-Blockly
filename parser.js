@@ -18,6 +18,7 @@ var blockNames;
 var oneOrMoreBlocks;
 var optionalNames;
 var rngDoc;
+var slotNumber=0;
 
 var creatingBlock=false;
 var indexSpecifier=-1;
@@ -88,12 +89,12 @@ function handleRNG( unparsedRNG ){
         for(var i=0;i<children.length;i++){
             blockCode += goDeeper( blockRequestQueue, children[i], "{}", i );
         }
-		
+
 		// We want to always have a start block and here we force its blockCode to be unique
 		if (blockName == "start") {
 			blockCode += " ";
 		}
-		
+
         codeDict[blockCode] = {
             "blockName" : blockName,
             "blockCode" : blockCode,
@@ -184,16 +185,16 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
         blocklyCode = "this.appendDummyInput().appendField('*** CIRCULAR REFERENCE ***');"; // FIXME: can we escape directly out of the recursion in JS?
 
-    } 
-	
+    }
+
 	else if(nodeType == "text") {
 
         var name = path + "TXT";
 
         blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 
-    } 
-	
+    }
+
 	else if(nodeType == "element") {
         var nodeName = node.getAttribute("name");
 
@@ -207,15 +208,14 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
             blocklyCode += "this.appendDummyInput().appendField('"+name+"');";  // a label for the (non-empty) parent
         }
 
-		var childData="";
-		
-		var childData="";
+
 		if(children.length == 1){
+			var childData="";
 			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0 );
 			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
 			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
 			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
-			if(childData.indexOf("'"+name+"'")!=-1){	
+			if(childData.indexOf("'"+name+"'")!=-1){
 				blocklyCode = childData;
 			}else{
 				blocklyCode += childData;
@@ -225,11 +225,11 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			}
 		}
-		
+
 		/*
         for(var i=0;i<children.length;i++){
             childData = goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
-			
+
 			if(childData.indexOf("'"+name+"'")!=-1){	//if element has choice which has value
 				blocklyCode = childData;
 			}else{
@@ -238,7 +238,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
         }*/
     }
 
-	
+
 	else if(nodeType == "attribute") {
         var nodeName = node.getAttribute("name");
 
@@ -255,15 +255,15 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 			}
 		}
     }
-	
-	
+
+
 	else if(nodeType == "group"){
 		var context = node.getAttribute("context");
 		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-		var name = path + "GRO_";	
+		var name = path + "GRO_";
 
 		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"');";
-		
+
 		for(var i=0;i<children.length;i++){
 			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 		}
@@ -276,7 +276,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"').appendField('\t"+content+"');";
 	}
 	*/
-	
+
 	//currently data ignores any <param> tags that it may contain
 	else if(nodeType == "data"){
 		var type=node.getAttribute("type");
@@ -288,11 +288,11 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 			}
 		}
 		var name = path + "DAT_";
-		
+
 		blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
 	}
-	
-	
+
+
 	else if(nodeType == "choice") {
 		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
 		if(values == false){
@@ -308,24 +308,24 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 			var parentName = path.substring(0 , lastUnderscore);
 			blocklyCode = "this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
 		}
-        
-    } 
-	
+
+    }
+
 	else if(nodeType == "interleave"){
 		blocklyCode = createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, path, true, false);
-	} 
-	
+	}
+
 	else if(nodeType == "optional"){
 		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path, false, true);
-	} 
-	
+	}
+
 	else if(nodeType == "zeroOrMore"){
 		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path, true, true);
 	}
 
 	else if(nodeType == "oneOrMore"){
 		blocklyCode = createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlreadySeenStr, path, true, false);
-	}	
+	}
 
     return blocklyCode + "\n";
 }
@@ -338,8 +338,9 @@ function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, pat
     var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
-	var blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
-	
+	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').appendField('"+name+"');";
+	slotNumber++;
+
     if(! node.hasAttribute("visited") ) {
         for(var i=0;i<children.length;i++){
             var choiceChildNode = children[i];
@@ -359,7 +360,7 @@ function createOneBlockPerChild(blockRequestQueue, node, haveAlreadySeenStr, pat
 		alert("circular ref loop detected because of "+node.nodeName);
 		blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
 	}
-	
+
 	return blocklyCode;
 }
 
@@ -371,16 +372,17 @@ function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlready
 	var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");
 
-	var blocklyCode = "this.appendStatementInput('"+name+"').appendField('"+name+"');";
-	
+	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').appendField('"+name+"');";
+	slotNumber++;
+
 	var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
-	
+
 	if(! node.hasAttribute("visited") ){
 		blockRequestQueue.push( {
 			"blockName"					:childBlockName,
 			"children"					:children,
-			"top"						:true,
-			"bottom"					:bottomNotch
+			"top"								:true,
+			"bottom"						:bottomNotch
 		} );
 
 		node.setAttribute("visited", "true");
@@ -390,7 +392,7 @@ function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlready
 		alert("circular ref loop detected because of oneOrMore");
 		blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
 	}
-	
+
 	return blocklyCode;
 }
 
@@ -398,7 +400,7 @@ function createConsolidatedBlockForChildren(blockRequestQueue, node, haveAlready
 function allChildrenValueTags(node){
 	var allValues = "";
 	var children = node.childNodes;
-	
+
 	for(var i=0;i<children.length;i++){
 		if(children[i].nodeName == "value"){
 			var value=children[i].textContent;
@@ -411,7 +413,7 @@ function allChildrenValueTags(node){
 			return false;
 		}
 	}
-	
+
 	return allValues;
 }
 
@@ -439,7 +441,7 @@ function _removeNodeNameRecursively(node, name) {
 			continue;
 		}else{
 			_removeNodeNameRecursively(children[i], name);
-		}	
+		}
 	}
 }
 
