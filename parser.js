@@ -90,7 +90,7 @@ function handleRNG( unparsedRNG ){
         for(var i=0;i<children.length;i++){
             blockCode += goDeeper( blockRequestQueue, children[i], "{}", i );
         }
-				
+
 				// We want to always have a start block and here we force its blockCode to be unique
 				if (blockName == "0") {
 					blockCode += " ";
@@ -418,10 +418,11 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
         node.setAttribute("visited", "true");
     } else if(sensitive) {
-		alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+			blocklyCode = "this.appendStatementInput('"+(slotNumber-1)+"').appendField('"+name+"');";
     } else{
-		alert("circular ref loop detected because of "+node.nodeName);
-		blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
+			alert("circular ref loop detected because of "+node.nodeName);
+			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
 	}
 
 	return blocklyCode;
