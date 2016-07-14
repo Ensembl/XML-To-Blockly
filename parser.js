@@ -119,13 +119,14 @@ function handleRNG( unparsedRNG ){
 
     for (var i=0;i<blockOrder.length;i++){
         var dictEntry   = blockOrder[i];
-        var blockName   = dictEntry.blockName;
+        var displayName = dictEntry.blockName;
+        var blockName   = "block_" + blockCounter;
         var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
         var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
 
-        toolboxXML  += "<block type='block_" + blockCounter + "'></block>";
+        toolboxXML  += "<block type='" + blockName + "'></block>";
 
-        blockCode   = "\nBlockly.Blocks['block_" + blockCounter+"']={ init:function() {"
+        blockCode   = "\nBlockly.Blocks['" + blockName + "']={ init:function() {"
                     + "this.appendDummyInput().appendField('====[ " + blockCounter + ": " + blockName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
