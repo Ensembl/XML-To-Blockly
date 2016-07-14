@@ -47,7 +47,7 @@ function readFile(event) {
 
 //handles xml by creating blocks as per RNG rules
 function handleRNG( unparsedRNG ){
-
+		slotNumber = 0;	//re-initialize each time the user chooses a new file
     blocks=[];
     blockNames=[];
     oneOrMoreBlocks=[];
@@ -72,14 +72,15 @@ function handleRNG( unparsedRNG ){
     blockRequestQueue.push( {
         "blockName"         : "start",
         "children"          : substitutedNodeList(startContent, "{}", "START"),
-        "top"               : false,
-        "bottom"            : false
+        "top"               : [],
+        "bottom"            : []
     } );  // initialize the queue
 
+		var blockCounter = 0;
     while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest = blockRequestQueue.shift();
 
-        var blockName    = blockRequest.blockName;
+        var blockName    = blockCounter++;
         var children     = blockRequest.children;
         var top          = blockRequest.top;
         var bottom       = blockRequest.bottom;
@@ -89,11 +90,56 @@ function handleRNG( unparsedRNG ){
         for(var i=0;i<children.length;i++){
             blockCode += goDeeper( blockRequestQueue, children[i], "{}", i );
         }
+				
+				// We want to always have a start block and here we force its blockCode to be unique
+				if (blockName == "0") {
+					blockCode += " ";
+				}
 
-		// We want to always have a start block and here we force its blockCode to be unique
-		if (blockName == "start") {
-			blockCode += " ";
-		}
+				if(codeDict[blockCode] != undefined){
+					if(codeDict[blockCode].top == "false"){
+						if(top.length == 0){
+							top = "false";
+						} else{
+							top = "true, ["+ top +"]";
+						}
+					} else{
+						if(top.length == 0){
+							top = codeDict[blockCode].top;
+						} else{
+							top = top.concat(codeDict[blockCode].top);
+							top = "true, ["+ top +"]";
+						}
+					}
+
+					if(codeDict[blockCode].bottom == "false"){
+						if(bottom.length == 0){
+							bottom = "false";
+						} else{
+							bottom = "true, ["+ bottom +"]";
+						}
+					} else{
+						if(bottom.length == 0){
+							bottom = codeDict[blockCode].bottom;
+						} else{
+							bottom = bottom.concat(codeDict[blockCode].bottom);
+							bottom = "true, ["+ bottom +"]";
+						}
+					}
+				} else{
+					if(top.length ==0){
+						top = "false";
+					}else{
+						top = "true, ["+top+"]";
+					}
+
+					if(bottom.length ==0){
+						bottom = "false";
+					}else{
+						bottom = "true, ["+bottom+"]";
+					}
+				}
+
 
         codeDict[blockCode] = {
             "blockName" : blockName,
@@ -338,7 +384,14 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
   var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
-	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').appendField('"+name+"');";
+	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(['"+slotNumber+"']).appendField('"+name+"');";
+	//each block will have a topnotch. It may or may not have a bottom notch depending on the value of bottomNotch passed by the user.
+	var topNotch = ["'"+slotNumber.toString()+"'"];
+	if(bottomNotch == true){
+		bottomNotch = ["'"+slotNumber.toString()+"'"];
+	} else{
+		bottomNotch = [];
+	}
 	slotNumber++;
 
     if(! node.hasAttribute("visited") ) {
@@ -349,7 +402,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             blockRequestQueue.push( {
                 "blockName"         : childBlockName,
                 "children"          : [ choiceChildNode ],
-                "top"               : true,
+                "top"               : topNotch,
                 "bottom"            : bottomNotch
             } );
         }
@@ -358,7 +411,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 				blockRequestQueue.push( {
 					"blockName"					:childBlockName,
 					"children"					:children,
-					"top"								:true,
+					"top"								:topNotch,
 					"bottom"						:bottomNotch
 				} );
 			}
