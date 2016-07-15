@@ -1,22 +1,18 @@
-Blockly.Blocks['block_0']={ init:function() {this.appendDummyInput().appendField('====[ 0: block_0 ]====');
-this.appendDummyInput().appendField('0ELM_addressBook');this.appendStatementInput('0').setCheck(['0']).appendField('0ELM_addressBook_0ONE_');
+Blockly.Blocks['block_0']={ init:function() {this.appendDummyInput().appendField('====[ block_0: start ]====');
+this.appendDummyInput().appendField('0ELM_addressBook');this.appendStatementInput('0').setCheck([0]).appendField('0ELM_addressBook_0ONE_');
  this.setPreviousStatement(false);this.setNextStatement(false);this.setColour(0);}};
 
-
-Blockly.Blocks['block_1']={ init:function() {this.appendDummyInput().appendField('====[ 1: block_1 ]====');
+Blockly.Blocks['block_1']={ init:function() {this.appendDummyInput().appendField('====[ block_1: 0ELM_addressBook_0_one(START_0) ]====');
 this.appendDummyInput().appendField('0ELM_contact');this.appendDummyInput().appendField('0ELM_contact_0ELM_name_0TXT').appendField(new Blockly.FieldTextInput(''),'0ELM_contact_0ELM_name_0TXT');
-this.appendStatementInput('1').setCheck(['1']).appendField('0ELM_contact_1ONE_');
-this.appendStatementInput('2').setCheck(['2']).appendField('0ELM_contact_2ONE_');
-this.setPreviousStatement(true, ['0']);this.setNextStatement(true, ['0']);this.setColour(211);}};
+this.appendStatementInput('1').setCheck([1]).appendField('0ELM_contact_1ONE_');
+this.appendStatementInput('2').setCheck([2]).appendField('0ELM_contact_2ONE_');
+this.setPreviousStatement(true, [0]);this.setNextStatement(true, [0]);this.setColour(211);}};
 
-
-Blockly.Blocks['block_2']={ init:function() {this.appendDummyInput().appendField('====[ 2: block_2 ]====');
+Blockly.Blocks['block_2']={ init:function() {this.appendDummyInput().appendField('====[ block_2: 0ELM_contact_1_one(START_1) ]====');
 this.appendDummyInput().appendField('0ELM_phone_number_0TXT').appendField(new Blockly.FieldTextInput(''),'0ELM_phone_number_0TXT');
-this.setPreviousStatement(true, ['1']);this.setNextStatement(true, ['1']);this.setColour(62);}};
+this.setPreviousStatement(true, [1]);this.setNextStatement(true, [1]);this.setColour(62);}};
 
-
-Blockly.Blocks['block_3']={ init:function() {this.appendDummyInput().appendField('====[ 3: block_3 ]====');
+Blockly.Blocks['block_3']={ init:function() {this.appendDummyInput().appendField('====[ block_3: 0ELM_contact_2_one(START_2) ]====');
 this.appendDummyInput().appendField('0ELM_email');this.appendDummyInput().appendField('0ELM_email_0ELM_username_0TXT').appendField(new Blockly.FieldTextInput(''),'0ELM_email_0ELM_username_0TXT');
 this.appendDummyInput().appendField('0ELM_email_1ELM_hostname_0TXT').appendField(new Blockly.FieldTextInput(''),'0ELM_email_1ELM_hostname_0TXT');
-this.setPreviousStatement(true, ['2']);this.setNextStatement(true, ['2']);this.setColour(273);}};
-
+this.setPreviousStatement(true, [2]);this.setNextStatement(true, [2]);this.setColour(273);}};
