@@ -127,7 +127,7 @@ function handleRNG( unparsedRNG ){
         toolboxXML  += "<block type='" + blockName + "'></block>";
 
         blockCode   = "Blockly.Blocks['" + blockName + "']={ init:function() {"
-                    + "this.appendDummyInput().appendField('====[ " + blockCounter + ": " + blockName + " ]====');\n"
+                    + "this.appendDummyInput().appendField('====[ " + blockName + ": " + displayName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
                     + "this.setNextStatement(" + bottomText + ");"
