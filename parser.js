@@ -284,7 +284,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"');";
 
 		for(var i=0;i<children.length;i++){
-			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + i );
 		}
 	}
 	/*
@@ -356,6 +356,8 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
   var context_child_idx = node.getAttribute("context_child_idx");
   var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
+	var bottomNotched = [ "oneOrMore" , "zeroOrMore" ];
+
 
 	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+name+"');";
 
@@ -376,14 +378,20 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     } );
                 }
 			} else{
-				var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
-				blockRequestQueue.push( {
-					"blockName"     : childBlockName,
-					"children"      : children,
-                    "topList"       : JSON.parse( topListStr ),
-                    "bottomList"    : JSON.parse( bottomListStr )
-				} );
-			}
+				if( children.length == 1 && bottomNotched.indexOf(node.nodeName)!=-1 && magicBlocks.indexOf(children[0].nodeName)!=-1 ){
+					blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
+					var childPath = name + '0';
+					blocklyCode += handleMagicBlock(blockRequestQueue, children[0], haveAlreadySeenStr, childPath, true, sensitive);
+				}else{
+					var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
+					blockRequestQueue.push( {
+						"blockName"     : childBlockName,
+						"children"      : children,
+                    	"topList"       : JSON.parse( topListStr ),
+                    	"bottomList"    : JSON.parse( bottomListStr )
+					} );
+				}
+		}
 
         node.setAttribute("visited", "true");
         node.setAttribute("slotNumber", slotNumber);
@@ -391,7 +399,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     } else if(sensitive) {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
-			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+name+"');";
+			blocklyCode = "this.appendStatementInput('"+assignedSlotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+name+"');";
     } else{
 			alert("circular ref loop detected because of "+node.nodeName);
 			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
