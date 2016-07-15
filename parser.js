@@ -358,10 +358,10 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
 	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(['"+slotNumber+"']).appendField('"+name+"');";
+
 	//each block will have a topnotch. It may or may not have a bottom notch depending on the value of bottomNotch passed by the user.
 	var topList     = ["'"+slotNumber.toString()+"'"];
-    var bottomList  = bottomNotch ? topList : [];
-	slotNumber++;
+  var bottomList  = bottomNotch ? topList : [];
 
     if(! node.hasAttribute("visited") ) {
 			if( node.nodeName == "choice" || node.nodeName == "interleave" ){
@@ -386,9 +386,12 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			}
 
         node.setAttribute("visited", "true");
+				node.setAttribute("slotNumber", slotNumber);
+				slotNumber++;
     } else if(sensitive) {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
-			// blocklyCode = "this.appendStatementInput('"+(slotNumber-1)+"').appendField('"+name+"');";
+			var assignedSlotNumber = node.getAttribute("slotNumber");
+			blocklyCode = "this.appendStatementInput('"+assignedSlotNumber+"').setCheck(['"+assignedSlotNumber+"']).appendField('"+name+"');";
     } else{
 			alert("circular ref loop detected because of "+node.nodeName);
 			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
