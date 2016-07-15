@@ -18,7 +18,7 @@ var blockNames;
 var oneOrMoreBlocks;
 var optionalNames;
 var rngDoc;
-var slotNumber=0;
+var slotNumber;
 
 var creatingBlock=false;
 var indexSpecifier=-1;
@@ -361,7 +361,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
 	//each block will have a topnotch. It may or may not have a bottom notch depending on the value of bottomNotch passed by the user.
 	var topList     = ["'"+slotNumber.toString()+"'"];
-  var bottomList  = bottomNotch ? topList : [];
+    var bottomList  = bottomNotch ? topList : [];
 
     if(! node.hasAttribute("visited") ) {
 			if( node.nodeName == "choice" || node.nodeName == "interleave" ){
@@ -386,12 +386,12 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			}
 
         node.setAttribute("visited", "true");
-				node.setAttribute("slotNumber", slotNumber);
-				slotNumber++;
+        node.setAttribute("slotNumber", slotNumber);
+        slotNumber++;
     } else if(sensitive) {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
-			blocklyCode = "this.appendStatementInput('"+assignedSlotNumber+"').setCheck(['"+assignedSlotNumber+"']).appendField('"+name+"');";
+			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(['"+assignedSlotNumber+"']).appendField('"+name+"');";
     } else{
 			alert("circular ref loop detected because of "+node.nodeName);
 			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
