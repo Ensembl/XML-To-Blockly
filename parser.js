@@ -24,7 +24,34 @@ var creatingBlock=false;
 var indexSpecifier=-1;
 var seen=false;
 
-var magicBlocks=[ 'oneOrMore' , 'optional' , 'zeroOrMore' , 'choice' , 'interleave' ];
+var magicType = {
+    'optional'  :   {
+                        'hasBottomNotch'    :   false,
+                        'hasSeparateKids'   :   false,
+                        'hasLoopRisk'       :   false
+                    },
+    'choice'  :   {
+                        'hasBottomNotch'    :   false,
+                        'hasSeparateKids'   :   true,
+                        'hasLoopRisk'       :   false
+                    },
+    'interleave'  :   {
+                        'hasBottomNotch'    :   true,
+                        'hasSeparateKids'   :   true,
+                        'hasLoopRisk'       :   true
+                    },
+    'zeroOrMore'  :   {
+                        'hasBottomNotch'    :   true,
+                        'hasSeparateKids'   :   false,
+                        'hasLoopRisk'       :   false
+                    },
+    'oneOrMore'  :   {
+                        'hasBottomNotch'    :   true,
+                        'hasSeparateKids'   :   false,
+                        'hasLoopRisk'       :   true
+                    }
+};
+
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
 //init function for initializing the Blockly block area
@@ -180,7 +207,7 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
         } else {
             currChild.setAttribute("context", substContext);                                // magic tags will use this to propagate the context
 
-            if( magicBlocks.indexOf(currChild.nodeName)!=-1 ) {    // FIXME: change this for a generic test for all magic tags
+            if( magicType.hasOwnProperty(currChild.nodeName) ) {      // testing if currChild is magic in general
                 currChild.setAttribute("context_child_idx", "("+currChild.getAttribute("context")+"_"+i.toString()+")");  // magic tags will need this to create a block
 			} else {
                 currChild.setAttribute("haveAlreadySeen", haveAlreadySeenStr);                  // non-magic tags will need this to support loop detection
@@ -315,7 +342,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 	else if(nodeType == "choice") {
 		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
 		if(values == false){
-			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, true);
+			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
 		} else{
 			var lastUnderscore = -1;
 			for(var i=path.length-1;i>=0;i--){
@@ -331,19 +358,19 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
     }
 
 	else if(nodeType == "interleave"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, true, false);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
 	}
 
 	else if(nodeType == "optional"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, true);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
 	}
 
 	else if(nodeType == "zeroOrMore"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, true, true);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
 	}
 
 	else if(nodeType == "oneOrMore"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, true, false);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
 	}
 
     return blocklyCode + "\n";
@@ -351,22 +378,21 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
 
 //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotch, sensitive){
+function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotchOverride){
+    var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
-  var context_child_idx = node.getAttribute("context_child_idx");
-  var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-	var name = path + node.nodeName.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
-	var bottomNotched = [ "oneOrMore" , "zeroOrMore" ];
-
+    var context_child_idx = node.getAttribute("context_child_idx");
+    var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
 	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+name+"');";
 
-	//each block will have a topnotch. It may or may not have a bottom notch depending on the value of bottomNotch passed by the user.
+        //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
-    var bottomListStr   = bottomNotch ? topListStr : "[]";
+    var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
 
     if(! node.hasAttribute("visited") ) {
-			if( node.nodeName == "choice" || node.nodeName == "interleave" ){
+            if( magicType[nodeType].hasSeparateKids ) {
                 for(var i=0;i<children.length;i++){
                     var choiceChildNode = children[i];
                     var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
@@ -378,10 +404,11 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     } );
                 }
 			} else{
-				if( children.length == 1 && bottomNotched.indexOf(node.nodeName)!=-1 && magicBlocks.indexOf(children[0].nodeName)!=-1 ){
+
+				if( children.length == 1 && magicType[nodeType].hasBottomNotch && magicType.hasOwnProperty(children[0].nodeName) ){
 					blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
 					var childPath = name + '0';
-					blocklyCode += handleMagicBlock(blockRequestQueue, children[0], haveAlreadySeenStr, childPath, true, sensitive);
+					blocklyCode += handleMagicBlock(blockRequestQueue, children[0], haveAlreadySeenStr, childPath, true);
 				}else{
 					var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
 					blockRequestQueue.push( {
@@ -396,13 +423,13 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
         node.setAttribute("visited", "true");
         node.setAttribute("slotNumber", slotNumber);
         slotNumber++;
-    } else if(sensitive) {
+    } else if(magicType[nodeType].hasLoopRisk) {
+			alert("circular ref loop detected because of "+node.nodeName);
+			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
+    } else {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
 			blocklyCode = "this.appendStatementInput('"+assignedSlotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+name+"');";
-    } else{
-			alert("circular ref loop detected because of "+node.nodeName);
-			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
 	}
 
 	return blocklyCode;
