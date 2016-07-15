@@ -97,8 +97,12 @@ function handleRNG( unparsedRNG ){
         }
 
         if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created this block already, just merge the compatibility lists
-            codeDict[blockCode].topList.push( topList );
-            codeDict[blockCode].bottomList.push( bottomList );
+					if(topList.length > 0){
+						codeDict[blockCode].topList.push( topList );
+					}
+					if(bottomList.length>0){
+						codeDict[blockCode].bottomList.push( bottomList );
+					}
 
         } else {    // otherwise create a new block
 
