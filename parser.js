@@ -97,12 +97,8 @@ function handleRNG( unparsedRNG ){
         }
 
         if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created this block already, just merge the compatibility lists
-					if(topList.length > 0){
-						codeDict[blockCode].topList.push( topList );
-					}
-					if(bottomList.length>0){
-						codeDict[blockCode].bottomList.push( bottomList );
-					}
+                Array.prototype.push.apply( codeDict[blockCode].topList, topList);
+                Array.prototype.push.apply( codeDict[blockCode].bottomList, bottomList);
 
         } else {    // otherwise create a new block
 
@@ -369,16 +365,16 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
     if(! node.hasAttribute("visited") ) {
 			if( node.nodeName == "choice" || node.nodeName == "interleave" ){
-        for(var i=0;i<children.length;i++){
-            var choiceChildNode = children[i];
-            var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
-            blockRequestQueue.push( {
-                "blockName"         : childBlockName,
-                "children"          : [ choiceChildNode ],
-                "topList"           : topList,
-                "bottomList"        : bottomList
-            } );
-        }
+                for(var i=0;i<children.length;i++){
+                    var choiceChildNode = children[i];
+                    var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
+                    blockRequestQueue.push( {
+                        "blockName"         : childBlockName,
+                        "children"          : [ choiceChildNode ],
+                        "topList"           : topList,
+                        "bottomList"        : bottomList
+                    } );
+                }
 			} else{
 				var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
 				blockRequestQueue.push( {
