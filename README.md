@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/anujk14/XML-To-Blockly.svg?branch=master)](https://travis-ci.org/anujk14/XML-To-Blockly)
+[![Build Status](https://travis-ci.org/anujk14/XML-To-Blockly.svg?branch=gh-pages)](https://travis-ci.org/anujk14/XML-To-Blockly)
 
 # Introduction
 
