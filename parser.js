@@ -399,7 +399,8 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             var childPath = name + '0';
             node.setAttribute("visited", "true"); //to prevent infinite loop if node calls itself via a ref
             var child = children[0];
-            if(magicType[node.nodeName].hasBottomNotch && !magicType[node.nodeName].hasSeparateKids){
+            if((name.indexOf("ONE")!=-1 || name.indexOf("ZER")!=-1)){
+                //if we meet oneOrMore or zeroOrMore along the path, the bottom notch becomes true by default
                 bottomNotchOverride = true;
             }else{
                 bottomNotchOverride = magicType[child.nodeName].hasBottomNotch;
