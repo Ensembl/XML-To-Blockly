@@ -391,47 +391,36 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 	var topListStr      = "["+slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
     if(! node.hasAttribute("visited") ) {
-
         //Rule 1
         //if any magic node has another magic node as its only child, inline the child
         if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
             blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
             var childPath = name + '0';
-            node.setAttribute("visited", "true"); //to prevent infinite loop if node calls itself via a ref
+            setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
             var child = children[0];
+
             if((name.indexOf("ONE")!=-1 || name.indexOf("ZER")!=-1)){
                 //if we meet oneOrMore or zeroOrMore along the path, the bottom notch becomes true by default
                 bottomNotchOverride = true;
             }else{
                 bottomNotchOverride = magicType[child.nodeName].hasBottomNotch;
             }
+
             blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride);
         }else{
+
             if( magicType[nodeType].hasSeparateKids ) {
-                  for(var i=0;i<children.length;i++){
-                    var choiceChildNode = children[i];
-                    var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
-                    blockRequestQueue.push( {
-                        "blockName"         : childBlockName,
-                        "children"          : [ choiceChildNode ],
-                        "topList"           : JSON.parse( topListStr ),
-                        "bottomList"        : JSON.parse( bottomListStr )
-                    } );
+                for(var i=0;i<children.length;i++){
+                    var currentChild = children[i];
+                    var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
+
+                    pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
                 }
-                node.setAttribute("visited", "true");
-                node.setAttribute("slotNumber", slotNumber);
-                slotNumber++;
+                setVisitedAndSlotNumber(node, slotNumber);
 			} else{
 					var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
-					blockRequestQueue.push( {
-						"blockName"     : childBlockName,
-						"children"      : children,
-                    	"topList"       : JSON.parse( topListStr ),
-                    	"bottomList"    : JSON.parse( bottomListStr )
-					} );
-          node.setAttribute("visited", "true");
-          node.setAttribute("slotNumber", slotNumber);
-          slotNumber++;
+                    pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
+                    setVisitedAndSlotNumber(node, slotNumber);
 		    }
 
         }
@@ -441,12 +430,27 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     } else {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
-			blocklyCode = "this.appendStatementInput('"+assignedSlotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+name+"');";
+			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+name+"');";
 	}
-
 	return blocklyCode;
 }
 
+function pushToQueue(blockRequestQueue, blockName, children, topList, bottomList){
+    blockRequestQueue.push({
+        "blockName"         :blockName,
+        "children"          :children,
+        "topList"           :topList,
+        "bottomList"        :bottomList
+    } );
+}
+
+function setVisitedAndSlotNumber(node, slot){
+    node.setAttribute("visited", "true");
+    if(slot != undefined){
+        node.setAttribute("slotNumber", slot);
+        slotNumber++;
+    }
+}
 
 function allChildrenValueTags(node){
 	var allValues = "";
