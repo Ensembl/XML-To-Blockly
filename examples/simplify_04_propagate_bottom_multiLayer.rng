@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<element name="ele">
+			<oneOrMore>
+				<interleave>
+					<choice>
+						<attribute name="a"/>
+						<attribute name="b"/>
+					</choice>
+				</interleave>
+			</oneOrMore>
+		</element>
+	</start>
+</grammar>
