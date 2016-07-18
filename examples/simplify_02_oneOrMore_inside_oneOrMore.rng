@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<element name="ele">
+			<oneOrMore>
+				<oneOrMore>
+					<element name="A">
+						<text/>
+					</element>
+					<element name="B">
+						<text/>
+					</element>
+				</oneOrMore>
+			</oneOrMore>
+		</element>
+	</start>
+</grammar>
