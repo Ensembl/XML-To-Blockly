@@ -393,7 +393,13 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
     if(! node.hasAttribute("visited") ) {
             if( magicType[nodeType].hasSeparateKids ) {
-                for(var i=0;i<children.length;i++){
+              if(children.length == 1){
+                blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
+                var childPath = name + '0';
+                node.setAttribute("visited", "true"); //to prevent infinite loop if node calls itself via a ref
+                blocklyCode += goDeeper(blockRequestQueue, children[0], haveAlreadySeenStr, childPath);
+              } else{
+                  for(var i=0;i<children.length;i++){
                     var choiceChildNode = children[i];
                     var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
                     blockRequestQueue.push( {
@@ -403,11 +409,16 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         "bottomList"        : JSON.parse( bottomListStr )
                     } );
                 }
+                node.setAttribute("visited", "true");
+                node.setAttribute("slotNumber", slotNumber);
+                slotNumber++;
+              }
 			} else{
 
 				if( children.length == 1 && magicType[nodeType].hasBottomNotch && magicType.hasOwnProperty(children[0].nodeName) ){
 					blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
 					var childPath = name + '0';
+          node.setAttribute("visited", "true"); //to prevent infinite loop if node calls itself via a ref
 					blocklyCode += handleMagicBlock(blockRequestQueue, children[0], haveAlreadySeenStr, childPath, true);
 				}else{
 					var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
@@ -417,12 +428,13 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     	"topList"       : JSON.parse( topListStr ),
                     	"bottomList"    : JSON.parse( bottomListStr )
 					} );
+          node.setAttribute("visited", "true");
+          node.setAttribute("slotNumber", slotNumber);
+          slotNumber++;
 				}
 		}
 
-        node.setAttribute("visited", "true");
-        node.setAttribute("slotNumber", slotNumber);
-        slotNumber++;
+
     } else if(magicType[nodeType].hasLoopRisk) {
 			alert("circular ref loop detected because of "+node.nodeName);
 			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
