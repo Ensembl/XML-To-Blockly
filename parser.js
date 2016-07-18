@@ -393,7 +393,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     if(! node.hasAttribute("visited") ) {
 
         //Rule 1
-        //if any magic node has a choice or optional as its only child, inline the children
+        //if any magic node has another magic node as its only child, inline the child
         if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
             blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
             var childPath = name + '0';
