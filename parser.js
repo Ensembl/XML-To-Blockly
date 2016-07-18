@@ -390,15 +390,23 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
         //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
-
     if(! node.hasAttribute("visited") ) {
+
+        //Rule 1
+        //if any magic node has a choice or optional as its only child, inline the children
+        if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
+            blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
+            var childPath = name + '0';
+            node.setAttribute("visited", "true"); //to prevent infinite loop if node calls itself via a ref
+            var child = children[0];
+            if(magicType[node.nodeName].hasBottomNotch && !magicType[node.nodeName].hasSeparateKids){
+                bottomNotchOverride = true;
+            }else{
+                bottomNotchOverride = magicType[child.nodeName].hasBottomNotch;
+            }
+            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride);
+        }else{
             if( magicType[nodeType].hasSeparateKids ) {
-              if(children.length == 1){
-                blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
-                var childPath = name + '0';
-                node.setAttribute("visited", "true"); //to prevent infinite loop if node calls itself via a ref
-                blocklyCode += goDeeper(blockRequestQueue, children[0], haveAlreadySeenStr, childPath);
-              } else{
                   for(var i=0;i<children.length;i++){
                     var choiceChildNode = children[i];
                     var childBlockName  = choiceChildNode.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
@@ -412,15 +420,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 node.setAttribute("visited", "true");
                 node.setAttribute("slotNumber", slotNumber);
                 slotNumber++;
-              }
 			} else{
-
-				if( children.length == 1 && magicType[nodeType].hasBottomNotch && magicType.hasOwnProperty(children[0].nodeName) ){
-					blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
-					var childPath = name + '0';
-          node.setAttribute("visited", "true"); //to prevent infinite loop if node calls itself via a ref
-					blocklyCode += handleMagicBlock(blockRequestQueue, children[0], haveAlreadySeenStr, childPath, true);
-				}else{
 					var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
 					blockRequestQueue.push( {
 						"blockName"     : childBlockName,
@@ -431,10 +431,9 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
           node.setAttribute("visited", "true");
           node.setAttribute("slotNumber", slotNumber);
           slotNumber++;
-				}
-		}
+		    }
 
-
+        }
     } else if(magicType[nodeType].hasLoopRisk) {
 			alert("circular ref loop detected because of "+node.nodeName);
 			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
