@@ -414,7 +414,31 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     var currentChild = children[i];
                     var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
 
-                    pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
+                    if(magicType.hasOwnProperty(currentChild.nodeName)){
+                        //Decide whether the current child needs to have bottom notch or not
+                        var bottomForThisChild = bottomNotchOverride;
+                        if(! bottomNotchOverride){
+                            bottomForThisChild = magicType[currentChild.nodeName].hasBottomNotch;
+                        }
+                        //bottom here needs to be different from bottomListStr so that it does not affect other children
+                        var bottom   = bottomForThisChild ? topListStr : "[]";
+                        setVisitedAndSlotNumber(currentChild);  //mark as visited to avoid infinite loop
+                        var childrenOfCurrentChild = currentChild.childNodes;
+
+                        if(magicType[currentChild.nodeName].hasSeparateKids){
+                            for(var j=0; j<childrenOfCurrentChild.length; j++){
+                                var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + j ;
+                                pushToQueue(blockRequestQueue, name, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
+                            }
+                        }else{
+                            var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + j ;
+                            pushToQueue(blockRequestQueue, name, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
+                        }
+
+                    }else{
+                        pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
+                    }
+
                 }
                 setVisitedAndSlotNumber(node, slotNumber);
 			} else{
