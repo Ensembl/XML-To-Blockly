@@ -422,16 +422,18 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         }
                         //bottom here needs to be different from bottomListStr so that it does not affect other children
                         var bottom   = bottomForThisChild ? topListStr : "[]";
+                        var currentContext = currentChild.getAttribute("context");
+                        var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
+
                         setVisitedAndSlotNumber(currentChild);  //mark as visited to avoid infinite loop
-                        var childrenOfCurrentChild = currentChild.childNodes;
 
                         if(magicType[currentChild.nodeName].hasSeparateKids){
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
-                                var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + j ;
+                                var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_" + j ;
                                 pushToQueue(blockRequestQueue, name, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
                             }
                         }else{
-                            var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + j ;
+                            var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_0" ;
                             pushToQueue(blockRequestQueue, name, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
                         }
 
