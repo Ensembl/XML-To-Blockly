@@ -399,12 +399,14 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
             var child = children[0];
 
-            if((name.indexOf("ONE")!=-1 || name.indexOf("ZER")!=-1)){
+            if(bottomListStr != "[]"){
                 //if we meet oneOrMore or zeroOrMore along the path, the bottom notch becomes true by default
                 bottomNotchOverride = true;
             }else{
-                bottomNotchOverride = magicType[child.nodeName].hasBottomNotch;
+                bottomNotchOverride = false;
             }
+
+            console.log(bottomNotchOverride);
 
             blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride);
         }else{
@@ -416,12 +418,13 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
                     if(magicType.hasOwnProperty(currentChild.nodeName)){
                         //Decide whether the current child needs to have bottom notch or not
-                        var bottomForThisChild = bottomNotchOverride;
-                        if(! bottomNotchOverride){
+                        var bottomForThisChild = ( bottomListStr != "[]" ) ? true : false;
+                        console.log("for "+currentChild.nodeName+": "+bottomForThisChild);
+                        /*if(! bottomNotchOverride){
                             bottomForThisChild = magicType[currentChild.nodeName].hasBottomNotch;
-                        }
+                        }*/
                         //bottom here needs to be different from bottomListStr so that it does not affect other children
-                        var bottom   = bottomForThisChild ? topListStr : "[]";
+                        var bottom   = (bottomForThisChild  || magicType[currentChild.nodeName].hasBottomNotch) ? topListStr : "[]";
                         var currentContext = currentChild.getAttribute("context");
                         var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
 
@@ -457,6 +460,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
 			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+name+"');";
+            slotNumber++;
 	}
 	return blocklyCode;
 }
