@@ -400,7 +400,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             var child = children[0];
 
             if(bottomListStr != "[]"){
-                //if we meet oneOrMore or zeroOrMore along the path, the bottom notch becomes true by default
+                //if current tag has bottom notch, propagate its bottom notch to children
                 bottomNotchOverride = true;
             }else{
                 bottomNotchOverride = false;
@@ -416,7 +416,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     var currentChild = children[i];
                     var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
 
-                    if(magicType.hasOwnProperty(currentChild.nodeName)){
+                    /*if(magicType.hasOwnProperty(currentChild.nodeName)){
                         //Decide whether the current child needs to have bottom notch or not
                         var bottomForThisChild = ( bottomListStr != "[]" ) ? true : false;
                         console.log("for "+currentChild.nodeName+": "+bottomForThisChild);
@@ -424,7 +424,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             bottomForThisChild = magicType[currentChild.nodeName].hasBottomNotch;
                         }*/
                         //bottom here needs to be different from bottomListStr so that it does not affect other children
-                        var bottom   = (bottomForThisChild  || magicType[currentChild.nodeName].hasBottomNotch) ? topListStr : "[]";
+                        /*var bottom   = (bottomForThisChild  || magicType[currentChild.nodeName].hasBottomNotch) ? topListStr : "[]";
                         var currentContext = currentChild.getAttribute("context");
                         var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
 
@@ -440,9 +440,9 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             pushToQueue(blockRequestQueue, name, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
                         }
 
-                    }else{
+                    }else{*/
                         pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
-                    }
+                    //}
 
                 }
                 setVisitedAndSlotNumber(node, slotNumber);
