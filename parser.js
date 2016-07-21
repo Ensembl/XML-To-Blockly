@@ -25,6 +25,8 @@ var indexSpecifier=-1;
 var seen=false;
 var expectedBlockNumber;
 
+var assignedPrettyName = {};
+
 var prettyIndicator = {
     'optional'      :       '?' ,
     'zeroOrMore'    :       '*' ,
@@ -411,6 +413,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
+    //This statement probably needs to be deleted
 	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+name+"');";
 
         //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
@@ -449,6 +452,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     expectedBlockNumber++;
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + prettyIndicator[node.nodeName] + " ");
+                assignedPrettyName[node] = childrenDisplayNames;
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+childrenDisplayNames+"');";
 
 			} else{
@@ -460,6 +464,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     //alert(expectedBlockNumber + " for " + childBlockName);
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
                     expectedBlockNumber++;
+                    assignedPrettyName[node] = childBlockName;
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+childBlockName + prettyIndicator[node.nodeName] +"');";
             }
             setVisitedAndSlotNumber(node, slotNumber);
@@ -471,7 +476,8 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     } else {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
-			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+name+"');";
+            var prettyName = assignedPrettyName[node];
+			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+prettyName+"');";
             slotNumber++;
 	}
 	return blocklyCode;
