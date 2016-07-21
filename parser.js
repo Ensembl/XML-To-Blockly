@@ -23,6 +23,15 @@ var slotNumber;
 var creatingBlock=false;
 var indexSpecifier=-1;
 var seen=false;
+var expectedBlockNumber;
+
+var prettyIndicator = {
+    'optional'      :       '?' ,
+    'zeroOrMore'    :       '*' ,
+    'oneOrMore'     :       '+' ,
+    'choice'        :       '|' ,
+    'interleave'    :       '&'
+}
 
 var magicType = {
     'optional'  :   {
@@ -74,7 +83,8 @@ function readFile(event) {
 
 //handles xml by creating blocks as per RNG rules
 function handleRNG( unparsedRNG ){
-		slotNumber = 0;	//re-initialize each time the user chooses a new file
+	slotNumber = 0;	//re-initialize each time the user chooses a new file
+    expectedBlockNumber = 1;
     blocks=[];
     blockNames=[];
     oneOrMoreBlocks=[];
@@ -422,21 +432,36 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 bottomNotchOverride = false;
             }
 
-            console.log(bottomNotchOverride);
-
             blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride);
         }else{
 
             if( magicType[nodeType].hasSeparateKids ) {
+                var childrenDisplayNames = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
-                    var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
+                    //var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
+                    var childBlockName = expectedBlockNumber;
+                    childBlockName = children[i].getAttribute("name") ? children[i].getAttribute("name") : expectedBlockNumber;
+                    childBlockName = children[i].getAttribute("blockly:blockName") ? node.childNodes[i].getAttribute("blockly:blockName") : childBlockName;
+                    childrenDisplayNames.push(childBlockName);
+                    //alert(expectedBlockNumber + " for " + childBlockName);
                     pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
+                    expectedBlockNumber++;
                 }
+                childrenDisplayNames = childrenDisplayNames.join(" " + prettyIndicator[node.nodeName] + " ");
+                blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+childrenDisplayNames+"');";
+
 			} else{
-					var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
+					//var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
+                    var childBlockName = expectedBlockNumber;
+                    childBlockName = children[0].getAttribute("name") ? children[0].getAttribute("name") : expectedBlockNumber;
+                    childBlockName = children[0].getAttribute("blockly:blockName") ? node.childNodes[0].getAttribute("blockly:blockName") : childBlockName;
+
+                    //alert(expectedBlockNumber + " for " + childBlockName);
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
-		    }
+                    expectedBlockNumber++;
+                    blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+childBlockName + prettyIndicator[node.nodeName] +"');";
+            }
             setVisitedAndSlotNumber(node, slotNumber);
 
         }
