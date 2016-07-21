@@ -237,7 +237,15 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
         var name = path + "TXT";
 
-        blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+        var displayName = "";
+
+        if(node.parentNode.childNodes.length == 1 && node.parentNode.getAttribute("name")){
+            displayName = node.parentNode.getAttribute("name");
+        } else{
+            displayName = "text";
+        }
+
+        blocklyCode += "this.appendDummyInput().appendField('"+displayName+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 
     }
 
@@ -251,7 +259,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
         var singleChild = ['text', 'data', 'value'];
 		if(! (children.length == 1 && singleChild.indexOf(children[0].nodeName)!=-1) ) {
-            blocklyCode += "this.appendDummyInput().appendField('"+name+"');";  // a label for the (non-empty) parent
+            blocklyCode += "this.appendDummyInput().appendField('"+nodeName+"');";  // a label for the (non-empty) parent
         }
 
 
@@ -261,7 +269,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
 			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
 			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
-			if(childData.indexOf("'"+name+"'")!=-1){
+			if( childData.indexOf("'" + node.getAttribute("name") + "'") != -1 ){
 				blocklyCode = childData;
 			}else{
 				blocklyCode += childData;
@@ -294,12 +302,18 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
         var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         if( children.length == 0 ){
-			blocklyCode += "this.appendDummyInput().appendField('" + name + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+			blocklyCode += "this.appendDummyInput().appendField('" + nodeName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 		} else{
 			for(var i=0;i<children.length;i++){
 				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
 			}
 		}
+
+        //if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
+        if( blocklyCode.indexOf("appendField('"+nodeName+"')") ==-1 ){
+            var displayStatement = "this.appendDummyInput().appendField('"+nodeName+"');";
+            blocklyCode = displayStatement + blocklyCode;
+        }
     }
 
 
@@ -335,7 +349,8 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 		}
 		var name = path + "DAT_";
 
-		blocklyCode += "this.appendDummyInput().appendField('"+name+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
+        var displayName = node.parentNode.getAttribute("name") + " (" + node.getAttribute("type") + ")";
+		blocklyCode += "this.appendDummyInput().appendField('"+displayName+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
 	}
 
 
@@ -344,14 +359,15 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 		if(values == false){
 			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
 		} else{
-			var lastUnderscore = -1;
+			/*var lastUnderscore = -1;
 			for(var i=path.length-1;i>=0;i--){
 				if(path.charAt(i) == "_"){
 					lastUnderscore = i;
 					break;
 				}
 			}
-			var parentName = path.substring(0 , lastUnderscore);
+			var parentName = path.substring(0 , lastUnderscore);*/
+            var parentName = node.parentNode.getAttribute("name");
 			blocklyCode = "this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
 		}
 
@@ -415,42 +431,13 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
                     var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
-
-                    /*if(magicType.hasOwnProperty(currentChild.nodeName)){
-                        //Decide whether the current child needs to have bottom notch or not
-                        var bottomForThisChild = ( bottomListStr != "[]" ) ? true : false;
-                        console.log("for "+currentChild.nodeName+": "+bottomForThisChild);
-                        /*if(! bottomNotchOverride){
-                            bottomForThisChild = magicType[currentChild.nodeName].hasBottomNotch;
-                        }*/
-                        //bottom here needs to be different from bottomListStr so that it does not affect other children
-                        /*var bottom   = (bottomForThisChild  || magicType[currentChild.nodeName].hasBottomNotch) ? topListStr : "[]";
-                        var currentContext = currentChild.getAttribute("context");
-                        var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
-
-                        setVisitedAndSlotNumber(currentChild);  //mark as visited to avoid infinite loop
-
-                        if(magicType[currentChild.nodeName].hasSeparateKids){
-                            for(var j=0; j<childrenOfCurrentChild.length; j++){
-                                var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_" + j ;
-                                pushToQueue(blockRequestQueue, name, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
-                            }
-                        }else{
-                            var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_0" ;
-                            pushToQueue(blockRequestQueue, name, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
-                        }
-
-                    }else{*/
-                        pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
-                    //}
-
+                    pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
                 }
-                setVisitedAndSlotNumber(node, slotNumber);
 			} else{
 					var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
-                    setVisitedAndSlotNumber(node, slotNumber);
 		    }
+            setVisitedAndSlotNumber(node, slotNumber);
 
         }
     } else if(magicType[nodeType].hasLoopRisk) {
@@ -502,6 +489,20 @@ function allChildrenValueTags(node){
 	return allValues;
 }
 
+
+function getDisplayName(node){
+    var displayName = node.getAttribute("name");
+    if(displayName){
+        return displayName;
+    } else{
+        var parentName = node.parentNode.getAttribute("name");
+        if(parentName){
+            return parentName;
+        } else{
+            return node.nodeName;
+        }
+    }
+}
 
 //Removes #text nodes
 //These are string elements present in the XML document between tags. The
