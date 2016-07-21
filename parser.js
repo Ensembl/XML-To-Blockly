@@ -127,7 +127,7 @@ function handleRNG( unparsedRNG ){
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
         for(var i=0;i<children.length;i++){
-            blockCode += goDeeper( blockRequestQueue, children[i], "{}", i );
+            blockCode += goDeeper( blockRequestQueue, children[i], "{}", i , 0);    //0 is the indentation level
         }
 
             // We want to always have a start block and here we force its blockCode to be unique
@@ -233,8 +233,8 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 }
 
 
-function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
-	//console.log(node.getAttribute("context_child_idx"));
+function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, indentationLevel) {
+    indentationLevel++;
     var nodeType = (node == null) ? "null" : node.nodeName;
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
@@ -253,11 +253,12 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
         if(node.parentNode.childNodes.length == 1 && node.parentNode.getAttribute("name")){
             displayName = node.parentNode.getAttribute("name");
+            indentationLevel--;
         } else{
             displayName = "text";
         }
 
-        blocklyCode += "this.appendDummyInput().appendField('"+displayName+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+        blocklyCode += "this.appendDummyInput().appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 
     }
 
@@ -271,13 +272,13 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
         var singleChild = ['text', 'data', 'value'];
 		if(! (children.length == 1 && singleChild.indexOf(children[0].nodeName)!=-1) ) {
-            blocklyCode += "this.appendDummyInput().appendField('"+nodeName+"');";  // a label for the (non-empty) parent
+            blocklyCode += "this.appendDummyInput().appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+nodeName+"');";  // a label for the (non-empty) parent
         }
 
 
 		if(children.length == 1){
 			var childData="";
-			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0 );
+			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, indentationLevel );
 			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
 			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
 			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
@@ -288,7 +289,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 			}
 		}else{
 			for(var i=0;i<children.length;i++){
-				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i , indentationLevel);
 			}
 		}
 
@@ -314,16 +315,16 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
         var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         if( children.length == 0 ){
-			blocklyCode += "this.appendDummyInput().appendField('" + nodeName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+			blocklyCode += "this.appendDummyInput().appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('" + nodeName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 		} else{
 			for(var i=0;i<children.length;i++){
-				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
+				blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i , indentationLevel);
 			}
 		}
 
         //if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
-        if( blocklyCode.indexOf("appendField('"+nodeName+"')") ==-1 ){
-            var displayStatement = "this.appendDummyInput().appendField('"+nodeName+"');";
+        if( blocklyCode.indexOf("appendField('"+nodeName) ==-1 ){
+            var displayStatement = "this.appendDummyInput().appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+nodeName+"');";
             blocklyCode = displayStatement + blocklyCode;
         }
     }
@@ -334,10 +335,10 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";
 
-		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"');";
+		blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+name+"');";
 
 		for(var i=0;i<children.length;i++){
-			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + i );
+			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + i , indentationLevel);
 		}
 	}
 	/*
@@ -351,6 +352,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
 	//currently data ignores any <param> tags that it may contain
 	else if(nodeType == "data"){
+        indentationLevel--; //reduce indentation level as this tag creates the entire field for its parent.
 		var type=node.getAttribute("type");
 		if(type!=null){
 			if(numberTypes.indexOf(type)!=-1){
@@ -362,14 +364,14 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 		var name = path + "DAT_";
 
         var displayName = node.parentNode.getAttribute("name") + " (" + node.getAttribute("type") + ")";
-		blocklyCode += "this.appendDummyInput().appendField('"+displayName+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
+		blocklyCode += "this.appendDummyInput().appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
 	}
 
 
 	else if(nodeType == "choice") {
 		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
 		if(values == false){
-			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
+			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, indentationLevel);
 		} else{
 			/*var lastUnderscore = -1;
 			for(var i=path.length-1;i>=0;i--){
@@ -379,26 +381,27 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 				}
 			}
 			var parentName = path.substring(0 , lastUnderscore);*/
+            indentationLevel--; //as this one attaches itself at its parent's level
             var parentName = node.parentNode.getAttribute("name");
-			blocklyCode = "this.appendDummyInput().appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
+			blocklyCode = "this.appendDummyInput().appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
 		}
 
     }
 
 	else if(nodeType == "interleave"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, indentationLevel);
 	}
 
 	else if(nodeType == "optional"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, indentationLevel);
 	}
 
 	else if(nodeType == "zeroOrMore"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, indentationLevel);
 	}
 
 	else if(nodeType == "oneOrMore"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, indentationLevel);
 	}
 
     return blocklyCode + "\n";
@@ -406,7 +409,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path) {
 
 
 //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotchOverride){
+function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotchOverride, indentationLevel){
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
@@ -414,7 +417,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
     //This statement probably needs to be deleted
-	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+name+"');";
+	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+name+"');";
 
         //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
@@ -423,7 +426,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
         //Rule 1
         //if any magic node has another magic node as its only child, inline the child
         if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
-            blocklyCode = "this.appendDummyInput().appendField('"+name+"');";
+            blocklyCode = "this.appendDummyInput().appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+name+"');";
             var childPath = name + '0';
             setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
             var child = children[0];
@@ -435,7 +438,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 bottomNotchOverride = false;
             }
 
-            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride);
+            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, indentationLevel+1);
         }else{
 
             if( magicType[nodeType].hasSeparateKids ) {
@@ -453,7 +456,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + prettyIndicator[node.nodeName] + " ");
                 assignedPrettyName[node] = childrenDisplayNames;
-                blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+childrenDisplayNames+"');";
+                blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+childrenDisplayNames+"');";
 
 			} else{
 					//var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
@@ -465,7 +468,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
                     expectedBlockNumber++;
                     assignedPrettyName[node] = childBlockName;
-                    blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('"+childBlockName + prettyIndicator[node.nodeName] +"');";
+                    blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+childBlockName + prettyIndicator[node.nodeName] +"');";
             }
             setVisitedAndSlotNumber(node, slotNumber);
 
@@ -477,7 +480,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
             var prettyName = assignedPrettyName[node];
-			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('"+prettyName+"');";
+			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+prettyName+"');";
             slotNumber++;
 	}
 	return blocklyCode;
@@ -533,6 +536,30 @@ function getDisplayName(node){
             return node.nodeName;
         }
     }
+}
+
+function getUnicodeChars(level){
+    var str="";
+    if(level == 0){
+        return str;
+    }
+
+    if(level==1){
+        str = "\u2517\u2501\u2501";
+        return str;
+    }
+    /* \u2514 is tetris. \u2500 is horizontal line \u2502 is vertical line*/
+    for(var i=0 ; i<level; i++){
+        if(i==0){
+            str += "\u2503        ";
+        }else if(i==level-1){
+            str += "\u2517\u2501\u2501";
+        }else{
+            str+="        ";
+        }
+    }
+    //str+="\u2514"
+    return str;
 }
 
 //Removes #text nodes
