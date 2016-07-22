@@ -459,9 +459,10 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			} else{
 					//var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
                     var childBlockName = expectedBlockNumber;
-                    childBlockName = children[0].getAttribute("name") ? children[0].getAttribute("name") : expectedBlockNumber;
-                    childBlockName = children[0].getAttribute("blockly:blockName") ? node.childNodes[0].getAttribute("blockly:blockName") : childBlockName;
-
+                    if(children.length == 1){
+                        childBlockName = children[0].getAttribute("name") ? children[0].getAttribute("name") : expectedBlockNumber;
+                        childBlockName = children[0].getAttribute("blockly:blockName") ? node.childNodes[0].getAttribute("blockly:blockName") : childBlockName;
+                    }
                     //alert(expectedBlockNumber + " for " + childBlockName);
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
                     expectedBlockNumber++;
