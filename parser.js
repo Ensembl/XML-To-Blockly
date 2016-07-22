@@ -27,39 +27,37 @@ var expectedBlockNumber;
 
 var assignedPrettyName = {};
 
-var prettyIndicator = {
-    'optional'      :       '?' ,
-    'zeroOrMore'    :       '*' ,
-    'oneOrMore'     :       '+' ,
-    'choice'        :       '|' ,
-    'interleave'    :       '&'
-}
 
 var magicType = {
     'optional'  :   {
                         'hasBottomNotch'    :   false,
                         'hasSeparateKids'   :   false,
-                        'hasLoopRisk'       :   false
+                        'hasLoopRisk'       :   false,
+                        'prettyIndicator'   :   '?'
                     },
     'choice'  :   {
                         'hasBottomNotch'    :   false,
                         'hasSeparateKids'   :   true,
-                        'hasLoopRisk'       :   false
+                        'hasLoopRisk'       :   false,
+                        'prettyIndicator'   :   '|'
                     },
     'interleave'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   true,
-                        'hasLoopRisk'       :   true
+                        'hasLoopRisk'       :   true,
+                        'prettyIndicator'   :   '&'
                     },
     'zeroOrMore'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   false,
-                        'hasLoopRisk'       :   false
+                        'hasLoopRisk'       :   false,
+                        'prettyIndicator'   :   '*'
                     },
     'oneOrMore'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   false,
-                        'hasLoopRisk'       :   true
+                        'hasLoopRisk'       :   true,
+                        'prettyIndicator'   :   '+'
                     }
 };
 
@@ -454,7 +452,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
                     expectedBlockNumber++;
                 }
-                childrenDisplayNames = childrenDisplayNames.join(" " + prettyIndicator[node.nodeName] + " ");
+                childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 assignedPrettyName[node] = childrenDisplayNames;
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+childrenDisplayNames+"');";
 
@@ -468,7 +466,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
                     expectedBlockNumber++;
                     assignedPrettyName[node] = childBlockName;
-                    blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+childBlockName + prettyIndicator[node.nodeName] +"');";
+                    blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + getUnicodeChars(indentationLevel-1) + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
             }
             setVisitedAndSlotNumber(node, slotNumber);
 
