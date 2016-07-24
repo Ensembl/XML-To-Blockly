@@ -288,7 +288,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
 		if(children.length == 1){
 			var childData="";
-			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, false );
+			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
 			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
 			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
 			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
