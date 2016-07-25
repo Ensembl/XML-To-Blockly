@@ -460,13 +460,46 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
                     //var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
-                    var childBlockName = expectedBlockNumber;
-                    childBlockName = children[i].getAttribute("name") ? children[i].getAttribute("name") : expectedBlockNumber;
-                    childBlockName = children[i].getAttribute("blockly:blockName") ? node.childNodes[i].getAttribute("blockly:blockName") : childBlockName;
-                    childrenDisplayNames.push(childBlockName);
-                    //alert(expectedBlockNumber + " for " + childBlockName);
-                    pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
-                    expectedBlockNumber++;
+                    if(magicType.hasOwnProperty(currentChild.nodeName)){
+                        //var childBlockName = path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx;
+                        var bottomForThisChild = (bottomListStr == "[]") ? false : true;
+                        var bottom = (bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
+                        var currentContext = currentChild.getAttribute("context");
+                        var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
+
+                        setVisitedAndSlotNumber(currentChild); //mark as visited to avoid infinite loop
+                        console.log(currentChild);
+                        if(magicType[currentChild.nodeName].hasSeparateKids){
+                            for(var j=0; j<childrenOfCurrentChild.length; j++){
+                                var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_" + j ;
+                                var childBlockName = expectedBlockNumber;
+                                childBlockName = childrenOfCurrentChild[j].getAttribute("name") ? childrenOfCurrentChild[j].getAttribute("name") : expectedBlockNumber;
+                                childBlockName = childrenOfCurrentChild[j].getAttribute("blockly:blockName") ? currentChild.childNodes[j].getAttribute("blockly:blockName") : childBlockName;
+                                childrenDisplayNames.push(childBlockName);
+                                pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
+                                expectedBlockNumber++;
+                            }
+                        }else{
+                            var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_0" ;
+                            var childBlockName = expectedBlockNumber;
+                            childBlockName = currentChild.getAttribute("name") ? currentChild.getAttribute("name") : expectedBlockNumber;
+                            childBlockName = currentChild.getAttribute("blockly:blockName") ? currentChild.getAttribute("blockly:blockName") : childBlockName;
+                            childrenDisplayNames.push(childBlockName);
+                            pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
+                            expectedBlockNumber++;
+                        }
+                    }
+
+
+                    else{
+                        var childBlockName = expectedBlockNumber;
+                        childBlockName = currentChild.getAttribute("name") ? currentChild.getAttribute("name") : expectedBlockNumber;
+                        childBlockName = currentChild.getAttribute("blockly:blockName") ? currentChild.getAttribute("blockly:blockName") : childBlockName;
+                        childrenDisplayNames.push(childBlockName);
+                        //alert(expectedBlockNumber + " for " + childBlockName);
+                        pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
+                        expectedBlockNumber++;
+                    }
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 assignedPrettyName[node] = childrenDisplayNames;
