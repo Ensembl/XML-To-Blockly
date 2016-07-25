@@ -348,10 +348,12 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";
 
-		blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + getUnicodeChars(indentationLevel-1, linePrefix) + "').appendField('"+name+"');";
+        var displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : "group";
+		blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField('"+displayName+"');";
 
 		for(var i=0;i<children.length;i++){
-			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + i , indentationLevel, linePrefix);
+            var this_is_last_sibling = (i == children.length-1);
+			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + i , common_prefix + child_suffix, this_is_last_sibling);
 		}
 	}
 	/*
