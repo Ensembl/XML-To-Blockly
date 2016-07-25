@@ -261,10 +261,10 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         var displayName = "";
 
         if(node.parentNode.childNodes.length == 1 && node.parentNode.getAttribute("name")){
-            displayName = node.parentNode.getAttribute("name");
+            displayName = node.parentNode.getAttribute("blockly:blockName") ? node.parentNode.getAttribute("blockly:blockName") : node.parentNode.getAttribute("name");
             unicode_pattern = unicode_pattern_for_prev_level;
         } else{
-            displayName = "text";
+            displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : "text";
         }
 
         blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
@@ -275,6 +275,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         unicode_pattern_for_prev_level = unicode_pattern;
 
         var nodeName = node.getAttribute("name");
+        var displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : nodeName ;
 
         var name = path + "ELM_" + nodeName;
         var context = node.getAttribute("context");
@@ -283,7 +284,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
         var singleChild = ['text', 'data', 'value'];
 		if(! (children.length == 1 && singleChild.indexOf(children[0].nodeName)!=-1) ) {
-            blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+nodeName+"');";  // a label for the (non-empty) parent
+            blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+displayName+"');";  // a label for the (non-empty) parent
         }
 
 		if(children.length == 1){
@@ -292,7 +293,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
 			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
 			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
-			if( childData.indexOf("'" + node.getAttribute("name") + "'") != -1 ){
+			if( childData.indexOf("'" + displayName + "'") != -1 ){
 				blocklyCode = childData;
 			}else{
 				blocklyCode += childData;
@@ -320,6 +321,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 	else if(nodeType == "attribute") {
         unicode_pattern_for_prev_level = unicode_pattern;
         var nodeName = node.getAttribute("name");
+        var displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : nodeName ;
 
         var name = path + "ATT_" + nodeName;
         var context = node.getAttribute("context");
@@ -327,7 +329,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         if( children.length == 0 ){
-			blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + nodeName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+			blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + displayName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 		} else{
 			for(var i=0;i<children.length;i++){
                 var this_is_last_sibling = (i == children.length-1);
@@ -336,8 +338,8 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 		}
 
         //if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
-        if( blocklyCode.indexOf("appendField('"+nodeName) ==-1 ){
-            var displayStatement = "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+nodeName+"');";
+        if( blocklyCode.indexOf("appendField('"+displayName) ==-1 ){
+            var displayStatement = "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + displayName + "');";
             blocklyCode = displayStatement + blocklyCode;
         }
     }
@@ -377,8 +379,9 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 			}
 		}
 		var name = path + "DAT_";
+        var parentName = node.parentNode.getAttribute("blockly:blockName") ? node.parentNode.getAttribute("blockly:blockName") : node.parentNode.getAttribute("name");
 
-        var displayName = node.parentNode.getAttribute("name") + " (" + node.getAttribute("type") + ")";
+        var displayName = parentName + " (" + node.getAttribute("type") + ")";
 		blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
 	}
 
@@ -388,17 +391,9 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 		if(values == false){
 			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
 		} else{
-			/*var lastUnderscore = -1;
-			for(var i=path.length-1;i>=0;i--){
-				if(path.charAt(i) == "_"){
-					lastUnderscore = i;
-					break;
-				}
-			}
-			var parentName = path.substring(0 , lastUnderscore);*/
             //indentationLevel--; //as this one attaches itself at its parent's level
-            var parentName = node.parentNode.getAttribute("name");
-			blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+parentName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
+            var displayName = node.parentNode.getAttribute("blockly:blockName") ? node.parentNode.getAttribute("blockly:blockName") : node.parentNode.getAttribute("name");
+			blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
 		}
 
     }
