@@ -452,7 +452,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 bottomNotchOverride = false;
             }
 
-            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, false);
+            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true);
         }else{
 
             if( magicType[nodeType].hasSeparateKids ) {
