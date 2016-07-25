@@ -463,18 +463,16 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     if(magicType.hasOwnProperty(currentChild.nodeName)){
                         //var childBlockName = path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx;
                         var bottomForThisChild = (bottomListStr == "[]") ? false : true;
-                        var bottom = (bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
+                        var bottom = ( bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
                         var currentContext = currentChild.getAttribute("context");
                         var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
 
-                        setVisitedAndSlotNumber(currentChild); //mark as visited to avoid infinite loop
-                        console.log(currentChild);
                         if(magicType[currentChild.nodeName].hasSeparateKids){
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_" + j ;
                                 var childBlockName = expectedBlockNumber;
                                 childBlockName = childrenOfCurrentChild[j].getAttribute("name") ? childrenOfCurrentChild[j].getAttribute("name") : expectedBlockNumber;
-                                childBlockName = childrenOfCurrentChild[j].getAttribute("blockly:blockName") ? currentChild.childNodes[j].getAttribute("blockly:blockName") : childBlockName;
+                                childBlockName = childrenOfCurrentChild[j].getAttribute("blockly:blockName") ? childrenOfCurrentChild[j].getAttribute("blockly:blockName") : childBlockName;
                                 childrenDisplayNames.push(childBlockName);
                                 pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
                                 expectedBlockNumber++;
@@ -496,7 +494,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         childBlockName = currentChild.getAttribute("name") ? currentChild.getAttribute("name") : expectedBlockNumber;
                         childBlockName = currentChild.getAttribute("blockly:blockName") ? currentChild.getAttribute("blockly:blockName") : childBlockName;
                         childrenDisplayNames.push(childBlockName);
-                        //alert(expectedBlockNumber + " for " + childBlockName);
                         pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
                         expectedBlockNumber++;
                     }
@@ -528,7 +525,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 			var assignedSlotNumber = node.getAttribute("slotNumber");
             var prettyName = assignedPrettyName[node];
-			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+"');";
+			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
             slotNumber++;
 	}
 	return blocklyCode;
