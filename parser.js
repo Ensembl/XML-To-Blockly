@@ -580,53 +580,6 @@ function getDisplayName(node){
     }
 }
 
-function getUnicodeChars(level, linePrefix){
-    var str="";
-
-    if(level == 0){
-        return str;
-    }
-
-    if(level==1){
-        str = "\u2517\u2501\u2501";
-        return str;
-    }
-    /* \u2514 is tetris. \u2500 is horizontal line \u2502 is vertical line*/
-    for(var i=0 ; i<level; i++){
-        if(i==0){
-            if(linePrefix){
-                str += "\u2503        ";
-            } else{
-                str += "         ";
-            }
-
-        }else if(i==level-1){
-            str += "\u2517\u2501\u2501";
-        }else{
-            str+="        ";
-        }
-    }
-    //str+="\u2514"
-    return str;
-}
-
-function getDesign(str, level, addLine){
-    var nodeName = node.getAttribute("name");
-
-    var head_suffix = (last_sibling == undefined)? '': last_sibling? last_branch: non_last_branch;
-
-    var child_suffix = (last_sibling == undefined)? '': last_sibling? last_child: non_last_child;
-
-    console.log( common_prefix+head_suffix+nodeName );
-    var children = node.childNodes;
-    if( children.length>0 ) {
-        for(var i=0 ; i<children.length ; i++) {
-            var this_is_last_sibling = (i == children.length-1);
-            print_node( children[i], common_prefix+child_suffix, this_is_last_sibling );
-        }
-    }
-}
-
 
 //Removes #text nodes
 //These are string elements present in the XML document between tags. The
