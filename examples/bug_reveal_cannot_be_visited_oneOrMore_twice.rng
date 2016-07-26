@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+
+	<start>
+		<element name="ele">
+			<ref name="first"/>
+			<ref name="second"/>
+		</element>
+	</start>
+
+	<define name="first">
+		<element name="first_child">
+		    <text/>
+		</element>
+		<ref name="child"/>
+	</define>
+
+	<define name="second">
+		<element name="second_child">
+		    <text/>
+		</element>
+		<ref name="child"/>
+	</define>
+
+	<define name="child">
+		<element name="child_property">
+			<text/>
+		</element>
+		<oneOrMore>
+			<element name="breaker">
+				<text/>
+			</element>
+		</oneOrMore>
+	</define>
+
+</grammar>
