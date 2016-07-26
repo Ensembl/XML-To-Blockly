@@ -459,9 +459,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 var childrenDisplayNames = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
-                    //var childBlockName  = currentChild.getAttribute("blockly:blockName") || ( path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx );
                     if(magicType.hasOwnProperty(currentChild.nodeName)){
-                        //var childBlockName = path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx;
                         var bottomForThisChild = (bottomListStr == "[]") ? false : true;
                         var bottom = ( bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
                         var currentContext = currentChild.getAttribute("context");
@@ -469,19 +467,13 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
                         if(magicType[currentChild.nodeName].hasSeparateKids){
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
-                                var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_" + j ;
-                                var childBlockName = expectedBlockNumber;
-                                childBlockName = childrenOfCurrentChild[j].getAttribute("name") ? childrenOfCurrentChild[j].getAttribute("name") : expectedBlockNumber;
-                                childBlockName = childrenOfCurrentChild[j].getAttribute("blockly:blockName") ? childrenOfCurrentChild[j].getAttribute("blockly:blockName") : childBlockName;
+                                var childBlockName = getChildBlockName(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
                                 pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
                                 expectedBlockNumber++;
                             }
                         }else{
-                            var name = childBlockName + "_" + currentChild.nodeName.substring(0,3) + "_0" ;
-                            var childBlockName = expectedBlockNumber;
-                            childBlockName = currentChild.getAttribute("name") ? currentChild.getAttribute("name") : expectedBlockNumber;
-                            childBlockName = currentChild.getAttribute("blockly:blockName") ? currentChild.getAttribute("blockly:blockName") : childBlockName;
+                            var childBlockName = getChildBlockName(currentChild);
                             childrenDisplayNames.push(childBlockName);
                             pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
                             expectedBlockNumber++;
@@ -490,9 +482,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
 
                     else{
-                        var childBlockName = expectedBlockNumber;
-                        childBlockName = currentChild.getAttribute("name") ? currentChild.getAttribute("name") : expectedBlockNumber;
-                        childBlockName = currentChild.getAttribute("blockly:blockName") ? currentChild.getAttribute("blockly:blockName") : childBlockName;
+                        var childBlockName = getChildBlockName(currentChild);
                         childrenDisplayNames.push(childBlockName);
                         pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
                         expectedBlockNumber++;
@@ -503,13 +493,11 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
 
 			} else{
-					//var childBlockName = path + "_" + node.nodeName.substring(0,3) + context_child_idx;
                     var childBlockName = expectedBlockNumber;
                     if(children.length == 1){
                         childBlockName = children[0].getAttribute("name") ? children[0].getAttribute("name") : expectedBlockNumber;
                         childBlockName = children[0].getAttribute("blockly:blockName") ? node.childNodes[0].getAttribute("blockly:blockName") : childBlockName;
                     }
-                    //alert(expectedBlockNumber + " for " + childBlockName);
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
                     expectedBlockNumber++;
                     assignedPrettyName[node] = childBlockName;
@@ -547,6 +535,15 @@ function setVisitedAndSlotNumber(node, slot){
         slotNumber++;
     }
 }
+
+
+function getChildBlockName(node){
+    var name = expectedBlockNumber;
+    name = node.getAttribute("name") ? node.getAttribute("name") : name;
+    name = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : name;
+    return name;
+}
+
 
 function allChildrenValueTags(node){
 	var allValues = "";
