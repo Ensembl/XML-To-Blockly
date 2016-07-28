@@ -440,6 +440,8 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
                 blocklyCode += goDeeper(blockRequestQueue, children[i], haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
             }
         }
+        blocklyCode += "this.appendDummyInput('" + name + "end_of_optiField').setVisible(false);";
+
         currentlyCreatingOptiField = false;
 
         if(!successfulOptiField){
@@ -742,6 +744,19 @@ function checker(){
 		}
 	}
 
+    it++;
+
+    while(iplist[it].name != checkBoxFieldName+"end_of_optiField"){
+        if(this.state_==false){
+            iplist[it].setVisible(true);
+            source.render();
+        } else{
+            iplist[it].setVisible(false);
+            source.render();
+        }
+        it++;
+    }
+/*
     for(var i=it+1;i<iplist.length;i++){
         var currentDesign = iplist[i].fieldRow[0].text_;
         if(currentDesign.length > designOfOpti.length){
@@ -755,7 +770,7 @@ function checker(){
         } else{
             break;
         }
-    }
+    }*/
     /*
 	if(this.state_==false){
 		for(var i=it+1;i<=(it+optionalNames.length);i++){
