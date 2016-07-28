@@ -726,18 +726,41 @@ function validate(){
 
 function checker(){
 	var source=this.sourceBlock_;
+
 	//get the name of the checkbox's dummyInput
 	var checkBoxFieldName=this.name.split("_checkbox")[0];
-
+    //console.log(source.getInput(checkBoxFieldName));
 	var it;
 	var iplist=source.inputList;
+    var designOfOpti;
+    var numSpacesInOpti = 0;
+    //console.log(iplist);
 	//find out at which position of the inputList of source block, the checkbox is present.
-	for(var it=0;it<iplist.length;it++){
+	for(it=0;it<iplist.length;it++){
 		if(iplist[it].name==checkBoxFieldName){
+            console.log(iplist[it].fieldRow[0].text_);
+            designOfOpti = iplist[it].fieldRow[0].text_;
+            numSpacesInOpti = getNumberOfSpaces(designOfOpti);
 			break;
 		}
 	}
 
+    for(var i=it+1;i<iplist.length;i++){
+        var currentDesign = iplist[i].fieldRow[0].text_;
+        var currentNumSpaces = getNumberOfSpaces(currentDesign);
+        if(currentNumSpaces > numSpacesInOpti){
+            if(this.state_==false){
+                iplist[i].setVisible(true);
+                source.render();
+            } else{
+                iplist[i].setVisible(false);
+                source.render();
+            }
+        } else{
+            break;
+        }
+    }
+    /*
 	if(this.state_==false){
 		for(var i=it+1;i<=(it+optionalNames.length);i++){
 			iplist[i].setVisible(true);
@@ -750,7 +773,18 @@ function checker(){
 		}
 		source.render();
 		return;
-	}
+	}*/
+}
+
+
+function getNumberOfSpaces(str){
+    var count = 0;
+    for(var i=0;i<str.length;i++){
+        if(str.charAt(i) == " "){
+            count++;
+        }
+    }
+    return count;
 }
 
 
