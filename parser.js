@@ -429,7 +429,6 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         currentlyCreatingOptiField = true;
         successfulOptiField = true;
 
-        blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox').appendField('"+name+"');"
 
         for(var i=0;i<children.length;i++){
             if(magicType.hasOwnProperty(children[i].nodeName)){
@@ -440,11 +439,23 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
                 blocklyCode += goDeeper(blockRequestQueue, children[i], haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
             }
         }
-        blocklyCode += "this.appendDummyInput('" + name + "end_of_optiField').setVisible(false);";
 
-        currentlyCreatingOptiField = false;
+        //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
+        if(successfulOptiField){
+            var count = blocklyCode.split("this.appendDummyInput");
 
-        if(!successfulOptiField){
+            if(count.length == 2){
+                var childPartToBeAdded = count[1].split(".appendField('"+common_prefix + child_suffix + last_branch+"')")[1];
+                blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox')" + childPartToBeAdded;
+            } else{
+                blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox').appendField('"+name+"');" + blocklyCode;
+            }
+
+            blocklyCode += "this.appendDummyInput('" + name + "end_of_optiField').setVisible(false);";  //hidden field to detect end of optiField
+            currentlyCreatingOptiField = false;
+
+        } else{
+            currentlyCreatingOptiField = false;
             blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
         }
 
@@ -728,33 +739,44 @@ function validate(){
 
 function checker(){
 	var source=this.sourceBlock_;
-
-	//get the name of the checkbox's dummyInput
-	var checkBoxFieldName=this.name.split("_checkbox")[0];
-    //console.log(source.getInput(checkBoxFieldName));
-	var it;
+	var checkBoxFieldName=this.name.split("_checkbox")[0]; //the name of the checkbox's dummyInput
+	var it = 0;
 	var iplist=source.inputList;
-    var designOfOpti;
-    //console.log(iplist);
+
 	//find out at which position of the inputList of source block, the checkbox is present.
-	for(it=0;it<iplist.length;it++){
-		if(iplist[it].name==checkBoxFieldName){
-            designOfOpti = iplist[it].fieldRow[0].text_;
-			break;
-		}
-	}
+    while(iplist[it].name != checkBoxFieldName){
+        it++;
+    }
 
-    it++;
-
-    while(iplist[it].name != checkBoxFieldName+"end_of_optiField"){
+    //if the input field has fieldRow of length, then it means that it's a single level optiField with no special label (label of the attibute/element itself is used)
+    /* fieldRow indices:
+     * 0 : The unicode design
+     * 1 : The checkbox
+     * 2 : The text label for the field
+     * 3 : The text/dropdown field
+     */
+    if(iplist[it].fieldRow.length == 4){
         if(this.state_==false){
-            iplist[it].setVisible(true);
+            iplist[it].fieldRow[2].setVisible(true);
+            iplist[it].fieldRow[3].setVisible(true);
             source.render();
         } else{
-            iplist[it].setVisible(false);
+            iplist[it].fieldRow[2].setVisible(false);
+            iplist[it].fieldRow[3].setVisible(false);
             source.render();
         }
+    } else{
         it++;
+        while(iplist[it].name != checkBoxFieldName+"end_of_optiField"){
+            if(this.state_==false){
+                iplist[it].setVisible(true);
+                source.render();
+            } else{
+                iplist[it].setVisible(false);
+                source.render();
+            }
+            it++;
+        }
     }
 /*
     for(var i=it+1;i<iplist.length;i++){
