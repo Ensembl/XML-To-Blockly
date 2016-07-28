@@ -25,6 +25,8 @@ var indexSpecifier=-1;
 var seen=false;
 var expectedBlockNumber;
 var assignedPrettyName = [];
+var successfulOptiField;   //true or false depending on whether optiField can be created or not
+var currentlyCreatingOptiField;
 
 var unicode_pattern_for_prev_level = "";
 
@@ -240,6 +242,10 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 
 
 function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_prefix, last_sibling) {
+    if(currentlyCreatingOptiField == true && successfulOptiField == false){
+        return null;
+    }
+
     var head_suffix = (last_sibling == undefined)? '': last_sibling? last_branch: non_last_branch;
     var child_suffix = (last_sibling == undefined)? '': last_sibling? last_child: non_last_child;
     var unicode_pattern = common_prefix + head_suffix;
@@ -293,7 +299,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
 			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
 			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
-			if( childData.indexOf("'" + displayName + "'") != -1 ){
+			if( childData!=null && childData.indexOf("'" + displayName + "'") != -1 ){
 				blocklyCode = childData;
 			}else{
 				blocklyCode += childData;
@@ -389,6 +395,10 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 	else if(nodeType == "choice") {
 		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
 		if(values == false){
+            if(currentlyCreatingOptiField){
+                successfulOptiField = false;
+                return null;
+            }
 			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
 		} else{
             //indentationLevel--; //as this one attaches itself at its parent's level
@@ -399,18 +409,60 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
     }
 
 	else if(nodeType == "interleave"){
+        if(currentlyCreatingOptiField){
+            successfulOptiField = false;
+            return null;
+        }
 		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
 	}
 
 	else if(nodeType == "optional"){
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
+        if(currentlyCreatingOptiField){
+            successfulOptiField = false;
+            return null;
+        }
+
+    	var context = node.getAttribute("context");
+        //var context_child_idx = node.getAttribute("context_child_idx");
+        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+    	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");
+        currentlyCreatingOptiField = true;
+        successfulOptiField = true;
+
+        blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox').appendField('"+name+"');"
+
+        for(var i=0;i<children.length;i++){
+            if(magicType.hasOwnProperty(children[i].nodeName)){
+                successfulOptiField = false;
+                break;
+            } else{
+                var this_is_last_sibling = (i == children.length-1);
+                blocklyCode += goDeeper(blockRequestQueue, children[i], haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
+            }
+        }
+        currentlyCreatingOptiField = false;
+
+        if(!successfulOptiField){
+            blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
+        }
+
+        //createOptiField(blockRequestQueue, node, haveAlreadySeenStr, path, common_prefix, last_sibling);
+		//blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
 	}
 
 	else if(nodeType == "zeroOrMore"){
+        if(currentlyCreatingOptiField){
+            successfulOptiField = false;
+            return null;
+        }
 		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
 	}
 
 	else if(nodeType == "oneOrMore"){
+        if(currentlyCreatingOptiField){
+            successfulOptiField = false;
+            return null;
+        }
 		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
 	}
 
@@ -429,11 +481,11 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     var head_suffix = (last_sibling == undefined)? '': last_sibling? last_branch: non_last_branch;
     var child_suffix = (last_sibling == undefined)? '': last_sibling? last_child: non_last_child;
     var unicode_pattern = common_prefix + head_suffix;
-
+    /*
     //This statement probably needs to be deleted
 	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+name+"');";
-
-        //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
+    */
+    //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
     if(! node.hasAttribute("visited") ) {
@@ -451,19 +503,36 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             }else{
                 bottomNotchOverride = false;
             }
-
             blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true);
         }else{
-
             if( magicType[nodeType].hasSeparateKids ) {
                 var childrenDisplayNames = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
+                    var testBlockName  =  path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx ;
+
                     if(magicType.hasOwnProperty(currentChild.nodeName)){
                         var bottomForThisChild = (bottomListStr == "[]") ? false : true;
                         var bottom = ( bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
                         var currentContext = currentChild.getAttribute("context");
                         var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
+
+                        /*if(childrenOfCurrentChild.length == 1 && magicType.hasOwnProperty(childrenOfCurrentChild[0].nodeName)){
+                            //var name = testBlockName + "_" + currentChild.nodeName.substring(0,3) + "_0" ;
+                            var childPath = testBlockName + '0';
+                            setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
+                            var child = childrenOfCurrentChild[0];
+
+                            if(bottom != "[]"){
+                                //if current tag has bottom notch, propagate its bottom notch to children
+                                bottom = true;
+                            }else{
+                                bottom = false;
+                            }
+                            dontIncrementSlot=true;
+
+                            blocklyCode = handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottom, common_prefix+child_suffix, true);
+                        }*/
 
                         if(magicType[currentChild.nodeName].hasSeparateKids){
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
@@ -480,7 +549,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         }
                     }
 
-
                     else{
                         var childBlockName = getChildBlockName(currentChild);
                         childrenDisplayNames.push(childBlockName);
@@ -491,7 +559,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 assignedPrettyName[node] = childrenDisplayNames;
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
-
 			} else{
                     var childBlockName = expectedBlockNumber;
                     if(children.length == 1){
@@ -503,6 +570,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     assignedPrettyName[node] = childBlockName;
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
             }
+
             setVisitedAndSlotNumber(node, slotNumber);
 
         }
