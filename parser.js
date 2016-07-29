@@ -27,6 +27,9 @@ var expectedBlockNumber;
 var assignedPrettyName = {};
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
 var currentlyCreatingOptiField;
+var statementInputCounter;
+var blockCounter;
+var notchToBlockMapper = {};    //block numbers are keys. contains two elements: starting notch number for block, ending notch number+1
 
 var unicode_pattern_for_prev_level = "";
 
@@ -97,6 +100,9 @@ function handleRNG( unparsedRNG ){
     blockNames=[];
     oneOrMoreBlocks=[];
     optionalNames=[];
+    statementInputCounter = 0;
+    blockCounter = 0;
+    notchToBlockMapper = {};
 
     var xmlParser=new DOMParser();
     rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
@@ -132,11 +138,17 @@ function handleRNG( unparsedRNG ){
 
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
+
+        var countPriorToBlockCreation = statementInputCounter;
         for(var i=0;i<children.length;i++){
-            //var len = children[i].childNodes.length;
-            //var last_sibling = (len==1) ? 'true' : undefined;
             blockCode += goDeeper( blockRequestQueue, children[i], "{}", i , '', undefined);
         }
+        if(statementInputCounter != countPriorToBlockCreation){
+            var numberOfStatementInputs = [countPriorToBlockCreation, statementInputCounter];   //starting slot, ending slot +1
+            notchToBlockMapper[blockCounter] = numberOfStatementInputs;
+            blockCounter++;
+        }
+
 
             // We want to always have a start block and here we force its blockCode to be unique
         if( blockName == "start" ) {
@@ -572,6 +584,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 //assignedPrettyName[node] = childrenDisplayNames;
                 node.setAttribute("name", childrenDisplayNames);
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
+                statementInputCounter++;
 			} else{
                     var childBlockName = expectedBlockNumber;
                     if(children.length == 1){
@@ -583,6 +596,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     //assignedPrettyName[node] = childBlockName;
                     node.setAttribute("name", childBlockName);
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
+                    statementInputCounter++;
             }
 
             setVisitedAndSlotNumber(node, slotNumber);
@@ -599,6 +613,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             var prettyName = node.getAttribute("name");
             blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
             slotNumber++;
+            statementInputCounter++;
 	}
 	return blocklyCode;
 }
@@ -695,7 +710,25 @@ function _removeNodeNameRecursively(node, name) {
 
 //function to check if all the oneOrMore blocks have children attached to them.
 function validate(){
-	var workspace=Blockly.getMainWorkspace();
+    var workspace = Blockly.getMainWorkspace();
+    var blocks = workspace.getTopBlocks();
+    if(blocks.length == 0){
+        alert("Workspace is empty");
+        return;
+    }
+    /*
+    var startBlock = blocks[0];
+    try{
+        var inp = startBlock.getInput("0");
+        console.log(inp);
+        var conn = inp.connection;
+        var tar = conn.targetBlock();
+        console.log(tar);
+    }catch(e){
+        console.log(e);
+    }*/
+
+    /*var workspace=Blockly.getMainWorkspace();
 	var allClear=true;
 	for(var i=0;i<oneOrMoreBlocks.length;i++){
 		var currentBlock=Blockly.Block.getById(oneOrMoreBlocks[i],workspace);
@@ -737,7 +770,7 @@ function validate(){
 	}
 	if(allClear==true){
 		alert("You may save this!");
-	}
+	}*/
 }
 
 function checker(){
