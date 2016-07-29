@@ -24,7 +24,7 @@ var creatingBlock=false;
 var indexSpecifier=-1;
 var seen=false;
 var expectedBlockNumber;
-var assignedPrettyName = [];
+var assignedPrettyName = {};
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
 var currentlyCreatingOptiField;
 
@@ -146,7 +146,6 @@ function handleRNG( unparsedRNG ){
         if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created this block already, just merge the compatibility lists
                 Array.prototype.push.apply( codeDict[blockCode].topList, topList);
                 Array.prototype.push.apply( codeDict[blockCode].bottomList, bottomList);
-
         } else {    // otherwise create a new block
 
             codeDict[blockCode] = {
@@ -570,7 +569,8 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     }
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
-                assignedPrettyName[node] = childrenDisplayNames;
+                //assignedPrettyName[node] = childrenDisplayNames;
+                node.setAttribute("name", childrenDisplayNames);
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
 			} else{
                     var childBlockName = expectedBlockNumber;
@@ -580,7 +580,8 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     }
                     pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
                     expectedBlockNumber++;
-                    assignedPrettyName[node] = childBlockName;
+                    //assignedPrettyName[node] = childBlockName;
+                    node.setAttribute("name", childBlockName);
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
             }
 
@@ -592,9 +593,11 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			blocklyCode = "this.appendDummyInput().appendField('***Circular Reference***');";
     } else {
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
-			var assignedSlotNumber = node.getAttribute("slotNumber");
-            var prettyName = assignedPrettyName[node];
-			blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
+
+            var assignedSlotNumber = node.getAttribute("slotNumber");
+            //var prettyName = assignedPrettyName[node];
+            var prettyName = node.getAttribute("name");
+            blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
             slotNumber++;
 	}
 	return blocklyCode;
