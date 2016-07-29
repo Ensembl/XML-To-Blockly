@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<group>
+
+			<element name="template">
+			      <ref name="structure"/>
+			</element>
+
+			<optional>
+				<element name="t2">
+					<ref name="structure"/>
+				</element>
+			</optional>
+
+		</group>
+	</start>
+
+	<define name="structure">
+		<choice>
+
+            <element name="hash">
+                <zeroOrMore>
+                    <element name="pair">
+                        <attribute name="key"/>
+                        <ref name="structure"/>
+                    </element>
+                </zeroOrMore>
+            </element>
+
+            <element name="array">
+                <zeroOrMore>
+                  <element name="item">
+                    <ref name="structure"/>
+                  </element>
+                </zeroOrMore>
+            </element>
+
+            <text/>
+
+        </choice>
+	</define>
+</grammar>
