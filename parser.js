@@ -30,7 +30,7 @@ var currentlyCreatingOptiField;
 var statementInputCounter;
 var blockCounter;
 var notchToBlockMapper = {};    //block numbers are keys. contains two elements: starting notch number for block, ending notch number+1
-
+var notchProperties = {};
 var unicode_pattern_for_prev_level = "";
 
 var non_last_child  = "\u2503       ";
@@ -44,31 +44,51 @@ var magicType = {
                         'hasBottomNotch'    :   false,
                         'hasSeparateKids'   :   false,
                         'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '?'
+                        'prettyIndicator'   :   '?',
+                        'canBeEmpty'        :   true,
+                        'hasToOccurTogether':   false,
+                        'eitherOneOf'       :   false,
+                        'repeatableBlocks'  :   false
                     },
     'choice'  :   {
                         'hasBottomNotch'    :   false,
                         'hasSeparateKids'   :   true,
                         'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '|'
+                        'prettyIndicator'   :   '|',
+                        'canBeEmpty'        :   false,
+                        'hasToOccurTogether':   false,
+                        'eitherOneOf'       :   true,
+                        'repeatableBlocks'  :   false
                     },
     'interleave'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   true,
                         'hasLoopRisk'       :   true,
-                        'prettyIndicator'   :   '&'
+                        'prettyIndicator'   :   '&',
+                        'canBeEmpty'        :   false,
+                        'hasToOccurTogether':   true,
+                        'eitherOneOf'       :   false,
+                        'repeatableBlocks'  :   false
                     },
     'zeroOrMore'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   false,
                         'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '*'
+                        'prettyIndicator'   :   '*',
+                        'canBeEmpty'        :   true,
+                        'hasToOccurTogether':   false,
+                        'eitherOneOf'       :   false,
+                        'repeatableBlocks'  :   true
                     },
     'oneOrMore'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   false,
                         'hasLoopRisk'       :   true,
-                        'prettyIndicator'   :   '+'
+                        'prettyIndicator'   :   '+',
+                        'canBeEmpty'        :   false,
+                        'hasToOccurTogether':   false,
+                        'eitherOneOf'       :   false,
+                        'repeatableBlocks'  :   true
                     }
 };
 
