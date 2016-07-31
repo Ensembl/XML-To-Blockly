@@ -44,53 +44,67 @@ var magicType = {
                         'hasBottomNotch'    :   false,
                         'hasSeparateKids'   :   false,
                         'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '?',
-                        'canBeEmpty'        :   true,
-                        'hasToOccurTogether':   false,
-                        'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   false
+                        'prettyIndicator'   :   '?'
                     },
     'choice'  :   {
                         'hasBottomNotch'    :   false,
                         'hasSeparateKids'   :   true,
                         'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '|',
-                        'canBeEmpty'        :   false,
-                        'hasToOccurTogether':   false,
-                        'eitherOneOf'       :   true,
-                        'repeatableBlocks'  :   false
+                        'prettyIndicator'   :   '|'
                     },
     'interleave'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   true,
                         'hasLoopRisk'       :   true,
-                        'prettyIndicator'   :   '&',
-                        'canBeEmpty'        :   false,
-                        'hasToOccurTogether':   true,
-                        'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   false
+                        'prettyIndicator'   :   '&'
                     },
     'zeroOrMore'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   false,
                         'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '*',
-                        'canBeEmpty'        :   true,
-                        'hasToOccurTogether':   false,
-                        'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   true
+                        'prettyIndicator'   :   '*'
                     },
     'oneOrMore'  :   {
                         'hasBottomNotch'    :   true,
                         'hasSeparateKids'   :   false,
                         'hasLoopRisk'       :   true,
-                        'prettyIndicator'   :   '+',
+                        'prettyIndicator'   :   '+'
+                    }
+};
+
+var defaultProperties = {
+    'optional'   :   {
+                        'canBeEmpty'        :   true,
+                        'hasToOccurTogether':   false,
+                        'eitherOneOf'       :   false,
+                        'repeatableBlocks'  :   false
+                    },
+    'choice'     :   {
+                        'canBeEmpty'        :   false,
+                        'hasToOccurTogether':   false,
+                        'eitherOneOf'       :   true,
+                        'repeatableBlocks'  :   false
+                    },
+    'interleave' :   {
+                        'canBeEmpty'        :   false,
+                        'hasToOccurTogether':   true,
+                        'eitherOneOf'       :   false,
+                        'repeatableBlocks'  :   false
+                    },
+    'zeroOrMore' :   {
+                        'canBeEmpty'        :   true,
+                        'hasToOccurTogether':   false,
+                        'eitherOneOf'       :   false,
+                        'repeatableBlocks'  :   true
+                    },
+    'oneOrMore' :   {
                         'canBeEmpty'        :   false,
                         'hasToOccurTogether':   false,
                         'eitherOneOf'       :   false,
                         'repeatableBlocks'  :   true
                     }
 };
+
 
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
@@ -165,7 +179,7 @@ function handleRNG( unparsedRNG ){
         }
         if(statementInputCounter != countPriorToBlockCreation){
             var numberOfStatementInputs = [countPriorToBlockCreation, statementInputCounter];   //starting slot, ending slot +1
-            notchToBlockMapper[blockCounter] = numberOfStatementInputs;
+            notchToBlockMapper["block_"+blockCounter] = numberOfStatementInputs;
             blockCounter++;
         }
 
@@ -430,7 +444,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
                 successfulOptiField = false;
                 return null;
             }
-			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
+			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 		} else{
             //indentationLevel--; //as this one attaches itself at its parent's level
             var displayName = node.parentNode.getAttribute("blockly:blockName") ? node.parentNode.getAttribute("blockly:blockName") : node.parentNode.getAttribute("name");
@@ -444,7 +458,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             successfulOptiField = false;
             return null;
         }
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 	}
 
 	else if(nodeType == "optional"){
@@ -487,7 +501,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
         } else{
             currentlyCreatingOptiField = false;
-            blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
+            blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
         }
 
         //createOptiField(blockRequestQueue, node, haveAlreadySeenStr, path, common_prefix, last_sibling);
@@ -499,7 +513,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             successfulOptiField = false;
             return null;
         }
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 	}
 
 	else if(nodeType == "oneOrMore"){
@@ -507,7 +521,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             successfulOptiField = false;
             return null;
         }
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
+		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 	}
 
     return blocklyCode + "\n";
@@ -515,7 +529,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
 
 //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotchOverride, common_prefix, last_sibling){
+function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotchOverride, common_prefix, last_sibling, inheritedProperties){
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
@@ -547,7 +561,9 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             }else{
                 bottomNotchOverride = false;
             }
-            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true);
+
+            var properties = getNotchProperties(node, inheritedProperties);
+            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true, properties);
         }else{
             if( magicType[nodeType].hasSeparateKids ) {
                 var childrenDisplayNames = [];
@@ -604,6 +620,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 //assignedPrettyName[node] = childrenDisplayNames;
                 node.setAttribute("name", childrenDisplayNames);
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
+                notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
                 statementInputCounter++;
 			} else{
                     var childBlockName = expectedBlockNumber;
@@ -616,6 +633,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     //assignedPrettyName[node] = childBlockName;
                     node.setAttribute("name", childBlockName);
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
+                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
                     statementInputCounter++;
             }
 
@@ -632,6 +650,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             //var prettyName = assignedPrettyName[node];
             var prettyName = node.getAttribute("name");
             blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
+            notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
             slotNumber++;
             statementInputCounter++;
 	}
@@ -700,6 +719,18 @@ function getDisplayName(node){
 }
 
 
+function getNotchProperties(node, inheritedProperties){
+    var properties = {};
+    var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
+    properties = defaultProperties[node.nodeName];
+    if(inheritedPropertiesLength > 0){
+        properties['canBeEmpty'] = properties['canBeEmpty'] || inheritedProperties['canBeEmpty'];
+    }
+
+    return properties;
+}
+
+
 //Removes #text nodes
 //These are string elements present in the XML document between tags. The
 //RNG specification only allows these strings to be composed of whitespace.
@@ -736,8 +767,38 @@ function validate(){
         alert("Workspace is empty");
         return;
     }
-    /*
+
     var startBlock = blocks[0];
+
+    queueForValidation = [];
+    queueForValidation.push(startBlock);
+
+    while(queueForValidation.length > 0){
+        var currentBlock = queueForValidation.shift();
+        console.log(currentBlock);
+        var blockType = currentBlock.type;
+        var notchNumbers = notchToBlockMapper[blockType];  //undefined if there is no notch
+        if(notchNumbers){
+            for(var i=notchNumbers[0]; i<notchNumbers[1]; i++){
+                var currentNotch = currentBlock.getInput(''+i);
+                console.log(currentNotch);
+                var connection = currentNotch.connection;
+                var blockInConnection = connection.targetBlock();
+                if(blockInConnection == null && notchProperties[i].canBeEmpty==false){
+                    alert("slot "+i+" needs to have something in it");
+                } else{
+                    //var blockInConnection = connection.targetBlock();
+                    if(blockInConnection!=null){
+                        queueForValidation.push(blockInConnection);
+                    }
+                }
+
+                //push next connection of the block as well apart from thje children blocks.
+            }
+        }
+    }
+
+    /*
     try{
         var inp = startBlock.getInput("0");
         console.log(inp);
