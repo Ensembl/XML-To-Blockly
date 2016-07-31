@@ -356,16 +356,6 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             }
 		}
 
-		/*
-        for(var i=0;i<children.length;i++){
-            childData = goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i );
-
-			if(childData.indexOf("'"+name+"'")!=-1){	//if element has choice which has value
-				blocklyCode = childData;
-			}else{
-				blocklyCode += childData;
-			}
-        }*/
     }
 
 
@@ -504,8 +494,6 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
         }
 
-        //createOptiField(blockRequestQueue, node, haveAlreadySeenStr, path, common_prefix, last_sibling);
-		//blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling);
 	}
 
 	else if(nodeType == "zeroOrMore"){
@@ -539,10 +527,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     var head_suffix = (last_sibling == undefined)? '': last_sibling? last_branch: non_last_branch;
     var child_suffix = (last_sibling == undefined)? '': last_sibling? last_child: non_last_child;
     var unicode_pattern = common_prefix + head_suffix;
-    /*
-    //This statement probably needs to be deleted
-	var blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+name+"');";
-    */
+
     //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
@@ -761,6 +746,7 @@ function _removeNodeNameRecursively(node, name) {
 
 //function to check if all the oneOrMore blocks have children attached to them.
 function validate(){
+    var allClear = true;
     var workspace = Blockly.getMainWorkspace();
     var blocks = workspace.getTopBlocks();
     if(blocks.length == 0){
@@ -786,6 +772,7 @@ function validate(){
                 var blockInConnection = connection.targetBlock();
                 if(blockInConnection == null && notchProperties[i].canBeEmpty==false){
                     alert("slot "+i+" needs to have something in it");
+                    allClear = false;
                 } else{
                     //var blockInConnection = connection.targetBlock();
                     if(blockInConnection!=null){
@@ -793,65 +780,13 @@ function validate(){
                     }
                 }
 
-                //push next connection of the block as well apart from thje children blocks.
+                //push next connection of the block as well apart from the children blocks.
             }
         }
     }
-
-    /*
-    try{
-        var inp = startBlock.getInput("0");
-        console.log(inp);
-        var conn = inp.connection;
-        var tar = conn.targetBlock();
-        console.log(tar);
-    }catch(e){
-        console.log(e);
-    }*/
-
-    /*var workspace=Blockly.getMainWorkspace();
-	var allClear=true;
-	for(var i=0;i<oneOrMoreBlocks.length;i++){
-		var currentBlock=Blockly.Block.getById(oneOrMoreBlocks[i],workspace);
-		var foundChild=false;
-		var connections=[];
-		var children=[];
-		var childBlockNames=[];	//contains all the allowed child block names
-
-		if(currentBlock==null){
-			continue;
-		}else{
-			//get all children of the current oneOrMore block being tested
-			children=currentBlock.getChildren();
-			//get all connection types of the current block
-			connections=currentBlock.getConnections_();
-
-			//last index of the array indicates the types of allowed connections for children blocks.
-			var childConn=connections[connections.length-1];
-			console.log(childConn);
-			//childConn contains a field check_ which is an array of the valid block types that can be the children of current block. We add these names to childBlockNames
-			var typesOfChildren=childConn.check_;
-			console.log(typesOfChildren);
-			for (var j=0;j<typesOfChildren.length;j++){
-				childBlockNames.push(typesOfChildren[j]);
-			}
-
-			//parse through all the children of the current block being tested to check if it actually has a nested child element and not just a nextStatement. foundChild keeps track of whether currentBlock has at least one nested child attached to it.
-			for(var j=0;j<children.length;j++){
-				var currentChildBeingEvaluated=children[j].type;
-				if(childBlockNames.indexOf(currentChildBeingEvaluated)!=-1){
-					foundChild=true;
-				}
-			}
-			if(foundChild==false){
-				alert(currentBlock.type+" needs to have at least one child");
-				allClear=false;
-			}
-		}
-	}
-	if(allClear==true){
-		alert("You may save this!");
-	}*/
+    if(allClear){
+        alert("You may save this");
+    }
 }
 
 function checker(){
@@ -895,35 +830,6 @@ function checker(){
             it++;
         }
     }
-/*
-    for(var i=it+1;i<iplist.length;i++){
-        var currentDesign = iplist[i].fieldRow[0].text_;
-        if(currentDesign.length > designOfOpti.length){
-            if(this.state_==false){
-                iplist[i].setVisible(true);
-                source.render();
-            } else{
-                iplist[i].setVisible(false);
-                source.render();
-            }
-        } else{
-            break;
-        }
-    }*/
-    /*
-	if(this.state_==false){
-		for(var i=it+1;i<=(it+optionalNames.length);i++){
-			iplist[i].setVisible(true);
-		}
-		source.render();
-		return;
-	}else if(this.state_==true){
-		for(var i=it+1;i<=(it+optionalNames.length);i++){
-			iplist[i].setVisible(false);
-		}
-		source.render();
-		return;
-	}*/
 }
 
 
