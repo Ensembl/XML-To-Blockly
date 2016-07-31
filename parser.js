@@ -77,13 +77,13 @@ var defaultProperties = {
                         'canBeEmpty'        :   true,
                         'hasToOccurTogether':   false,
                         'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   false
+                        'hasOnlyOneBlock'   :   true
                     },
     'choice'     :   {
                         'canBeEmpty'        :   false,
                         'hasToOccurTogether':   false,
                         'eitherOneOf'       :   true,
-                        'repeatableBlocks'  :   false
+                        'hasOnlyOneBlock'   :   true
                     },
     'interleave' :   {
                         'canBeEmpty'        :   false,
@@ -95,13 +95,13 @@ var defaultProperties = {
                         'canBeEmpty'        :   true,
                         'hasToOccurTogether':   false,
                         'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   true
+                        'repeatableBlocks'  :   false
                     },
     'oneOrMore' :   {
                         'canBeEmpty'        :   false,
                         'hasToOccurTogether':   false,
                         'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   true
+                        'repeatableBlocks'  :   false
                     }
 };
 
@@ -709,7 +709,8 @@ function getNotchProperties(node, inheritedProperties){
     var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
     properties = defaultProperties[node.nodeName];
     if(inheritedPropertiesLength > 0){
-        properties['canBeEmpty'] = properties['canBeEmpty'] || inheritedProperties['canBeEmpty'];
+        properties['canBeEmpty']        = properties['canBeEmpty']      ||  inheritedProperties['canBeEmpty'];
+        properties['hasOnlyOneBlock']   = properties['hasOnlyOneBlock'] &&  inheritedProperties['hasOnlyOneBlock'];
     }
 
     return properties;
@@ -761,26 +762,38 @@ function validate(){
 
     while(queueForValidation.length > 0){
         var currentBlock = queueForValidation.shift();
-        console.log(currentBlock);
+        //add the block connected to the current block's bottom notch (if any) for validation
+        try{
+            var bottomConnection = currentBlock.nextConnection.targetConnection;
+            if(bottomConnection != null){
+                queueForValidation.push(bottomConnection.sourceBlock_);
+            }
+        } catch(e){
+            console.log("No bottom connection");
+        }
+        //console.log(currentBlock);
         var blockType = currentBlock.type;
         var notchNumbers = notchToBlockMapper[blockType];  //undefined if there is no notch
         if(notchNumbers){
             for(var i=notchNumbers[0]; i<notchNumbers[1]; i++){
                 var currentNotch = currentBlock.getInput(''+i);
-                console.log(currentNotch);
+                //console.log(currentNotch);
                 var connection = currentNotch.connection;
                 var blockInConnection = connection.targetBlock();
+                //console.log(blockInConnection);
+
                 if(blockInConnection == null && notchProperties[i].canBeEmpty==false){
                     alert("slot "+i+" needs to have something in it");
                     allClear = false;
+                } else if(blockInConnection.nextConnection.targetConnection !=null && notchProperties[i].hasOnlyOneBlock==true){
+                    alert("slot "+i+" has an extra block");
+                    allClear = false;
                 } else{
-                    //var blockInConnection = connection.targetBlock();
                     if(blockInConnection!=null){
                         queueForValidation.push(blockInConnection);
                     }
                 }
 
-                //push next connection of the block as well apart from the children blocks.
             }
         }
     }
