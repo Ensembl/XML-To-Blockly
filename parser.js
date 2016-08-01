@@ -13,16 +13,11 @@
  */
 
 var blocklyWorkspace;
-var blocks;
-var blockNames;
 var oneOrMoreBlocks;
 var optionalNames;
 var rngDoc;
 var slotNumber;
 
-var creatingBlock=false;
-var indexSpecifier=-1;
-var seen=false;
 var expectedBlockNumber;
 var assignedPrettyName = {};
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
@@ -32,6 +27,7 @@ var blockCounter;
 var notchToBlockMapper = {};    //block numbers are keys. contains two elements: starting notch number for block, ending notch number+1
 var notchProperties = {};
 var unicode_pattern_for_prev_level = "";
+var blockNameToDisplayNameMapper;
 
 var non_last_child  = "\u2503       ";
 var     last_child  = "        ";
@@ -89,19 +85,19 @@ var defaultProperties = {
                         'canBeEmpty'        :   false,
                         'hasToOccurTogether':   true,
                         'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   false
+                        'hasOnlyOneBlock'   :   false
                     },
     'zeroOrMore' :   {
                         'canBeEmpty'        :   true,
                         'hasToOccurTogether':   false,
                         'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   false
+                        'hasOnlyOneBlock'   :   false
                     },
     'oneOrMore' :   {
                         'canBeEmpty'        :   false,
                         'hasToOccurTogether':   false,
                         'eitherOneOf'       :   false,
-                        'repeatableBlocks'  :   false
+                        'hasOnlyOneBlock'   :   false
                     }
 };
 
@@ -130,13 +126,12 @@ function readFile(event) {
 function handleRNG( unparsedRNG ){
 	slotNumber = 0;	//re-initialize each time the user chooses a new file
     expectedBlockNumber = 1;
-    blocks=[];
-    blockNames=[];
     oneOrMoreBlocks=[];
     optionalNames=[];
     statementInputCounter = 0;
     blockCounter = 0;
     notchToBlockMapper = {};
+    blockNameToDisplayNameMapper = [];
 
     var xmlParser=new DOMParser();
     rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
@@ -215,6 +210,7 @@ function handleRNG( unparsedRNG ){
         var blockName   = "block_" + blockCounter;
         var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
         var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
+        blockNameToDisplayNameMapper[blockName] = displayName;
 
         toolboxXML  += "<block type='" + blockName + "'></block>";
 
@@ -552,6 +548,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
         }else{
             if( magicType[nodeType].hasSeparateKids ) {
                 var childrenDisplayNames = [];
+                var treatAsSingleBlock = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
                     var testBlockName  =  path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx ;
@@ -580,20 +577,26 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         }*/
 
                         if(magicType[currentChild.nodeName].hasSeparateKids){
+                            var arrayOfChildren = [];
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var childBlockName = getChildBlockName(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
                                 pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
                                 expectedBlockNumber++;
+                                arrayOfChildren.push(childBlockName);
                             }
+                            if(bottom != "[]"){
+                                treatAsSingleBlock.push(arrayOfChildren);
+                            }
+
                         }else{
                             var childBlockName = getChildBlockName(currentChild);
                             childrenDisplayNames.push(childBlockName);
                             pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
                             expectedBlockNumber++;
+                            treatAsSingleBlock.push(childBlockName);
                         }
                     }
-
                     else{
                         var childBlockName = getChildBlockName(currentChild);
                         childrenDisplayNames.push(childBlockName);
@@ -605,7 +608,11 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 //assignedPrettyName[node] = childrenDisplayNames;
                 node.setAttribute("name", childrenDisplayNames);
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
-                notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
+                if(treatAsSingleBlock.length == 0){
+                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
+                } else{
+                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties, treatAsSingleBlock);
+                }
                 statementInputCounter++;
 			} else{
                     var childBlockName = expectedBlockNumber;
@@ -704,13 +711,17 @@ function getDisplayName(node){
 }
 
 
-function getNotchProperties(node, inheritedProperties){
+function getNotchProperties(node, inheritedProperties, treatAsSingleBlock){
     var properties = {};
     var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
     properties = defaultProperties[node.nodeName];
     if(inheritedPropertiesLength > 0){
         properties['canBeEmpty']        = properties['canBeEmpty']      ||  inheritedProperties['canBeEmpty'];
         properties['hasOnlyOneBlock']   = properties['hasOnlyOneBlock'] &&  inheritedProperties['hasOnlyOneBlock'];
+    }
+
+    if(treatAsSingleBlock){
+        properties['treatAsSingleBlock'] = treatAsSingleBlock;
     }
 
     return properties;
@@ -785,13 +796,67 @@ function validate(){
                 if(blockInConnection == null && notchProperties[i].canBeEmpty==false){
                     alert("slot "+i+" needs to have something in it");
                     allClear = false;
-                } else if(blockInConnection.nextConnection.targetConnection !=null && notchProperties[i].hasOnlyOneBlock==true){
-                    alert("slot "+i+" has an extra block");
-                    allClear = false;
-                } else{
-                    if(blockInConnection!=null){
-                        queueForValidation.push(blockInConnection);
+                }
+
+                if(notchProperties[i].hasOnlyOneBlock==true && blockInConnection.nextConnection.targetConnection !=null){
+                    if(notchProperties[i].treatAsSingleBlock){
+                        var notchBlockName = blockNameToDisplayNameMapper[blockInConnection.type];
+                        var exception = makeExceptionForThis(notchBlockName , notchProperties[i].treatAsSingleBlock);
+                        //HELP: Should there be a condition to check if the variable "exception" actually contains anything
+                        var condition = "";
+                        var currentlyChecking = blockInConnection;
+                        var conditionNumber;
+                        if(Object.prototype.toString.call ( exception ) === "[object Array]"){
+                            condition = "exception.length>0 && currentlyChecking.nextConnection.targetConnection!=null";
+                            conditionNumber = 1;
+                            var firstRemover = exception.indexOf(blockNameToDisplayNameMapper[currentlyChecking.type]);
+                            exception.splice(firstRemover,1);
+                            //console.log(exception);
+                            //console.log("condition 1");
+                        } else{
+                            //condition = "blockNameToDisplayNameMapper[x.nextConnection.targetConnection.sourceBlock_.type] == exception";
+                            condition = "currentlyChecking.nextConnection.targetConnection!=null";
+                            conditionNumber = 2;
+                            //console.log("condition 2");
+                        }
+                        var allowed = true;
+                        while(eval(condition)){
+                            if(conditionNumber == 1){
+                                var index = exception.indexOf(blockNameToDisplayNameMapper[currentlyChecking.nextConnection.targetConnection.sourceBlock_.type]);
+                                if(index != -1){
+                                    currentlyChecking=currentlyChecking.nextConnection.targetConnection.sourceBlock_;
+                                    exception.splice(index, 1);
+                                } else{
+                                    allowed = false;
+                                    break;
+                                }
+                            } else{
+                                currentlyChecking=currentlyChecking.nextConnection.targetConnection.sourceBlock_;
+                                if(blockNameToDisplayNameMapper[currentlyChecking.type]!=exception){
+                                    allowed = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if(allowed && exception.length == 0 && currentlyChecking.nextConnection.targetConnection!=null){
+                            alert("Extra block added as part of interleave");
+                            allClear = false;
+                        }
+                        if(!allowed){
+                            allClear = false;
+                            alert("error: extra block");
+                        } else if(conditionNumber == 1 && exception.length!=0){
+                            console.log(exception);
+                            allClear = false;
+                            alert("didn't go through all the interleave blocks");
+                        }
+                    } else{
+                        alert("slot "+i+" has an extra block");
+                        allClear = false;
                     }
+                }
+                if(blockInConnection!=null){
+                    queueForValidation.push(blockInConnection);
                 }
 
             }
@@ -800,6 +865,25 @@ function validate(){
     if(allClear){
         alert("You may save this");
     }
+}
+
+
+function makeExceptionForThis( name, treatAsSingleBlock ){
+    var str = null;
+    for(var i=0;i<treatAsSingleBlock.length;i++){
+        if(Object.prototype.toString.call ( treatAsSingleBlock[i] ) === "[object Array]"){
+            if(treatAsSingleBlock[i].indexOf(name) != -1){
+                str = treatAsSingleBlock[i].slice(0);
+                break;
+            }
+        } else{
+            if(name == treatAsSingleBlock[i]){
+                str = treatAsSingleBlock[i];
+                break;
+            }
+        }
+    }
+    return str;
 }
 
 function checker(){
