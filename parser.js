@@ -175,9 +175,8 @@ function handleRNG( unparsedRNG ){
         if(statementInputCounter != countPriorToBlockCreation){
             var numberOfStatementInputs = [countPriorToBlockCreation, statementInputCounter];   //starting slot, ending slot +1
             notchToBlockMapper["block_"+blockCounter] = numberOfStatementInputs;
-            blockCounter++;
         }
-
+        blockCounter++;
 
             // We want to always have a start block and here we force its blockCode to be unique
         if( blockName == "start" ) {
@@ -786,6 +785,7 @@ function validate(){
         var blockType = currentBlock.type;
         var notchNumbers = notchToBlockMapper[blockType];  //undefined if there is no notch
         if(notchNumbers){
+        try{    
             for(var i=notchNumbers[0]; i<notchNumbers[1]; i++){
                 var currentNotch = currentBlock.getInput(''+i);
                 //console.log(currentNotch);
@@ -860,6 +860,9 @@ function validate(){
                 }
 
             }
+        }catch(e){
+            console.log(e);
+        }
         }
     }
     if(allClear){
