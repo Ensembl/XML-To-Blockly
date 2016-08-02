@@ -713,7 +713,7 @@ function getDisplayName(node){
 function getNotchProperties(node, inheritedProperties, treatAsSingleBlock){
     var properties = {};
     var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
-    properties = defaultProperties[node.nodeName];
+    properties = JSON.parse(JSON.stringify(defaultProperties[node.nodeName]));
     if(inheritedPropertiesLength > 0){
         properties['canBeEmpty']        = properties['canBeEmpty']      ||  inheritedProperties['canBeEmpty'];
         properties['hasOnlyOneBlock']   = properties['hasOnlyOneBlock'] &&  inheritedProperties['hasOnlyOneBlock'];
@@ -785,7 +785,7 @@ function validate(){
         var blockType = currentBlock.type;
         var notchNumbers = notchToBlockMapper[blockType];  //undefined if there is no notch
         if(notchNumbers){
-        try{    
+        try{
             for(var i=notchNumbers[0]; i<notchNumbers[1]; i++){
                 var currentNotch = currentBlock.getInput(''+i);
                 //console.log(currentNotch);
