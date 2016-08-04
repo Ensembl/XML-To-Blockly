@@ -69,35 +69,24 @@ var magicType = {
 };
 
 var defaultProperties = {
-    'optional'   :   {
-                        'canBeEmpty'        :   true,
-                        'hasToOccurTogether':   false,
-                        'eitherOneOf'       :   false,
-                        'hasOnlyOneBlock'   :   true
+    'optional'  :   {
+                        'canBeEmpty'        :   true
                     },
-    'choice'     :   {
+    'choice'    :   {
                         'canBeEmpty'        :   false,
-                        'hasToOccurTogether':   false,
-                        'eitherOneOf'       :   true,
-                        'hasOnlyOneBlock'   :   true
+                        'shouldHaveOneBlock':   true
                     },
-    'interleave' :   {
+    'interleave':   {
                         'canBeEmpty'        :   false,
-                        'hasToOccurTogether':   true,
-                        'eitherOneOf'       :   false,
-                        'hasOnlyOneBlock'   :   false
+                        'isGrouped'         :   true
                     },
-    'zeroOrMore' :   {
+    'zeroOrMore':   {
                         'canBeEmpty'        :   true,
-                        'hasToOccurTogether':   false,
-                        'eitherOneOf'       :   false,
-                        'hasOnlyOneBlock'   :   false
+                        'isRepeatable'      :   true
                     },
     'oneOrMore' :   {
                         'canBeEmpty'        :   false,
-                        'hasToOccurTogether':   false,
-                        'eitherOneOf'       :   false,
-                        'hasOnlyOneBlock'   :   false
+                        'isRepeatable'      :   true
                     }
 };
 
@@ -523,6 +512,8 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     var child_suffix = (last_sibling == undefined)? '': last_sibling? last_child: non_last_child;
     var unicode_pattern = common_prefix + head_suffix;
 
+    var properties = getNotchProperties(node, inheritedProperties);
+
     //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
@@ -542,17 +533,16 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 bottomNotchOverride = false;
             }
 
-            var properties = getNotchProperties(node, inheritedProperties);
             blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true, properties);
         }else{
-            if( magicType[nodeType].hasSeparateKids ) {
+            if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 var childrenDisplayNames = [];
-                var treatAsSingleBlock = [];
+                var childrenInfo = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
-                    var testBlockName  =  path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx ;
+                    //var testBlockName  =  path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx ;
 
-                    if(magicType.hasOwnProperty(currentChild.nodeName)){
+                    if(magicType.hasOwnProperty(currentChild.nodeName)){    // interleave or choice has magic child
                         var bottomForThisChild = (bottomListStr == "[]") ? false : true;
                         var bottom = ( bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
                         var currentContext = currentChild.getAttribute("context");
@@ -575,7 +565,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             blocklyCode = handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottom, common_prefix+child_suffix, true);
                         }*/
 
-                        if(magicType[currentChild.nodeName].hasSeparateKids){
+                        if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
                             var arrayOfChildren = [];
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var childBlockName = getChildBlockName(childrenOfCurrentChild[j]);
@@ -584,36 +574,52 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                                 expectedBlockNumber++;
                                 arrayOfChildren.push(childBlockName);
                             }
-                            if(bottom != "[]"){
-                                treatAsSingleBlock.push(arrayOfChildren);
+                            if(bottom != "[]"){ //if child does not have a bottom notch, it is interleave
+                                childrenInfo.push(arrayOfChildren);
+                            } else{             //if child is choice
+                                if(node.nodeName == "choice"){
+                                    for(var x=0;x<arrayOfChildren.length;x++){
+                                        childrenInfo.push(arrayOfChildren[x]);
+                                    }
+                                } else{
+                                    childrenInfo.push("startchoice_");
+                                    for(var x=0;x<arrayOfChildren.length;x++){
+                                        childrenInfo.push(arrayOfChildren[x]);
+                                    }
+                                    childrenInfo.push("_choiceend");
+                                }
                             }
 
-                        }else{
+                        }else{        //choice/interleave has a oneOrMore/zeroOrMore/optional child
                             var childBlockName = getChildBlockName(currentChild);
                             childrenDisplayNames.push(childBlockName);
                             pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
                             expectedBlockNumber++;
-                            treatAsSingleBlock.push(childBlockName);
+                            childrenInfo.push("start" + currentChild.nodeName + "_");
+                            childrenInfo.push(childBlockName);
+                            childrenInfo.push("_" + currentChild.nodeName + "end");
                         }
                     }
-                    else{
+                    else{           //child of choice/interleave is a normal one
                         var childBlockName = getChildBlockName(currentChild);
                         childrenDisplayNames.push(childBlockName);
                         pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
                         expectedBlockNumber++;
+                        childrenInfo.push(childBlockName);
                     }
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 //assignedPrettyName[node] = childrenDisplayNames;
                 node.setAttribute("name", childrenDisplayNames);
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
-                if(treatAsSingleBlock.length == 0){
+                if(childrenInfo.length == 0){
                     notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
                 } else{
-                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties, treatAsSingleBlock);
+                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties, JSON.stringify(childrenInfo));
                 }
+                console.log(notchProperties[slotNumber]);
                 statementInputCounter++;
-			} else{
+			} else{      //current node is oneOrMore, zeroOrMore, optional
                     var childBlockName = expectedBlockNumber;
                     if(children.length == 1){
                         childBlockName = children[0].getAttribute("name") ? children[0].getAttribute("name") : expectedBlockNumber;
@@ -625,6 +631,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     node.setAttribute("name", childBlockName);
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
                     notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
+                    console.log(notchProperties[slotNumber]);
                     statementInputCounter++;
             }
 
@@ -641,7 +648,9 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             //var prettyName = assignedPrettyName[node];
             var prettyName = node.getAttribute("name");
             blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
-            notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
+            //notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
+            notchProperties[slotNumber] = notchProperties[assignedSlotNumber];
+            console.log(notchProperties[slotNumber]);
             slotNumber++;
             statementInputCounter++;
 	}
@@ -710,17 +719,21 @@ function getDisplayName(node){
 }
 
 
-function getNotchProperties(node, inheritedProperties, treatAsSingleBlock){
-    var properties = {};
+function getNotchProperties(node, inheritedProperties, childrenInfo){
+    var properties = JSON.parse(JSON.stringify(defaultProperties[node.nodeName]));;
     var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
-    properties = JSON.parse(JSON.stringify(defaultProperties[node.nodeName]));
+    var keys = ['isRepeatable' , 'shouldHaveOneBlock' , 'isGrouped'];
     if(inheritedPropertiesLength > 0){
-        properties['canBeEmpty']        = properties['canBeEmpty']      ||  inheritedProperties['canBeEmpty'];
-        properties['hasOnlyOneBlock']   = properties['hasOnlyOneBlock'] &&  inheritedProperties['hasOnlyOneBlock'];
+        for(var i=0;i<keys.length;i++){
+            if(inheritedProperties[keys[i]] != undefined){
+                properties[keys[i]] = inheritedProperties[keys[i]];
+            }
+        }
+        properties['canBeEmpty'] = properties['canBeEmpty'] || inheritedProperties['canBeEmpty'];
     }
 
-    if(treatAsSingleBlock){
-        properties['treatAsSingleBlock'] = treatAsSingleBlock;
+    if(childrenInfo){
+        properties['childrenInfo'] = JSON.parse(childrenInfo);
     }
 
     return properties;
@@ -764,7 +777,7 @@ function validate(){
         alert("Workspace is empty");
         return;
     }
-
+    /*
     var startBlock = blocks[0];
 
     queueForValidation = [];
@@ -864,7 +877,7 @@ function validate(){
             console.log(e);
         }
         }
-    }
+    }*/
     if(allClear){
         alert("You may save this");
     }
