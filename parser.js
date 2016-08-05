@@ -513,7 +513,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     var unicode_pattern = common_prefix + head_suffix;
 
     var properties = getNotchProperties(node, inheritedProperties);
-
+    
     //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
@@ -724,12 +724,19 @@ function getNotchProperties(node, inheritedProperties, childrenInfo){
     var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
     var keys = ['isRepeatable' , 'shouldHaveOneBlock' , 'isGrouped'];
     if(inheritedPropertiesLength > 0){
-        for(var i=0;i<keys.length;i++){
+        for(var i=0;i<1;i++){
             if(inheritedProperties[keys[i]] != undefined){
                 properties[keys[i]] = inheritedProperties[keys[i]];
             }
         }
         properties['canBeEmpty'] = properties['canBeEmpty'] || inheritedProperties['canBeEmpty'];
+
+        //if choice has ONLY interleave, it becomes an interleave. if interleave has ONLY choice, it becomes choice
+        if(inheritedProperties['shouldHaveOneBlock'] && properties['isGrouped']){
+            properties['isGrouped'] = true;
+        } else if(properties['shouldHaveOneBlock'] && inheritedProperties['isGrouped']){
+            properties['shouldHaveOneBlock'] = true;
+        }
     }
 
     if(childrenInfo){
