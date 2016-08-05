@@ -513,7 +513,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     var unicode_pattern = common_prefix + head_suffix;
 
     var properties = getNotchProperties(node, inheritedProperties);
-    
+
     //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
 	var topListStr      = "["+slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
@@ -784,7 +784,7 @@ function validate(){
         alert("Workspace is empty");
         return;
     }
-    /*
+
     var startBlock = blocks[0];
 
     queueForValidation = [];
@@ -793,6 +793,8 @@ function validate(){
     while(queueForValidation.length > 0){
         var currentBlock = queueForValidation.shift();
         //add the block connected to the current block's bottom notch (if any) for validation
+
+        //push block connected to its bottom to queueForValidation
         try{
             var bottomConnection = currentBlock.nextConnection.targetConnection;
             if(bottomConnection != null){
@@ -802,6 +804,7 @@ function validate(){
             console.log("No bottom connection");
         }
         //console.log(currentBlock);
+
         var blockType = currentBlock.type;
         var notchNumbers = notchToBlockMapper[blockType];  //undefined if there is no notch
         if(notchNumbers){
@@ -813,6 +816,30 @@ function validate(){
                 var blockInConnection = connection.targetBlock();
                 //console.log(blockInConnection);
 
+                if(blockInConnection == null){
+                    if(notchProperties[i].canBeEmpty == false){
+                        allClear = false;
+                        alert("slot " + i + " needs to have something in it");
+                    }
+                } else{
+                    if(notchProperties[i].isRepeatable){
+                        if(notchProperties[i].isGrouped){   // one/zeroOrMore has interleave as only child
+
+                        } else if(notchProperties[i].shouldHaveOneBlock){   // one/zeroOrMore has choice as only child
+
+                        }
+                    } else{
+                        if(notchProperties[i].isRepeatable){    // one/zeroOrMore notch
+
+                        } else if(notchProperties[i].shouldHaveOneBlock){   //choice notch
+
+                        } else{     //optional notch
+
+                        }
+                    }
+                }
+
+                /*
                 if(blockInConnection == null && notchProperties[i].canBeEmpty==false){
                     alert("slot "+i+" needs to have something in it");
                     allClear = false;
@@ -877,14 +904,14 @@ function validate(){
                 }
                 if(blockInConnection!=null){
                     queueForValidation.push(blockInConnection);
-                }
+                }*/
 
             }
         }catch(e){
             console.log(e);
         }
         }
-    }*/
+    }
     if(allClear){
         alert("You may save this");
     }
