@@ -829,14 +829,16 @@ function validate(){
 
                         }
                     } else{
-                        if(notchProperties[i].isRepeatable){    // one/zeroOrMore notch
+                        if(notchProperties[i].isGrouped){    // one/zeroOrMore notch
 
                         } else if(notchProperties[i].shouldHaveOneBlock){   //choice notch
-
+                            
                         } else{     //optional notch
 
                         }
                     }
+
+                    queueForValidation.push(blockInConnection);
                 }
 
                 /*
