@@ -24,15 +24,28 @@
  * It is way easier to iterate this way (just one call, and you always get a list, even if empty).
  */
 Blockly.Block.prototype.getSlotContentsList = function(slotName) {
-
-    var slotContentsList = []
+    var slotContentsList = [];
+    /*
     var next = this.getInputTargetBlock(slotName);
 
     while(next) {
         slotContentsList.push( next );
         next = next.getNextBlock();
+    }*/
+    var firstBlockInConnection = slotName.connection.targetBlock();
+    if(firstBlockInConnection != null){
+        slotContentsList.push(firstBlockInConnection.type);
+        var nextConn = firstBlockInConnection.nextConnection;
+        while(nextConn != null){
+            if(nextConn.targetConnection == null){
+                break;
+            } else{
+                var currentBlock = nextConn.targetConnection.sourceBlock_;
+                slotContentsList.push(currentBlock.type);
+                nextConn = currentBlock.nextConnection;
+            }
+        }
     }
 
     return slotContentsList;
 };
-
