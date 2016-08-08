@@ -25,27 +25,28 @@
  */
 Blockly.Block.prototype.getSlotContentsList = function(slotName) {
     var slotContentsList = [];
-    /*
+
     var next = this.getInputTargetBlock(slotName);
 
     while(next) {
-        slotContentsList.push( next );
+        slotContentsList.push( blockNameToDisplayNameMapper[next.type] );
         next = next.getNextBlock();
-    }*/
+    }
+    /*
     var firstBlockInConnection = slotName.connection.targetBlock();
     if(firstBlockInConnection != null){
-        slotContentsList.push(firstBlockInConnection.type);
+        slotContentsList.push( blockNameToDisplayNameMapper[firstBlockInConnection.type] );//push pretty name to list
         var nextConn = firstBlockInConnection.nextConnection;
         while(nextConn != null){
             if(nextConn.targetConnection == null){
                 break;
             } else{
                 var currentBlock = nextConn.targetConnection.sourceBlock_;
-                slotContentsList.push(currentBlock.type);
+                slotContentsList.push( blockNameToDisplayNameMapper[currentBlock.type] );  //push pretty name to list
                 nextConn = currentBlock.nextConnection;
             }
         }
-    }
+    }*/
 
     return slotContentsList;
 };

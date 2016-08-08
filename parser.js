@@ -595,9 +595,9 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             childrenDisplayNames.push(childBlockName);
                             pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
                             expectedBlockNumber++;
-                            childrenInfo.push("start" + currentChild.nodeName + "_");
+                            childrenInfo.push("startRepetition_");
                             childrenInfo.push(childBlockName);
-                            childrenInfo.push("_" + currentChild.nodeName + "end");
+                            childrenInfo.push("_endRepetition");
                         }
                     }
                     else{           //child of choice/interleave is a normal one
@@ -811,12 +811,12 @@ function validate(){
         try{
             for(var i=notchNumbers[0]; i<notchNumbers[1]; i++){
                 var currentNotch = currentBlock.getInput(''+i);
-                //console.log(currentNotch);
-                var connection = currentNotch.connection;
-                var blockInConnection = connection.targetBlock();
-                //console.log(blockInConnection);
+                console.log(currentNotch);
+                /*var connection = currentNotch.connection;
+                var blockInConnection = connection.targetBlock();*/
 
-                if(blockInConnection == null){
+
+                if(currentNotch.connection.targetBlock() == null){  //there is no block in the notch
                     if(notchProperties[i].canBeEmpty == false){
                         allClear = false;
                         alert("slot " + i + " needs to have something in it");
@@ -825,88 +825,19 @@ function validate(){
                     if(notchProperties[i].isRepeatable){
                         if(notchProperties[i].isGrouped){   // one/zeroOrMore has interleave as only child
 
-                        } else if(notchProperties[i].shouldHaveOneBlock){   // one/zeroOrMore has choice as only child
+                        } else{                             // one/zeroOrMore has choice, optional as only child
 
                         }
                     } else{
-                        if(notchProperties[i].isGrouped){    // one/zeroOrMore notch
+                        if(notchProperties[i].isGrouped){    // interleave notch notch
 
-                        } else if(notchProperties[i].shouldHaveOneBlock){   //choice notch
-                            
-                        } else{     //optional notch
-
+                        } else{                              //optional, choice notch
+                            allClear = validateChoiceNotch(currentBlock , currentNotch.name);
                         }
                     }
 
-                    queueForValidation.push(blockInConnection);
+                    //queueForValidation.push(blockInConnection);
                 }
-
-                /*
-                if(blockInConnection == null && notchProperties[i].canBeEmpty==false){
-                    alert("slot "+i+" needs to have something in it");
-                    allClear = false;
-                }
-
-                if(notchProperties[i].hasOnlyOneBlock==true && blockInConnection.nextConnection.targetConnection !=null){
-                    if(notchProperties[i].treatAsSingleBlock){
-                        var notchBlockName = blockNameToDisplayNameMapper[blockInConnection.type];
-                        var exception = makeExceptionForThis(notchBlockName , notchProperties[i].treatAsSingleBlock);
-                        //HELP: Should there be a condition to check if the variable "exception" actually contains anything
-                        var condition = "";
-                        var currentlyChecking = blockInConnection;
-                        var conditionNumber;
-                        if(Object.prototype.toString.call ( exception ) === "[object Array]"){
-                            condition = "exception.length>0 && currentlyChecking.nextConnection.targetConnection!=null";
-                            conditionNumber = 1;
-                            var firstRemover = exception.indexOf(blockNameToDisplayNameMapper[currentlyChecking.type]);
-                            exception.splice(firstRemover,1);
-                            //console.log(exception);
-                            //console.log("condition 1");
-                        } else{
-                            //condition = "blockNameToDisplayNameMapper[x.nextConnection.targetConnection.sourceBlock_.type] == exception";
-                            condition = "currentlyChecking.nextConnection.targetConnection!=null";
-                            conditionNumber = 2;
-                            //console.log("condition 2");
-                        }
-                        var allowed = true;
-                        while(eval(condition)){
-                            if(conditionNumber == 1){
-                                var index = exception.indexOf(blockNameToDisplayNameMapper[currentlyChecking.nextConnection.targetConnection.sourceBlock_.type]);
-                                if(index != -1){
-                                    currentlyChecking=currentlyChecking.nextConnection.targetConnection.sourceBlock_;
-                                    exception.splice(index, 1);
-                                } else{
-                                    allowed = false;
-                                    break;
-                                }
-                            } else{
-                                currentlyChecking=currentlyChecking.nextConnection.targetConnection.sourceBlock_;
-                                if(blockNameToDisplayNameMapper[currentlyChecking.type]!=exception){
-                                    allowed = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if(allowed && exception.length == 0 && currentlyChecking.nextConnection.targetConnection!=null){
-                            alert("Extra block added as part of interleave");
-                            allClear = false;
-                        }
-                        if(!allowed){
-                            allClear = false;
-                            alert("error: extra block");
-                        } else if(conditionNumber == 1 && exception.length!=0){
-                            console.log(exception);
-                            allClear = false;
-                            alert("didn't go through all the interleave blocks");
-                        }
-                    } else{
-                        alert("slot "+i+" has an extra block");
-                        allClear = false;
-                    }
-                }
-                if(blockInConnection!=null){
-                    queueForValidation.push(blockInConnection);
-                }*/
 
             }
         }catch(e){
@@ -917,6 +848,97 @@ function validate(){
     if(allClear){
         alert("You may save this");
     }
+}
+
+
+function validateChoiceNotch(block , notchName){
+    var expectedChildren = JSON.parse( JSON.stringify( notchProperties[notchName].childrenInfo ) );
+    var actualChildren = block.getSlotContentsList(notchName);
+    if( actualChildren.length == 1 ){
+        if( expectedChildren.indexOf( actualChildren[0] ) != -1 ){  //if child is directly mentioned in expectedChildren, it is not an interleave
+            return true;
+        }
+    }
+    
+    if( isRepetitiveChild( expectedChildren , actualChildren[0]) ){ //choice has a oneOrMore child
+        var iterator = 1;
+        while( iterator < actualChildren.length ){
+            if( actualChildren[0] == actualChildren[iterator] ){
+                console.log("same");
+                iterator++;
+                continue;
+            } else{
+                alert("Please attach only one type of repetitive block");
+                return false;
+            }
+        }
+    } else{
+        var interleaveLists = isInterleaveChild(expectedChildren , actualChildren[0]);
+        if(interleaveLists.length>0){   //choice has an interleave child
+            for(var i=0;i<interleaveLists.length;i++){
+                var currentList = JSON.parse(interleaveLists[i]);
+                var ans = false;
+                if(currentList.length != actualChildren.length){
+                    /*if we have two interleaves in the choice [a,b] and [a,b,c],
+                     *then we proceed ahead only for that list which has the same number of elements as the current notch
+                     */
+                     ans = false;
+                    continue;
+                }
+                ans = true;
+                while(currentList.length!=0){   //we may be missing interleave containing a repetitive block
+                    if( actualChildren.indexOf(currentList[0]) != -1 ){
+                        currentList.splice(0,1);
+                    } else{
+                        ans = false;
+                        break;
+                    }
+                }
+                if(ans == true){
+                    return true;
+                }
+            }
+            alert("The interleave has not been implemented properly.");
+            return false;
+        }
+    }
+}
+
+function isRepetitiveChild(expectedChildren , name){
+    var ans = false;
+    var index = expectedChildren.indexOf(name);
+    var i = index-1;
+    while(i>=0){
+        if( expectedChildren[i] == "startRepetition_" ){
+            break;
+        }
+        i--;
+    }
+    if(i>=0){
+        while(i<expectedChildren.length){
+            if( expectedChildren[i] == "_endRepetition" ){
+                break;
+            }
+            i++;
+        }
+        if(i>index && i!=expectedChildren.length){
+            ans = true;
+        }
+    }
+    return ans;
+}
+
+function isInterleaveChild( expectedChildren , name ){
+    var listsThatChildCanBePartOf = [];
+    for(var i=0;i<expectedChildren.length;i++){
+        if( Object.prototype.toString.call ( expectedChildren[i] ) === "[object Array]" ){
+            if(expectedChildren[i].indexOf(name) != -1 ){
+                listsThatChildCanBePartOf.push(JSON.stringify(expectedChildren[i]));
+            }
+        }
+    }
+    return listsThatChildCanBePartOf;
+
 }
 
 
