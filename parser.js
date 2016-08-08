@@ -774,7 +774,7 @@ function _removeNodeNameRecursively(node, name) {
 	}
 }
 
-
+/*
 //function to check if all the oneOrMore blocks have children attached to them.
 function validate(){
     var allClear = true;
@@ -814,7 +814,7 @@ function validate(){
                 console.log(currentNotch);
                 /*var connection = currentNotch.connection;
                 var blockInConnection = connection.targetBlock();*/
-
+/*
 
                 if(currentNotch.connection.targetBlock() == null){  //there is no block in the notch
                     if(notchProperties[i].canBeEmpty == false){
@@ -859,7 +859,7 @@ function validateChoiceNotch(block , notchName){
             return true;
         }
     }
-    
+
     if( isRepetitiveChild( expectedChildren , actualChildren[0]) ){ //choice has a oneOrMore child
         var iterator = 1;
         while( iterator < actualChildren.length ){
@@ -882,7 +882,7 @@ function validateChoiceNotch(block , notchName){
                     /*if we have two interleaves in the choice [a,b] and [a,b,c],
                      *then we proceed ahead only for that list which has the same number of elements as the current notch
                      */
-                     ans = false;
+/*                     ans = false;
                     continue;
                 }
                 ans = true;
@@ -958,7 +958,7 @@ function makeExceptionForThis( name, treatAsSingleBlock ){
         }
     }
     return str;
-}
+}*/
 
 function checker(){
 	var source=this.sourceBlock_;

@@ -29,7 +29,7 @@ Blockly.Block.prototype.getSlotContentsList = function(slotName) {
     var next = this.getInputTargetBlock(slotName);
 
     while(next) {
-        slotContentsList.push( blockNameToDisplayNameMapper[next.type] );
+        slotContentsList.push( next );
         next = next.getNextBlock();
     }
     /*
