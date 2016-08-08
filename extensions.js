@@ -50,3 +50,47 @@ Blockly.Block.prototype.getSlotContentsList = function(slotName) {
 
     return slotContentsList;
 };
+
+//function to toggle hide/show optiFields
+function checker(){
+	var source=this.sourceBlock_;
+	var checkBoxFieldName=this.name.split("_checkbox")[0]; //the name of the checkbox's dummyInput
+	var it = 0;
+	var iplist=source.inputList;
+
+	//find out at which position of the inputList of source block, the checkbox is present.
+    while(iplist[it].name != checkBoxFieldName){
+        it++;
+    }
+
+    //if the input field has fieldRow of length, then it means that it's a single level optiField with no special label (label of the attibute/element itself is used)
+    /* fieldRow indices:
+     * 0 : The unicode design
+     * 1 : The checkbox
+     * 2 : The text label for the field
+     * 3 : The text/dropdown field
+     */
+    if(iplist[it].fieldRow.length == 4){
+        if(this.state_==false){
+            iplist[it].fieldRow[2].setVisible(true);
+            iplist[it].fieldRow[3].setVisible(true);
+            source.render();
+        } else{
+            iplist[it].fieldRow[2].setVisible(false);
+            iplist[it].fieldRow[3].setVisible(false);
+            source.render();
+        }
+    } else{
+        it++;
+        while(iplist[it].name != checkBoxFieldName+"end_of_optiField"){
+            if(this.state_==false){
+                iplist[it].setVisible(true);
+                source.render();
+            } else{
+                iplist[it].setVisible(false);
+                source.render();
+            }
+            it++;
+        }
+    }
+}
