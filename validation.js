@@ -45,8 +45,9 @@ function validateBlock(block){
         var notchNumber         = availableNotchNumbers[i];
         var slotContents        = block.getSlotContentsList(notchNumber);
         var thisNotchProperties = notchProperties[notchNumber];
+        var errorContext        = block.type+", slot #"+(i+1);  // not a unique context, but will do for now; the slot# makes sense as a local base-1 number
 
-        blockValidationResult = validateNotch(slotContents, thisNotchProperties, notchNumber) && blockValidationResult; // check if the notch is correctly populated
+        blockValidationResult = validateNotch(slotContents, thisNotchProperties, errorContext) && blockValidationResult; // check if the notch is correctly populated
 
         for(var j=0;j<slotContents.length;j++){
             blockValidationResult = validateBlock(slotContents[j]) && blockValidationResult; // check each of the child blocks in turn
@@ -56,14 +57,14 @@ function validateBlock(block){
 }
 
 
-function validateNotch(slotContents, thisNotchProperties, notchNumber){
+function validateNotch(slotContents, thisNotchProperties, errorContext){
 	var notchValidationResult = true;
 
 	if(slotContents.length == 0) {
         notchValidationResult = thisNotchProperties.canBeEmpty;
 
         if(! notchValidationResult) {
-			alert("slot " + notchNumber + " needs to have something in it");
+			alert( errorContext + " needs to have something in it");
 		}
 	} else{
 		if(thisNotchProperties.isRepeatable){
@@ -76,7 +77,7 @@ function validateNotch(slotContents, thisNotchProperties, notchNumber){
 			if(thisNotchProperties.isGrouped){    // interleave notch notch
 
 			} else{                              //optional, choice notch
-				notchValidationResult = validateChoiceNotch(slotContents, thisNotchProperties);
+				notchValidationResult = validateChoiceNotch(slotContents, thisNotchProperties, errorContext);
 			}
 		}
 	}
@@ -84,7 +85,7 @@ function validateNotch(slotContents, thisNotchProperties, notchNumber){
 }
 
 
-function validateChoiceNotch(slotContents, thisNotchProperties){
+function validateChoiceNotch(slotContents, thisNotchProperties, errorContext){
 	var expectedChildren = JSON.parse( JSON.stringify( thisNotchProperties.childrenInfo ) );
     var actualChildren = getPrettyNamesOfSlotContents(slotContents);
 	if( actualChildren.length == 1 ){
@@ -100,7 +101,7 @@ function validateChoiceNotch(slotContents, thisNotchProperties){
                 iterator++;
                 continue;
             } else{
-                alert("Please attach only one type of repetitive block");
+                alert( errorContext + ": please attach only one type of repetitive block");
                 return false;
             }
         }
@@ -130,10 +131,10 @@ function validateChoiceNotch(slotContents, thisNotchProperties){
                     return true;
                 }
             }
-            alert("The interleave has not been implemented properly.");
+            alert( errorContext + ": the interleave has not been implemented properly.");
             return false;
         } else{ //if block occurs multiple times but is neither a repetitive nor interleave block
-			alert("You cannot attach this block more than once");
+			alert( errorContext + ": you cannot attach this block more than once");
 			return false;
 		}
     }
