@@ -22,9 +22,6 @@ var expectedBlockNumber;
 var assignedPrettyName = {};
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
 var currentlyCreatingOptiField;
-var statementInputCounter;
-var blockCounter;
-var notchToBlockMapper = {};    //block numbers are keys. contains two elements: starting notch number for block, ending notch number+1
 var notchProperties = {};
 var unicode_pattern_for_prev_level = "";
 var blockNameToDisplayNameMapper;
@@ -117,9 +114,6 @@ function handleRNG( unparsedRNG ){
     expectedBlockNumber = 1;
     oneOrMoreBlocks=[];
     optionalNames=[];
-    statementInputCounter = 0;
-    blockCounter = 0;
-    notchToBlockMapper = {};
     blockNameToDisplayNameMapper = [];
 
     var xmlParser=new DOMParser();
@@ -156,16 +150,9 @@ function handleRNG( unparsedRNG ){
 
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
-
-        var countPriorToBlockCreation = statementInputCounter;
         for(var i=0;i<children.length;i++){
             blockCode += goDeeper( blockRequestQueue, children[i], "{}", i , '', undefined);
         }
-        if(statementInputCounter != countPriorToBlockCreation){
-            var numberOfStatementInputs = [countPriorToBlockCreation, statementInputCounter];   //starting slot, ending slot +1
-            notchToBlockMapper["block_"+blockCounter] = numberOfStatementInputs;
-        }
-        blockCounter++;
 
             // We want to always have a start block and here we force its blockCode to be unique
         if( blockName == "start" ) {
@@ -189,13 +176,12 @@ function handleRNG( unparsedRNG ){
 
     var toolboxXML      = "";
     var allCode         = [];
-    var blockCounter    = 0;
     var blockCode;
 
     for (var i=0;i<blockOrder.length;i++){
         var dictEntry   = blockOrder[i];
         var displayName = dictEntry.blockName;
-        var blockName   = "block_" + blockCounter;
+        var blockName   = "block_" + i;
         var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
         var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
         blockNameToDisplayNameMapper[blockName] = displayName;
@@ -212,7 +198,6 @@ function handleRNG( unparsedRNG ){
 
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
         allCode.push(blockCode);
-        blockCounter++;
     }
     document.getElementById('toolbox').innerHTML = toolboxXML;
     document.getElementById('results').innerHTML = "<pre>" + allCode.join("</pre><pre>") + "</pre>";
@@ -618,7 +603,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties, JSON.stringify(childrenInfo));
                 }
                 console.log(notchProperties[slotNumber]);
-                statementInputCounter++;
 			} else{      //current node is oneOrMore, zeroOrMore, optional
                     var childBlockName = expectedBlockNumber;
                     if(children.length == 1){
@@ -632,7 +616,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
                     notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
                     console.log(notchProperties[slotNumber]);
-                    statementInputCounter++;
             }
 
             setVisitedAndSlotNumber(node, slotNumber);
@@ -652,7 +635,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
             notchProperties[slotNumber] = notchProperties[assignedSlotNumber];
             console.log(notchProperties[slotNumber]);
             slotNumber++;
-            statementInputCounter++;
 	}
 	return blocklyCode;
 }
