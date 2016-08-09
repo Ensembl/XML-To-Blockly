@@ -43,39 +43,40 @@ function validateBlock(block){
 
     for(var i=0; i<availableNotchNumbers.length; i++) {
         var notchNumber         = availableNotchNumbers[i];
-        var slotContentsList    = block.getSlotContentsList(notchNumber);
+        var slotContents        = block.getSlotContentsList(notchNumber);
+        var thisNotchProperties = notchProperties[notchNumber];
 
-        blockValidationResult = validateNotch(notchNumber , slotContentsList) && blockValidationResult; // check if the notch is correctly populated
+        blockValidationResult = validateNotch(slotContents, thisNotchProperties, notchNumber) && blockValidationResult; // check if the notch is correctly populated
 
-        for(var j=0;j<slotContentsList.length;j++){
-            blockValidationResult = validateBlock(slotContentsList[j]) && blockValidationResult; // check each of the child blocks in turn
+        for(var j=0;j<slotContents.length;j++){
+            blockValidationResult = validateBlock(slotContents[j]) && blockValidationResult; // check each of the child blocks in turn
         }
     }
 	return blockValidationResult;
 }
 
 
-function validateNotch(notchNumber , slotContents){
+function validateNotch(slotContents, thisNotchProperties, notchNumber){
 	var notchValidationResult = true;
 
 	if(slotContents.length == 0) {
-        notchValidationResult = notchProperties[notchNumber].canBeEmpty;
+        notchValidationResult = thisNotchProperties.canBeEmpty;
 
         if(! notchValidationResult) {
 			alert("slot " + notchNumber + " needs to have something in it");
 		}
 	} else{
-		if(notchProperties[notchNumber].isRepeatable){
-			if(notchProperties[notchNumber].isGrouped){   // one/zeroOrMore has interleave as only child
+		if(thisNotchProperties.isRepeatable){
+			if(thisNotchProperties.isGrouped){   // one/zeroOrMore has interleave as only child
 
 			} else{                             // one/zeroOrMore has choice, optional as only child
 
 			}
 		} else{
-			if(notchProperties[notchNumber].isGrouped){    // interleave notch notch
+			if(thisNotchProperties.isGrouped){    // interleave notch notch
 
 			} else{                              //optional, choice notch
-				notchValidationResult = validateChoiceNotch(notchNumber, slotContents);
+				notchValidationResult = validateChoiceNotch(slotContents, thisNotchProperties);
 			}
 		}
 	}
@@ -83,8 +84,8 @@ function validateNotch(notchNumber , slotContents){
 }
 
 
-function validateChoiceNotch(notchNumber, slotContents){
-	var expectedChildren = JSON.parse( JSON.stringify( notchProperties[notchNumber].childrenInfo ) );
+function validateChoiceNotch(slotContents, thisNotchProperties){
+	var expectedChildren = JSON.parse( JSON.stringify( thisNotchProperties.childrenInfo ) );
     var actualChildren = getPrettyNamesOfSlotContents(slotContents);
 	if( actualChildren.length == 1 ){
         if( expectedChildren.indexOf( actualChildren[0] ) != -1 ){  //if child is directly mentioned in expectedChildren, it is not an interleave
