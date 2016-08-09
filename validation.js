@@ -23,55 +23,52 @@
 
 
 function validateBlocklyGraph(){
-	var workspace = Blockly.getMainWorkspace();
-    var blocks = workspace.getTopBlocks();
-	var allowSaving = true;
+    var blocks = Blockly.getMainWorkspace().getTopBlocks();
+
     if(blocks.length == 0){
         alert("Workspace is empty");
-		return;
+        return false;
     } else if(blocks.length > 1){
 		alert("Only the start block is allowed to be placed directly in the workspace");
-		return;
-	} else{
-		var startBlock = blocks[0];
-		allowSaving = validateBlock(startBlock);
-	}
-	if(allowSaving){
-		alert("You may save this");
-	}
+        return false;
+	} else {
+        var blocklyValidationResult = validateBlock(blocks[0]);
+
+        if(blocklyValidationResult) {
+            alert("You may save this");
+        }
+        return blocklyValidationResult;
+    }
 }
 
 //get all blocks. Send each block's slots for validation. Send each child block of each slot for validation
 function validateBlock(block){
-	var validationResult = true;
+	var blockValidationResult = true;
+
 	var notchNumbers = notchToBlockMapper[block.type];
 	if(notchNumbers){
 		for(var i=notchNumbers[0] ; i<notchNumbers[1] ; i++){
-			var notch = block.getInput(''+i);
-			var slotContentsList = block.getSlotContentsList(notch.name);
-			var notchValidationBoolean = validateNotch(notch, i , slotContentsList);
-			if( !notchValidationBoolean ){
-				validationResult = false;
-			}
+			var slotContentsList = block.getSlotContentsList(''+i);
+
+			blockValidationResult = blockValidationResult && validateNotch(i , slotContentsList); // check if the notch is correctly populated
+
 			for(var j=0;j<slotContentsList.length;j++){
-				var blockValidationBoolean = validateBlock(slotContentsList[j]);
-				if( !blockValidationBoolean ){
-					validationResult = false;
-				}
+				blockValidationResult = blockValidationResult && validateBlock(slotContentsList[j]); // check each of the child blocks in turn
 			}
 		}
 	}
-	return validationResult;
+	return blockValidationResult;
 }
 
 
-function validateNotch(notch, notchNumber , slotContents){
-	var allClear = true;
-	//var notch = block.getInput(''+notchNumber)
-	if(notch.connection.targetBlock() == null){
-		if( notchProperties[notchNumber].canBeEmpty == false ){
+function validateNotch(notchNumber , slotContents){
+	var notchValidationResult = true;
+
+	if(slotContents.length == 0) {
+        notchValidationResult = notchProperties[notchNumber].canBeEmpty;
+
+        if(! notchValidationResult) {
 			alert("slot " + notchNumber + " needs to have something in it");
-			allClear = false;
 		}
 	} else{
 		if(notchProperties[notchNumber].isRepeatable){
@@ -84,16 +81,16 @@ function validateNotch(notch, notchNumber , slotContents){
 			if(notchProperties[notchNumber].isGrouped){    // interleave notch notch
 
 			} else{                              //optional, choice notch
-				allClear = validateChoiceNotch(notch.name, slotContents);
+				notchValidationResult = validateChoiceNotch(notchNumber, slotContents);
 			}
 		}
 	}
-	return allClear;
+	return notchValidationResult;
 }
 
 
-function validateChoiceNotch(notchName, slotContents){
-	var expectedChildren = JSON.parse( JSON.stringify( notchProperties[notchName].childrenInfo ) );
+function validateChoiceNotch(notchNumber, slotContents){
+	var expectedChildren = JSON.parse( JSON.stringify( notchProperties[notchNumber].childrenInfo ) );
     var actualChildren = getPrettyNamesOfSlotContents(slotContents);
 	if( actualChildren.length == 1 ){
         if( expectedChildren.indexOf( actualChildren[0] ) != -1 ){  //if child is directly mentioned in expectedChildren, it is not an interleave
