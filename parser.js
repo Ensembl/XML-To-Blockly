@@ -13,8 +13,6 @@
  */
 
 var blocklyWorkspace;
-var oneOrMoreBlocks;
-var optionalNames;
 var rngDoc;
 var slotNumber;
 
@@ -111,9 +109,7 @@ function readFile(event) {
 //handles xml by creating blocks as per RNG rules
 function handleRNG( unparsedRNG ){
 	slotNumber = 0;	//re-initialize each time the user chooses a new file
-    expectedBlockNumber = 1;
-    oneOrMoreBlocks=[];
-    optionalNames=[];
+    expectedBlockNumber = 0;
     blockNameToDisplayNameMapper = [];
 
     var xmlParser=new DOMParser();
@@ -551,7 +547,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                                 var childBlockName = getChildBlockName(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
                                 pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], topListStr, bottom);
-                                expectedBlockNumber++;
                                 arrayOfChildren.push(childBlockName);
                             }
                             if(bottom != "[]"){ //if child does not have a bottom notch, it is interleave
@@ -574,7 +569,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             var childBlockName = getChildBlockName(currentChild);
                             childrenDisplayNames.push(childBlockName);
                             pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, topListStr, bottom);
-                            expectedBlockNumber++;
                             childrenInfo.push("startRepetition_");
                             childrenInfo.push(childBlockName);
                             childrenInfo.push("_endRepetition");
@@ -584,7 +578,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         var childBlockName = getChildBlockName(currentChild);
                         childrenDisplayNames.push(childBlockName);
                         pushToQueue(blockRequestQueue, childBlockName, [currentChild], topListStr, bottomListStr);
-                        expectedBlockNumber++;
                         childrenInfo.push(childBlockName);
                     }
                 }
@@ -600,13 +593,12 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
                 console.log(notchProperties[slotNumber]);
 			} else{      //current node is oneOrMore, zeroOrMore, optional
-                    var childBlockName = expectedBlockNumber;
-                    if(children.length == 1){
-                        childBlockName = children[0].getAttribute("name") ? children[0].getAttribute("name") : expectedBlockNumber;
-                        childBlockName = children[0].getAttribute("blockly:blockName") ? node.childNodes[0].getAttribute("blockly:blockName") : childBlockName;
-                    }
+
+                    var childBlockName = (children.length == 1)
+                                            ? children[0].getAttribute("blockly:blockName") || children[0].getAttribute("name") || expectedBlockNumber
+                                            : expectedBlockNumber;
+
                     pushToQueue(blockRequestQueue, childBlockName, children, topListStr, bottomListStr);
-                    expectedBlockNumber++;
                     //assignedPrettyName[node] = childBlockName;
                     node.setAttribute("name", childBlockName);
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
@@ -642,6 +634,7 @@ function pushToQueue(blockRequestQueue, blockName, children, topListStr, bottomL
         "topList"           :   JSON.parse(topListStr),
         "bottomList"        :   JSON.parse(bottomListStr)
     } );
+    expectedBlockNumber++;
 }
 
 function setVisitedAndSlotNumber(node, slot){
