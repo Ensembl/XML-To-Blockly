@@ -133,12 +133,7 @@ function handleRNG( unparsedRNG ){
     var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
     var blockOrder          = [];   // the block descriptions, ordered by their position in the queue
 
-    blockRequestQueue.push( {
-        "blockName"         : "start",
-        "children"          : substitutedNodeList(startContent, "{}", "START"),
-        "topList"           : [],
-        "bottomList"        : []
-    } );  // initialize the queue
+    pushToQueue(blockRequestQueue, "start", substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
 
     while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest = blockRequestQueue.shift();
@@ -555,7 +550,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var childBlockName = getChildBlockName(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
-                                pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], JSON.parse(topListStr), JSON.parse(bottom));
+                                pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], topListStr, bottom);
                                 expectedBlockNumber++;
                                 arrayOfChildren.push(childBlockName);
                             }
@@ -578,7 +573,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         }else{        //choice/interleave has a oneOrMore/zeroOrMore/optional child
                             var childBlockName = getChildBlockName(currentChild);
                             childrenDisplayNames.push(childBlockName);
-                            pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, JSON.parse(topListStr), JSON.parse(bottom));
+                            pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, topListStr, bottom);
                             expectedBlockNumber++;
                             childrenInfo.push("startRepetition_");
                             childrenInfo.push(childBlockName);
@@ -588,7 +583,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     else{           //child of choice/interleave is a normal one
                         var childBlockName = getChildBlockName(currentChild);
                         childrenDisplayNames.push(childBlockName);
-                        pushToQueue(blockRequestQueue, childBlockName, [currentChild], JSON.parse(topListStr), JSON.parse(bottomListStr));
+                        pushToQueue(blockRequestQueue, childBlockName, [currentChild], topListStr, bottomListStr);
                         expectedBlockNumber++;
                         childrenInfo.push(childBlockName);
                     }
@@ -609,7 +604,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         childBlockName = children[0].getAttribute("name") ? children[0].getAttribute("name") : expectedBlockNumber;
                         childBlockName = children[0].getAttribute("blockly:blockName") ? node.childNodes[0].getAttribute("blockly:blockName") : childBlockName;
                     }
-                    pushToQueue(blockRequestQueue, childBlockName, children, JSON.parse(topListStr), JSON.parse(bottomListStr));
+                    pushToQueue(blockRequestQueue, childBlockName, children, topListStr, bottomListStr);
                     expectedBlockNumber++;
                     //assignedPrettyName[node] = childBlockName;
                     node.setAttribute("name", childBlockName);
@@ -639,12 +634,12 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 	return blocklyCode;
 }
 
-function pushToQueue(blockRequestQueue, blockName, children, topList, bottomList){
+function pushToQueue(blockRequestQueue, blockName, children, topListStr, bottomListStr) {
     blockRequestQueue.push({
-        "blockName"         :blockName,
-        "children"          :children,
-        "topList"           :topList,
-        "bottomList"        :bottomList
+        "blockName"         :   blockName,
+        "children"          :   children,
+        "topList"           :   JSON.parse(topListStr),
+        "bottomList"        :   JSON.parse(bottomListStr)
     } );
 }
 
