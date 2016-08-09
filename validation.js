@@ -50,10 +50,10 @@ function validateBlock(block){
 		for(var i=notchNumbers[0] ; i<notchNumbers[1] ; i++){
 			var slotContentsList = block.getSlotContentsList(''+i);
 
-			blockValidationResult = blockValidationResult && validateNotch(i , slotContentsList); // check if the notch is correctly populated
+			blockValidationResult = validateNotch(i , slotContentsList) && blockValidationResult; // check if the notch is correctly populated
 
 			for(var j=0;j<slotContentsList.length;j++){
-				blockValidationResult = blockValidationResult && validateBlock(slotContentsList[j]); // check each of the child blocks in turn
+				blockValidationResult = validateBlock(slotContentsList[j]) && blockValidationResult; // check each of the child blocks in turn
 			}
 		}
 	}
