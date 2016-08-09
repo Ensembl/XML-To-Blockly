@@ -13,12 +13,7 @@
 
  * ***************************************************************************
 
-    In this file we extend the standard Blockly library with application-specific functionality
-    that seems to be core enough to become core extension.
- */
-
-/**
- * This file contains methods that ensure that the blocks in the Blockly workspace are attached to each other in a valid sequence.
+    This file contains methods that ensure that the blocks in the Blockly workspace are attached to each other in a valid sequence.
  */
 
 
@@ -43,20 +38,19 @@ function validateBlocklyGraph(){
 
 //get all blocks. Send each block's slots for validation. Send each child block of each slot for validation
 function validateBlock(block){
-	var blockValidationResult = true;
+	var blockValidationResult   = true;
+    var availableNotchNumbers   = block.getStatementInputNames();
 
-	var notchNumbers = notchToBlockMapper[block.type];
-	if(notchNumbers){
-		for(var i=notchNumbers[0] ; i<notchNumbers[1] ; i++){
-			var slotContentsList = block.getSlotContentsList(''+i);
+    for(var i=0; i<availableNotchNumbers.length; i++) {
+        var notchNumber         = availableNotchNumbers[i];
+        var slotContentsList    = block.getSlotContentsList(notchNumber);
 
-			blockValidationResult = validateNotch(i , slotContentsList) && blockValidationResult; // check if the notch is correctly populated
+        blockValidationResult = validateNotch(notchNumber , slotContentsList) && blockValidationResult; // check if the notch is correctly populated
 
-			for(var j=0;j<slotContentsList.length;j++){
-				blockValidationResult = validateBlock(slotContentsList[j]) && blockValidationResult; // check each of the child blocks in turn
-			}
-		}
-	}
+        for(var j=0;j<slotContentsList.length;j++){
+            blockValidationResult = validateBlock(slotContentsList[j]) && blockValidationResult; // check each of the child blocks in turn
+        }
+    }
 	return blockValidationResult;
 }
 

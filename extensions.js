@@ -32,24 +32,26 @@ Blockly.Block.prototype.getSlotContentsList = function(slotName) {
         slotContentsList.push( next );
         next = next.getNextBlock();
     }
-    /*
-    var firstBlockInConnection = slotName.connection.targetBlock();
-    if(firstBlockInConnection != null){
-        slotContentsList.push( blockNameToDisplayNameMapper[firstBlockInConnection.type] );//push pretty name to list
-        var nextConn = firstBlockInConnection.nextConnection;
-        while(nextConn != null){
-            if(nextConn.targetConnection == null){
-                break;
-            } else{
-                var currentBlock = nextConn.targetConnection.sourceBlock_;
-                slotContentsList.push( blockNameToDisplayNameMapper[currentBlock.type] );  //push pretty name to list
-                nextConn = currentBlock.nextConnection;
-            }
-        }
-    }*/
 
     return slotContentsList;
 };
+
+
+/**
+ * Returns the list of all statement inputs (slots) available in a block.
+ */
+Blockly.Block.prototype.getStatementInputNames = function() {
+    var statementInputNames = [];
+
+    for (var i = 0, input; input = this.inputList[i]; i++) {
+        if(input.type == Blockly.NEXT_STATEMENT) {
+            statementInputNames.push(input.name);
+        }
+    }
+
+    return statementInputNames;
+}
+
 
 //function to toggle hide/show optiFields
 function checker(){
