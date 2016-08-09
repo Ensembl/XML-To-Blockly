@@ -592,11 +592,12 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 //assignedPrettyName[node] = childrenDisplayNames;
                 node.setAttribute("name", childrenDisplayNames);
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
-                if(childrenInfo.length == 0){
-                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
-                } else{
-                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties, JSON.stringify(childrenInfo));
+
+                notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
+                if(childrenInfo.length > 0) {   // add childrenInfo if it is available
+                    notchProperties[slotNumber].childrenInfo = JSON.parse(JSON.stringify(childrenInfo));
                 }
+
                 console.log(notchProperties[slotNumber]);
 			} else{      //current node is oneOrMore, zeroOrMore, optional
                     var childBlockName = expectedBlockNumber;
@@ -696,7 +697,7 @@ function getDisplayName(node){
 }
 
 
-function getNotchProperties(node, inheritedProperties, childrenInfo){
+function getNotchProperties(node, inheritedProperties){
     var properties = JSON.parse(JSON.stringify(defaultProperties[node.nodeName]));;
     var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
     var keys = ['isRepeatable' , 'shouldHaveOneBlock' , 'isGrouped'];
@@ -714,10 +715,6 @@ function getNotchProperties(node, inheritedProperties, childrenInfo){
         } else if(properties['shouldHaveOneBlock'] && inheritedProperties['isGrouped']){
             properties['shouldHaveOneBlock'] = true;
         }
-    }
-
-    if(childrenInfo){
-        properties['childrenInfo'] = JSON.parse(childrenInfo);
     }
 
     return properties;
