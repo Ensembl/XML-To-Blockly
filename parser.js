@@ -271,13 +271,13 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
         var name = path + "TXT";
 
-        var displayName = "";
+        var displayName;
 
         if(node.parentNode.childNodes.length == 1 && node.parentNode.getAttribute("name")){
-            displayName = node.parentNode.getAttribute("blockly:blockName") ? node.parentNode.getAttribute("blockly:blockName") : node.parentNode.getAttribute("name");
+            displayName = getNodeDisplayName(node.parentNode);
             unicode_pattern = unicode_pattern_for_prev_level;
         } else{
-            displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : "text";
+            displayName = node.getAttribute("blockly:blockName") || "text";
         }
 
         blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
@@ -288,7 +288,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         unicode_pattern_for_prev_level = unicode_pattern;
 
         var nodeName = node.getAttribute("name");
-        var displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : nodeName ;
+        var displayName = getNodeDisplayName(node);
 
         var name = path + "ELM_" + nodeName;
         var context = node.getAttribute("context");
@@ -323,8 +323,9 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
 	else if(nodeType == "attribute") {
         unicode_pattern_for_prev_level = unicode_pattern;
+
         var nodeName = node.getAttribute("name");
-        var displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : nodeName ;
+        var displayName = getNodeDisplayName(node);
 
         var name = path + "ATT_" + nodeName;
         var context = node.getAttribute("context");
@@ -353,7 +354,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";
 
-        var displayName = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : "group";
+        var displayName = getNodeDisplayName(node) || "group";
 		blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField('"+displayName+"');";
 
 		for(var i=0;i<children.length;i++){
@@ -382,7 +383,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 			}
 		}
 		var name = path + "DAT_";
-        var parentName = node.parentNode.getAttribute("blockly:blockName") ? node.parentNode.getAttribute("blockly:blockName") : node.parentNode.getAttribute("name");
+        var parentName = getNodeDisplayName(node.parentNode);
 
         var displayName = parentName + " (" + node.getAttribute("type") + ")";
 		blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
@@ -399,7 +400,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 		} else{
             //indentationLevel--; //as this one attaches itself at its parent's level
-            var displayName = node.parentNode.getAttribute("blockly:blockName") ? node.parentNode.getAttribute("blockly:blockName") : node.parentNode.getAttribute("name");
+            var displayName = getNodeDisplayName(node.parentNode);
 			blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
 		}
 
@@ -546,7 +547,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
                             var arrayOfChildren = [];
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
-                                var childBlockName = getChildBlockName(childrenOfCurrentChild[j]);
+                                var childBlockName = getNodeDisplayName(childrenOfCurrentChild[j], true);
                                 childrenDisplayNames.push(childBlockName);
                                 pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], topListStr, bottom);
                                 arrayOfChildren.push(childBlockName);
@@ -568,7 +569,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             }
 
                         }else{        //choice/interleave has a oneOrMore/zeroOrMore/optional child
-                            var childBlockName = getChildBlockName(currentChild);
+                            var childBlockName = getNodeDisplayName(currentChild, true);
                             childrenDisplayNames.push(childBlockName);
                             pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, topListStr, bottom);
                             childrenInfo.push("startRepetition_");
@@ -577,7 +578,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         }
                     }
                     else{           //child of choice/interleave is a normal one
-                        var childBlockName = getChildBlockName(currentChild);
+                        var childBlockName = getNodeDisplayName(currentChild, true);
                         childrenDisplayNames.push(childBlockName);
                         pushToQueue(blockRequestQueue, childBlockName, [currentChild], topListStr, bottomListStr);
                         childrenInfo.push(childBlockName);
@@ -596,7 +597,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			} else{      //current node is oneOrMore, zeroOrMore, optional
 
                     var childBlockName = (children.length == 1)
-                                            ? children[0].getAttribute("blockly:blockName") || children[0].getAttribute("name") || expectedBlockNumber
+                                            ? getNodeDisplayName(children[0], true)
                                             : expectedBlockNumber;
 
                     pushToQueue(blockRequestQueue, childBlockName, children, topListStr, bottomListStr);
@@ -645,11 +646,8 @@ function setVisitedAndSlotNumber(node, slot){
 }
 
 
-function getChildBlockName(node){
-    var name = expectedBlockNumber;
-    name = node.getAttribute("name") ? node.getAttribute("name") : name;
-    name = node.getAttribute("blockly:blockName") ? node.getAttribute("blockly:blockName") : name;
-    return name;
+function getNodeDisplayName(node, tryEBN){
+    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN && expectedBlockNumber) );
 }
 
 
