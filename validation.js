@@ -67,16 +67,18 @@ function validateNotch(slotContents, thisNotchProperties, errorContext){
 			alert( errorContext + " needs to have something in it");
 		}
 	} else{
+        console.log(thisNotchProperties);
+        //compulsorily check shouldHaveOneBlock so that we do not end up trying to validate a oneOrMore notch
 		if(thisNotchProperties.isRepeatable){
 			if(thisNotchProperties.isGrouped){   // one/zeroOrMore has interleave as only child
 
-			} else{                             // one/zeroOrMore has choice, optional as only child
-                
+			} else if(thisNotchProperties.shouldHaveOneBlock){                             // one/zeroOrMore has choice, optional as only child
+                notchValidationResult = validateMutatedChoiceNotch(slotContents, thisNotchProperties, errorContext);
 			}
 		} else{
 			if(thisNotchProperties.isGrouped){    // interleave notch notch
 
-			} else{                              //optional, choice notch
+			} else if(thisNotchProperties.shouldHaveOneBlock){                              //optional, choice notch
 				notchValidationResult = validateChoiceNotch(slotContents, thisNotchProperties, errorContext);
 			}
 		}
@@ -88,10 +90,8 @@ function validateNotch(slotContents, thisNotchProperties, errorContext){
 function validateChoiceNotch(slotContents, thisNotchProperties, errorContext){
 	var expectedChildren = JSON.parse( JSON.stringify( thisNotchProperties.childrenInfo ) );
     var actualChildren = getPrettyNamesOfSlotContents(slotContents);
-	if( actualChildren.length == 1 ){
-        if( expectedChildren.indexOf( actualChildren[0] ) != -1 ){  //if child is directly mentioned in expectedChildren, it is not an interleave
+	if( actualChildren.length == 1 && expectedChildren.indexOf( actualChildren[0] ) != -1){ //if child is directly mentioned in expectedChildren, it is not an interleave
 			return true;
-        }
     }
 
     if( isRepetitiveChild( expectedChildren , actualChildren[0]) ){ //choice has a oneOrMore child
@@ -142,7 +142,69 @@ function validateChoiceNotch(slotContents, thisNotchProperties, errorContext){
 }
 
 
+function validateMutatedChoiceNotch(slotContents, thisNotchProperties, errorContext){
+    var expectedChildren = JSON.parse( JSON.stringify( thisNotchProperties.childrenInfo ) );
+    var actualChildren = getPrettyNamesOfSlotContents(slotContents);
+    if( actualChildren.length == 1 && expectedChildren.indexOf( actualChildren[0] ) != -1){ //if child is directly mentioned in expectedChildren, it is not an interleave
+			return true;
+    }
 
+    for(var i =0;i<actualChildren.length;i++){
+        if( expectedChildren.indexOf(actualChildren[i]) == -1 ){
+            var interleaveLists = isInterleaveChild(expectedChildren, actualChildren[i]);
+            var lastIndexOfInterleave;
+
+            for(var j=0;j<interleaveLists.length;j++){
+                lastIndexOfInterleave = checkInterleave( interleaveLists[j], JSON.stringify(actualChildren), i );
+                if(lastIndexOfInterleave != -1){
+                    i = lastIndexOfInterleave;
+                    break;
+                }
+            }//end of checking all interleave lists
+
+            if(lastIndexOfInterleave == -1){
+                alert(errorContext + ": Interleave has not been implemented properly");
+                return false;
+            }
+        }//out of if interleave child condition
+    }//finished going through all the children
+    return true;
+}
+
+// checks if the array has an interleave from the current child onwards. Returns an index indicating till what position the interleave children continue
+function checkInterleave(interleaveList, array, startIndex){
+    var ans;
+    var interleaveChildren = JSON.parse(interleaveList);
+    var actualChildren = JSON.parse(array);
+    for(var i=startIndex;i<actualChildren.length;i++){
+        var index = interleaveChildren.indexOf(actualChildren[i]);
+        if( index != -1 ){
+            interleaveChildren.splice(index,1);
+        } else{
+            return -1;
+        }
+
+        if(interleaveChildren.length == 0){
+            return i;
+        }
+    }
+
+    //loop to handle an interleave child that may also be a simple block without interleave in choice Eg.[first, [first, second]]
+    while(startIndex > 0){
+        startIndex--;
+        var index = interleaveChildren.indexOf(actualChildren[startIndex]);
+        if( index != -1 ){
+            interleaveChildren.splice(index,1);
+        } else{
+            return -1;
+        }
+
+        if(interleaveChildren.length == 0){
+            return startIndex;
+        }
+    }
+    return -1;
+}
 
 
 function isChoiceChild(expectedChildren , name){
@@ -177,7 +239,7 @@ function isRepetitiveChild(expectedChildren, name){
     return ans;
 }
 
-
+//checks if current block name belongs to some interleave
 function isInterleaveChild( expectedChildren , name ){
     var listsThatChildCanBePartOf = [];
     for(var i=0;i<expectedChildren.length;i++){
@@ -197,5 +259,6 @@ function getPrettyNamesOfSlotContents(blockArray){
 	for(var i=0; i<blockArray.length; i++){
 		ans.push( blockTypeToDisplayNameMapper[blockArray[i].type] );
 	}
+    console.log(ans);
 	return ans;
 }

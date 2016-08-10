@@ -64,7 +64,8 @@ var magicType = {
 
 var defaultProperties = {
     'optional'  :   {
-                        'canBeEmpty'        :   true
+                        'canBeEmpty'        :   true,
+                        'shouldHaveOneBlock':   true
                     },
     'choice'    :   {
                         'canBeEmpty'        :   false,
@@ -699,7 +700,7 @@ function getNotchProperties(node, inheritedProperties){
         }
         properties['canBeEmpty'] = properties['canBeEmpty'] || inheritedProperties['canBeEmpty'];
 
-        //if choice has ONLY interleave, it becomes an interleave. if interleave has ONLY choice, it becomes choice
+        //if choice has ONLY interleave, it becomes an interleave. if interleave has ONLY choice, it becomes choice (works for optional as well. this property was added later for optional)
         if(inheritedProperties['shouldHaveOneBlock'] && properties['isGrouped']){
             properties['isGrouped'] = true;
         } else if(properties['shouldHaveOneBlock'] && inheritedProperties['isGrouped']){
