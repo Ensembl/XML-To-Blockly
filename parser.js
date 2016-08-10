@@ -557,11 +557,11 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                                         childrenInfo.push(arrayOfChildren[x]);
                                     }
                                 } else{
-                                    childrenInfo.push("startchoice_");
+                                    childrenInfo.push("startChoice_");
                                     for(var x=0;x<arrayOfChildren.length;x++){
                                         childrenInfo.push(arrayOfChildren[x]);
                                     }
-                                    childrenInfo.push("_choiceend");
+                                    childrenInfo.push("_endChoice");
                                 }
                             }
 

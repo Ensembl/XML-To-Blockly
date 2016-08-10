@@ -71,7 +71,7 @@ function validateNotch(slotContents, thisNotchProperties, errorContext){
 			if(thisNotchProperties.isGrouped){   // one/zeroOrMore has interleave as only child
 
 			} else{                             // one/zeroOrMore has choice, optional as only child
-
+                
 			}
 		} else{
 			if(thisNotchProperties.isGrouped){    // interleave notch notch
@@ -142,19 +142,22 @@ function validateChoiceNotch(slotContents, thisNotchProperties, errorContext){
 }
 
 
-function isRepetitiveChild(expectedChildren , name){
+
+
+
+function isChoiceChild(expectedChildren , name){
     var ans = false;
     var index = expectedChildren.indexOf(name);
     var i = index-1;
     while(i>=0){
-        if( expectedChildren[i] == "startRepetition_" ){
+        if( expectedChildren[i] == "startChoice_" ){
             break;
         }
         i--;
     }
     if(i>=0){
         while(i<expectedChildren.length){
-            if( expectedChildren[i] == "_endRepetition" ){
+            if( expectedChildren[i] == "_endChoice" ){
                 break;
             }
             i++;
@@ -163,6 +166,14 @@ function isRepetitiveChild(expectedChildren , name){
             ans = true;
         }
     }
+    return ans;
+}
+
+
+function isRepetitiveChild(expectedChildren, name){
+    var index = expectedChildren.indexOf(name);
+    var ans = (expectedChildren[index-1] == "startRepetition_" && expectedChildren[index+1] == "_endRepetition") ? true : false;
+    console.log(ans);
     return ans;
 }
 
