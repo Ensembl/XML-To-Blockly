@@ -22,7 +22,7 @@ var successfulOptiField;   //true or false depending on whether optiField can be
 var currentlyCreatingOptiField;
 var notchProperties = {};
 var unicode_pattern_for_prev_level = "";
-var blockNameToDisplayNameMapper;
+var blockTypeToDisplayNameMapper;
 
 var non_last_child  = "\u2503       ";
 var     last_child  = "        ";
@@ -110,7 +110,7 @@ function readFile(event) {
 function handleRNG( unparsedRNG ){
 	slotNumber = 0;	//re-initialize each time the user chooses a new file
     expectedBlockNumber = 0;
-    blockNameToDisplayNameMapper = [];
+    blockTypeToDisplayNameMapper = [];
 
     var xmlParser=new DOMParser();
     rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
@@ -172,15 +172,15 @@ function handleRNG( unparsedRNG ){
     for (var i=0;i<blockOrder.length;i++){
         var dictEntry   = blockOrder[i];
         var displayName = dictEntry.blockName;
-        var blockName   = "block_" + i;
+        var blockType   = "block_" + i;
         var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
         var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
-        blockNameToDisplayNameMapper[blockName] = displayName;
+        blockTypeToDisplayNameMapper[blockType] = displayName;
 
-        toolboxXML  += "<block type='" + blockName + "'></block>";
+        toolboxXML  += "<block type='" + blockType + "'></block>";
 
-        blockCode   = "Blockly.Blocks['" + blockName + "']={ init:function() {"
-                    + "this.appendDummyInput().appendField('====[ " + blockName + ": " + displayName + " ]====');\n"
+        blockCode   = "Blockly.Blocks['" + blockType + "']={ init:function() {"
+                    + "this.appendDummyInput().appendField('====[ " + blockType + ": " + displayName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
                     + "this.setNextStatement(" + bottomText + ");"

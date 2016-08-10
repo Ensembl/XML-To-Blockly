@@ -195,7 +195,7 @@ function isInterleaveChild( expectedChildren , name ){
 function getPrettyNamesOfSlotContents(blockArray){
 	var ans = [];
 	for(var i=0; i<blockArray.length; i++){
-		ans.push( blockNameToDisplayNameMapper[blockArray[i].type] );
+		ans.push( blockTypeToDisplayNameMapper[blockArray[i].type] );
 	}
 	return ans;
 }
