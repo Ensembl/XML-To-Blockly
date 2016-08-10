@@ -17,7 +17,6 @@ var rngDoc;
 var slotNumber;
 
 var expectedBlockNumber;
-var assignedPrettyName = {};
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
 var currentlyCreatingOptiField;
 var notchProperties = {};
@@ -582,7 +581,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                     }
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
-                //assignedPrettyName[node] = childrenDisplayNames;
                 node.setAttribute("name", childrenDisplayNames);
                 blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
 
@@ -599,7 +597,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                                             : expectedBlockNumber;
 
                     pushToQueue(blockRequestQueue, childBlockName, children, topListStr, bottomListStr);
-                    //assignedPrettyName[node] = childBlockName;
                     node.setAttribute("name", childBlockName);
                     blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
                     notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
@@ -616,7 +613,6 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 
             var assignedSlotNumber = node.getAttribute("slotNumber");
-            //var prettyName = assignedPrettyName[node];
             var prettyName = node.getAttribute("name");
             blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
             //notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
