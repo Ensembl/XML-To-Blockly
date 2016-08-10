@@ -131,12 +131,12 @@ function handleRNG( unparsedRNG ){
     pushToQueue(blockRequestQueue, "start", substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
 
     while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
-        var blockRequest = blockRequestQueue.shift();
+        var blockRequest        = blockRequestQueue.shift();
 
-        var children     = blockRequest.children;
-        var blockName    = blockRequest.blockName;
-        var topList      = blockRequest.topList;
-        var bottomList   = blockRequest.bottomList;
+        var children            = blockRequest.children;
+        var blockDisplayName    = blockRequest.blockDisplayName;
+        var topList             = blockRequest.topList;
+        var bottomList          = blockRequest.bottomList;
 
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
@@ -145,7 +145,7 @@ function handleRNG( unparsedRNG ){
         }
 
             // We want to always have a start block and here we force its blockCode to be unique
-        if( blockName == "start" ) {
+        if( blockDisplayName == "start" ) {
             blockCode += " ";
         }
 
@@ -155,10 +155,10 @@ function handleRNG( unparsedRNG ){
         } else {    // otherwise create a new block
 
             codeDict[blockCode] = {
-                "blockName"     : blockName,    // it is only a "suggested display name", we use numbers internally
-                "blockCode"     : blockCode,
-                "topList"       : topList,
-                "bottomList"    : bottomList
+                "blockDisplayName"  : blockDisplayName,    // it is only a "suggested display name", we use numbers internally
+                "blockCode"         : blockCode,
+                "topList"           : topList,
+                "bottomList"        : bottomList
             };
             blockOrder.push( codeDict[blockCode] );   // this is a reference to the same object, so that further modifications of topList and bottomList are seen
         }
@@ -168,18 +168,20 @@ function handleRNG( unparsedRNG ){
     var allCode         = [];
     var blockCode;
 
-    for (var i=0;i<blockOrder.length;i++){
-        var dictEntry   = blockOrder[i];
-        var displayName = dictEntry.blockName;
-        var blockType   = "block_" + i;
+    for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
+        var dictEntry   = blockOrder[blockOrderIndex];
+
+        var blockDisplayName = dictEntry.blockDisplayName;
+        var blockType   = "block_" + blockOrderIndex;
         var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
         var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
-        blockTypeToDisplayNameMapper[blockType] = displayName;
+
+        blockTypeToDisplayNameMapper[blockType] = blockDisplayName;
 
         toolboxXML  += "<block type='" + blockType + "'></block>";
 
         blockCode   = "Blockly.Blocks['" + blockType + "']={ init:function() {"
-                    + "this.appendDummyInput().appendField('====[ " + blockType + ": " + displayName + " ]====');\n"
+                    + "this.appendDummyInput().appendField('====[ " + blockType + ": " + blockDisplayName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
                     + "this.setNextStatement(" + bottomText + ");"
@@ -210,6 +212,7 @@ var hue = new function() {      // maintain a closure around nextHue
 
 function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
     var substChildren = [];
+
     for(var i=0;i<children.length;i++) {
         var currChild           = children[i];
         var currChildHasSeen    = JSON.parse(haveAlreadySeenStr);
@@ -623,12 +626,12 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 	return blocklyCode;
 }
 
-function pushToQueue(blockRequestQueue, blockName, children, topListStr, bottomListStr) {
+function pushToQueue(blockRequestQueue, blockDisplayName, children, topListStr, bottomListStr) {
     blockRequestQueue.push({
-        "blockName"         :   blockName,
-        "children"          :   children,
-        "topList"           :   JSON.parse(topListStr),
-        "bottomList"        :   JSON.parse(bottomListStr)
+        "blockDisplayName"  : blockDisplayName,
+        "children"          : children,
+        "topList"           : JSON.parse(topListStr),
+        "bottomList"        : JSON.parse(bottomListStr)
     } );
     expectedBlockNumber++;
 }
