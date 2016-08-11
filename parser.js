@@ -16,11 +16,13 @@ var blocklyWorkspace;
 var rngDoc;
 var slotNumber;
 
-var expectedBlockNumber;
+var _nextQueueIndex;
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
 var currentlyCreatingOptiField;
 var notchProperties = {};
 var unicode_pattern_for_prev_level = "";
+
+var queueIndex_2_blockType;
 var blockTypeToDisplayNameMapper;
 
 var non_last_child  = "\u2503       ";
@@ -109,8 +111,8 @@ function readFile(event) {
 //handles xml by creating blocks as per RNG rules
 function handleRNG( unparsedRNG ){
 	slotNumber = 0;	//re-initialize each time the user chooses a new file
-    expectedBlockNumber = 0;
-    blockTypeToDisplayNameMapper = [];
+    queueIndex_2_blockType = {};
+    blockTypeToDisplayNameMapper = {};
 
     var xmlParser=new DOMParser();
     rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
@@ -129,6 +131,7 @@ function handleRNG( unparsedRNG ){
     var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
     var blockOrder          = [];   // the block descriptions, ordered by their position in the queue
 
+    _nextQueueIndex = 0;
     pushToQueue(blockRequestQueue, "start", substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
 
     while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
@@ -138,6 +141,7 @@ function handleRNG( unparsedRNG ){
         var blockDisplayName    = blockRequest.blockDisplayName;
         var topList             = blockRequest.topList;
         var bottomList          = blockRequest.bottomList;
+        var queueIndex          = blockRequest.queueIndex;
 
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
@@ -153,13 +157,15 @@ function handleRNG( unparsedRNG ){
         if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created this block already, just merge the compatibility lists
                 Array.prototype.push.apply( codeDict[blockCode].topList, topList);
                 Array.prototype.push.apply( codeDict[blockCode].bottomList, bottomList);
+                codeDict[blockCode].queueIndices.push( queueIndex );
         } else {    // otherwise create a new block
 
             codeDict[blockCode] = {
-                "blockDisplayName"  : blockDisplayName,    // it is only a "suggested display name", we use numbers internally
+                "blockDisplayName"  : blockDisplayName,     // it is only a "suggested display name", we use numbers internally
                 "blockCode"         : blockCode,
                 "topList"           : topList,
-                "bottomList"        : bottomList
+                "bottomList"        : bottomList,
+                "queueIndices"      : [ queueIndex ]        // at least one value, but more may be added in case of synonyms
             };
             blockOrder.push( codeDict[blockCode] );   // this is a reference to the same object, so that further modifications of topList and bottomList are seen
         }
@@ -173,10 +179,14 @@ function handleRNG( unparsedRNG ){
         var dictEntry   = blockOrder[blockOrderIndex];
 
         var blockDisplayName = dictEntry.blockDisplayName;
-        var blockType   = "block_" + blockOrderIndex;
-        var topText     = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
-        var bottomText  = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
+        var blockType       = "block_" + blockOrderIndex;
+        var topText         = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
+        var bottomText      = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
+        var queueIndices    = dictEntry.queueIndices;
 
+        for (var i=0; i<queueIndices.length; i++){
+            queueIndex_2_blockType[ queueIndices[i] ] = blockType;
+        }
         blockTypeToDisplayNameMapper[blockType] = blockDisplayName;
 
         toolboxXML  += "<block type='" + blockType + "'></block>";
@@ -599,7 +609,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
                     var childBlockName = (children.length == 1)
                                             ? getNodeDisplayName(children[0], true)
-                                            : expectedBlockNumber;
+                                            : _nextQueueIndex;
 
                     pushToQueue(blockRequestQueue, childBlockName, children, topListStr, bottomListStr);
                     node.setAttribute("name", childBlockName);
@@ -633,9 +643,10 @@ function pushToQueue(blockRequestQueue, blockDisplayName, children, topListStr, 
         "blockDisplayName"  : blockDisplayName,
         "children"          : children,
         "topList"           : JSON.parse(topListStr),
-        "bottomList"        : JSON.parse(bottomListStr)
+        "bottomList"        : JSON.parse(bottomListStr),
+        "queueIndex"        : _nextQueueIndex
     } );
-    expectedBlockNumber++;
+    _nextQueueIndex++;
 }
 
 function setVisitedAndSlotNumber(node, slot){
@@ -648,7 +659,7 @@ function setVisitedAndSlotNumber(node, slot){
 
 
 function getNodeDisplayName(node, tryEBN){
-    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN && expectedBlockNumber) );
+    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN && _nextQueueIndex) );
 }
 
 
