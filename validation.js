@@ -106,27 +106,14 @@ function validateChoiceNotch(slotContents, thisNotchProperties, errorContext){
             }
         }
     } else{
+        actualChildren.sort();
         var interleaveLists = isInterleaveChild(expectedChildren , actualChildren[0]);
         if(interleaveLists.length>0){   //choice has an interleave child
             for(var i=0;i<interleaveLists.length;i++){
                 var currentList = JSON.parse(interleaveLists[i]);
                 var ans = false;
-                if(currentList.length != actualChildren.length){
-                    /*if we have two interleaves in the choice [a,b] and [a,b,c],
-                     *then we proceed ahead only for that list which has the same number of elements as the current notch
-                     */
-                     ans = false;
-                    continue;
-                }
-                ans = true;
-                while(currentList.length!=0){   //we may be missing interleave containing a repetitive block
-                    if( actualChildren.indexOf(currentList[0]) != -1 ){
-                        currentList.splice(0,1);
-                    } else{
-                        ans = false;
-                        break;
-                    }
-                }
+                currentList.sort();
+                ans = (currentList.length == actualChildren.length) && (currentList.every(function(element, index){ return element == actualChildren[index]; }));
                 if(ans == true){
                     return true;
                 }
