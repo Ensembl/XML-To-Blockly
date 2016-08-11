@@ -157,7 +157,7 @@ function validateMutatedChoiceNotch(slotContents, thisNotchProperties, errorCont
             for(var j=0;j<interleaveLists.length;j++){
                 lastIndexOfInterleave = checkInterleave( interleaveLists[j], JSON.stringify(actualChildren), i );
                 if(lastIndexOfInterleave != -1){
-                    i = lastIndexOfInterleave;
+                    i = lastIndexOfInterleave;  //i is now at the index where the successful interleave ends.
                     break;
                 }
             }//end of checking all interleave lists
@@ -204,31 +204,6 @@ function checkInterleave(interleaveList, array, startIndex){
         }
     }
     return -1;
-}
-
-
-function isChoiceChild(expectedChildren , name){
-    var ans = false;
-    var index = expectedChildren.indexOf(name);
-    var i = index-1;
-    while(i>=0){
-        if( expectedChildren[i] == "startChoice_" ){
-            break;
-        }
-        i--;
-    }
-    if(i>=0){
-        while(i<expectedChildren.length){
-            if( expectedChildren[i] == "_endChoice" ){
-                break;
-            }
-            i++;
-        }
-        if(i>index && i!=expectedChildren.length){
-            ans = true;
-        }
-    }
-    return ans;
 }
 
 
