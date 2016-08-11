@@ -228,6 +228,35 @@ function isInterleaveChild( expectedChildren , name ){
 
 }
 
+/* finds all the children that belong to various "choice" nodes.
+ * Returns a list of lists where each list represents a choice node's children.
+ * The marking of __CHILD_REMOVED__ will be handled by checkValidityOfRemainingChildren() which is yet to be implemented
+ */
+function getAllChoiceChildren(expectedChildren){
+    var listOfAllChoices = [];
+    var currentList = [];
+    var addChoiceChild = false;
+    for(var i=0;i<expectedChildren.length;i++){
+        if( expectedChildren[i] == "startChoice_" ){
+            addChoiceChild = true;
+            expectedChildren[i] = "__CHILD_REMOVED__";
+            continue;
+        }
+
+        if(addChoiceChild){
+            currentList.push(expectedChildren[i]);
+            expectedChildren[i] = "__CHILD_REMOVED__";
+        }
+
+        if(expectedChildren[i] == "_endChoice"){
+            expectedChildren[i] = "__CHILD_REMOVED__";
+            addChoiceChild = false;
+            listOfAllChoices.push(currentList);
+        }
+    }
+    return listOfAllChoices;
+}
+
 
 function getPrettyNamesOfSlotContents(blockArray){
 	var ans = [];
