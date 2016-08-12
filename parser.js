@@ -312,11 +312,12 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         }
 
 		if(children.length == 1){
-			var childData="";
-			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
-			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
-			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
-			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
+			var childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
+                // childData will contain the parent element's name only if it is being returned by a choice containing values.
+                // In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
+                // So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
+                // Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children.
+                // Assumption made is that such an element cannot have any other children along with choice+list of values.
 			if( childData!=null && childData.indexOf("'" + displayName + "'") != -1 ){
 				blocklyCode = childData;
 			}else{
@@ -352,7 +353,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 			}
 		}
 
-        //if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
+            // if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
         if( blocklyCode.indexOf("appendField('"+displayName) ==-1 ){
             var displayStatement = "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + displayName + "');";
             blocklyCode = displayStatement + blocklyCode;
