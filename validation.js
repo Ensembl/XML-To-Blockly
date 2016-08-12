@@ -196,8 +196,11 @@ function checkInterleave(interleaveList, array, startIndex){
 
 function isRepetitiveChild(expectedChildren, name){
     var index = expectedChildren.indexOf(name);
-    var ans = (expectedChildren[index-1] == "startRepetition_" && expectedChildren[index+1] == "_endRepetition") ? true : false;
-    console.log(ans);
+    var repetitiveTypes = [ 'startRepetition_oneOrMore' , 'startRepetition_zeroOrMore' ];
+    if(index == 0){
+        return false;
+    }
+    var ans = ( repetitiveTypes.indexOf(expectedChildren[index-1]) != -1 ) ? true : false;
     return ans;
 }
 

@@ -583,9 +583,9 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             var childBlockName = getNodeDisplayName(currentChild, true);
                             childrenDisplayNames.push(childBlockName);
                             pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, topListStr, bottom);
-                            childrenInfo.push("startRepetition_");
+                            childrenInfo.push( "startRepetition_" + currentChild.nodeName );
                             childrenInfo.push(childBlockName);
-                            childrenInfo.push("_endRepetition");
+                            childrenInfo.push( "_endRepetition" + currentChild.nodeName );
                         }
                     }
                     else{           //child of choice/interleave is a normal one
