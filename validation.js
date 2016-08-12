@@ -77,7 +77,7 @@ function validateNotch(slotContents, thisNotchProperties, errorContext){
 			}
 		} else{
 			if(thisNotchProperties.isGrouped){    // interleave notch notch
-
+                notchValidationResult = validateInterleaveNotch(slotContents, thisNotchProperties, errorContext);
 			} else if(thisNotchProperties.shouldHaveOneBlock){                              //optional, choice notch
 				notchValidationResult = validateChoiceNotch(slotContents, thisNotchProperties, errorContext);
 			}
@@ -158,6 +158,132 @@ function validateMutatedChoiceNotch(slotContents, thisNotchProperties, errorCont
     return true;
 }
 
+/*
+function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext){
+    var expectedChildren = JSON.parse( JSON.stringify( thisNotchProperties.childrenInfo ) );
+    var actualChildren = getPrettyNamesOfSlotContents(slotContents);
+
+    var repetitiveChildren = getAllRepetitiveChildren(expectedChildren);
+    var choiceChildren = getAllChoiceChildren(expectedChildren);
+    var interleaveLists = getAllInterleaveChildren(expectedChildren) ;
+
+    for(var i=0;i<actualChildren.length;i++){
+        if(expectedChildren.indexOf(actualChildren[i]) == "__CHILD_REMOVED__"){
+            alert(errorContext + " : " + actualChildren[i] + " cannot be used multiple times");
+            return false;
+        } else if(expectedChildren.indexOf(actualChildren[i]) != -1){  //normal child of interleave
+            var index = expectedChildren.indexOf(actualChildren[i]);
+            expectedChildren[index] = "__CHILD_REMOVED__";
+            continue;
+        } else if(repetitiveChildren[0].indexOf(actualChildren[i]) != -1 || repetitiveChildren[0].indexOf(actualChildren[i]) != -1 || repetitiveChildren[0].indexOf(actualChildren[i]) != -1){
+            var index,j;
+            for(j=0;j<3;j++){
+                if(repetitiveChildren[j].indexOf(actualChildren[i]) != -1){
+                    index = repetetitiveChildren[j].indexOf(actualChildren[i]);
+                    break;
+                }
+            }
+            var childName = actualChildren[i];
+            while(i<actualChildren.length){
+                if(actualChildren[i] == childName){
+                    i++;
+                } else{
+                    i--;
+                    break;
+                }
+            }
+            repetitiveChildren[j].splice(index,1);
+        } else if( interleaveLists.length>0 ){
+            for(var j=0;j<interleaveLists.length;j++){
+                var currentList = JSON.parse(interleaveLists[j]);
+                var len = currentList.length;
+                var partOfActualChildren = actualChildren.slice(i,i+len);
+                console.log(currentList.length);
+
+                currentList.sort();
+                partOfActualChildren.sort();
+
+                var properInterleave = ( (currentList.length == partOfActualChildren.length) && currentList.every(function(element, index){return element == partOfActualChildren[index];}) );
+
+                if(properInterleave == true){
+                    i+=len-1;
+                    interleaveLists[j] = [];
+                    break;
+                }
+            }
+            if( !properInterleave ){
+                alert(errorContext + " : Interleave has not been implemented correctly");
+                return false;
+            }
+        } else {
+            checkAndRemoveChoice(expectedChildren[i] , choiceChildren);
+        }
+    }
+
+    console.log(expectedChildren);
+    var ans = checkRemainingChildren(expectedChildren, repetitiveChildren, choiceChildren, interleaveLists);
+    return ans;
+
+    //check the expectedchildren list to find out if the interleave was implemented properly
+}*/
+
+
+function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext){
+    var expectedChildren = JSON.parse( JSON.stringify( thisNotchProperties.childrenInfo ) );
+    var actualChildren = getPrettyNamesOfSlotContents(slotContents);
+
+    var repetitiveChildren = getAllRepetitiveChildren(expectedChildren);
+    var choiceChildren = getAllChoiceChildren(expectedChildren);
+    var interleaveLists = getAllInterleaveChildren(expectedChildren) ;
+
+    console.log(choiceChildren);
+    console.log(expectedChildren);
+
+    for(var i=0;i<interleaveLists.length;i++){
+        var currentList = interleaveLists[i];
+        var len = currentList.length;
+        for(var j=0;j<=actualChildren.length-len;j++){
+            var partOfActualChildren = actualChildren.slice(j,j+len);
+            partOfActualChildren.sort();
+            if( currentList.every(function(element, index){ return element == partOfActualChildren[index]; }) ){
+                interleaveLists.splice(i, 1);
+                actualChildren.splice(j, len);
+                i--;
+                break;
+            }
+        }
+    }
+
+    if(interleaveLists.length == 0){
+        console.log("successful");
+    } else{
+        alert("Some interleaves not implemented");
+    }
+    console.log(expectedChildren);
+}
+
+
+function checkRemainingChildren(expectedChildren, repetitiveChildren, choiceChildren, interleaveLists){
+    var ans = true;
+    for(var i=0;i<expectedChildren.length;i++){
+        if( !(expectedChildren[i] == "__CHILD_REMOVED__" || (Object.prototype.toString.call ( expectedChildren[i] ) === "[object Array]")) ){
+            alert(expectedChildren[i] + " should be used at least once");
+            ans = false;
+        }
+    }
+    for(var i=0;i<repetitiveChildren[0].length;i++){
+        if(repetitiveChildren[i] != "__CHILD_REMOVED__"){
+            alert(expectedChildren[i] + " should be used at least once");
+            ans = false;
+        }
+    }
+    for(var i=0;i<choiceChildren.length;i++){
+        console.log(choiceChildren[i]);
+    }
+    return ans;
+}
+
+
 // checks if the array has an interleave from the current child onwards. Returns an index indicating till what position the interleave children continue
 function checkInterleave(interleaveList, array, startIndex){
     var ans;
@@ -194,6 +320,17 @@ function checkInterleave(interleaveList, array, startIndex){
 }
 
 
+function checkAndRemoveChoice(name , listOfLists){
+    for(var i=0; i<listOfLists.length;i++){
+        if(listOfLists[i].indexOf(name) != -1){
+            listOfLists[i] = [];
+            return true;
+        }
+    }
+    return false;
+}
+
+
 function isRepetitiveChild(expectedChildren, name){
     var index = expectedChildren.indexOf(name);
     var repetitiveTypes = [ 'startRepetition_oneOrMore' , 'startRepetition_zeroOrMore' ];
@@ -226,24 +363,28 @@ function getAllChoiceChildren(expectedChildren){
     var listOfAllChoices = [];
     var currentList = [];
     var addChoiceChild = false;
+    var startIndex = -1;
+    var endIndex = -1;
     for(var i=0;i<expectedChildren.length;i++){
         if( expectedChildren[i] == "startChoice_" ){
             addChoiceChild = true;
-            expectedChildren[i] = "__CHILD_REMOVED__";
+            startIndex = i;
             continue;
         }
 
         if(expectedChildren[i] == "_endChoice"){
-            expectedChildren[i] = "__CHILD_REMOVED__";
             addChoiceChild = false;
+            endIndex = i;
+            expectedChildren.splice(startIndex,endIndex-startIndex+1);
+            i = startIndex-1;
             listOfAllChoices.push(currentList);
         }
 
         if(addChoiceChild){
             currentList.push(expectedChildren[i]);
-            expectedChildren[i] = "__CHILD_REMOVED__";
         }
     }
+
     return listOfAllChoices;
 }
 
@@ -251,31 +392,48 @@ function getAllChoiceChildren(expectedChildren){
  * listOfAllRepetitiveChildren contains three lists - first for oneOrMore children, second for zeroOrMore and third for optional children
  */
 function getAllRepetitiveChildren(expectedChildren){
-    var listOfAllRepetitiveChildren = [ [] , [] , [] ];
+    var listOfAllRepetitiveChildren = [ [] , [] , [] ];     //[ [oneOrMore kids] , [zeroOrMore kids] , [optional kids] ]
     var repetitiveTypes = [ 'startRepetition_oneOrMore' , 'startRepetition_zeroOrMore' , 'startRepetition_optional' ];
     var removeChild = false;
     var index = -1;
+    var startIndex = -1;
+    var endIndex = -1;
     for(var i=0;i<expectedChildren.length;i++){
         if( !removeChild ){
             index = repetitiveTypes.indexOf(expectedChildren[i]);
             if(index != -1){
-                expectedChildren[i] = "__CHILD_REMOVED__";
                 removeChild = true;
+                startIndex = i;
                 continue;
             }
         }
 
         if(removeChild){
             if(expectedChildren[i] == "_endRepetition"){
-                expectedChildren[i] = "__CHILD_REMOVED__";
                 removeChild = false;
+                endIndex = i;
+                expectedChildren.splice(startIndex,endIndex-startIndex+1);
+                i = startIndex-1;
             } else{
                 listOfAllRepetitiveChildren[index].push(expectedChildren[i]);
-                expectedChildren[i] = "__CHILD_REMOVED__";
             }
         }
     }
     return listOfAllRepetitiveChildren;
+}
+
+
+function getAllInterleaveChildren(expectedChildren){
+    var listOfAllInterleaves = [];
+    for(var i=0;i<expectedChildren.length;i++){
+        if(Object.prototype.toString.call ( expectedChildren[i] ) === "[object Array]"){
+            expectedChildren[i].sort();
+            listOfAllInterleaves.push(expectedChildren[i]);
+            expectedChildren.splice(i,1);
+            i--;
+        }
+    }
+    return listOfAllInterleaves;
 }
 
 
