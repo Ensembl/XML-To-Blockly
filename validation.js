@@ -233,18 +233,49 @@ function getAllChoiceChildren(expectedChildren){
             continue;
         }
 
-        if(addChoiceChild){
-            currentList.push(expectedChildren[i]);
-            expectedChildren[i] = "__CHILD_REMOVED__";
-        }
-
         if(expectedChildren[i] == "_endChoice"){
             expectedChildren[i] = "__CHILD_REMOVED__";
             addChoiceChild = false;
             listOfAllChoices.push(currentList);
         }
+
+        if(addChoiceChild){
+            currentList.push(expectedChildren[i]);
+            expectedChildren[i] = "__CHILD_REMOVED__";
+        }
     }
     return listOfAllChoices;
+}
+
+/* Returns optional, oneOrMore and zeroOrMore children.
+ * listOfAllRepetitiveChildren contains three lists - first for oneOrMore children, second for zeroOrMore and third for optional children
+ */
+function getAllRepetitiveChildren(expectedChildren){
+    var listOfAllRepetitiveChildren = [ [] , [] , [] ];
+    var repetitiveTypes = [ 'startRepetition_oneOrMore' , 'startRepetition_zeroOrMore' , 'startRepetition_optional' ];
+    var removeChild = false;
+    var index = -1;
+    for(var i=0;i<expectedChildren.length;i++){
+        if( !removeChild ){
+            index = repetitiveTypes.indexOf(expectedChildren[i]);
+            if(index != -1){
+                expectedChildren[i] = "__CHILD_REMOVED__";
+                removeChild = true;
+                continue;
+            }
+        }
+
+        if(removeChild){
+            if(expectedChildren[i] == "_endRepetition"){
+                expectedChildren[i] = "__CHILD_REMOVED__";
+                removeChild = false;
+            } else{
+                listOfAllRepetitiveChildren[index].push(expectedChildren[i]);
+                expectedChildren[i] = "__CHILD_REMOVED__";
+            }
+        }
+    }
+    return listOfAllRepetitiveChildren;
 }
 
 
