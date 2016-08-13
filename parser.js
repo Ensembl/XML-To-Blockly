@@ -563,7 +563,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                                 pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], topListStr, bottom);
                                 arrayOfChildren.push(childBlockName);
                             }
-                            if(bottom != "[]"){ //if child does not have a bottom notch, it is interleave
+                            if(currentChild.nodeName == "interleave"){ //if child does not have a bottom notch, it is interleave
                                 childrenInfo.push(arrayOfChildren);
                             } else{             //if child is choice
                                 if(node.nodeName == "choice"){

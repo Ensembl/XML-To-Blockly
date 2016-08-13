@@ -229,17 +229,18 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
 
 
 function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext){
+    var validationResponse = true;
     var expectedChildren = JSON.parse( JSON.stringify( thisNotchProperties.childrenInfo ) );
     var actualChildren = getPrettyNamesOfSlotContents(slotContents);
 
-    var repetitiveChildren = getAllRepetitiveChildren(expectedChildren);
     var choiceChildren = getAllChoiceChildren(expectedChildren);
     var interleaveLists = getAllInterleaveChildren(expectedChildren) ;
+    var repetitiveChildren = getAllRepetitiveChildren(expectedChildren);
+    var oneOrMoreChildren =  repetitiveChildren[0];
+    var zeroOrMoreChildren = repetitiveChildren[1];
+    var optionalChildren = repetitiveChildren[2];
 
-    console.log(choiceChildren);
-    console.log(expectedChildren);
-
-    for(var i=0;i<interleaveLists.length;i++){
+    for(var i=0;i<interleaveLists.length;i++){  //validate 'interleave' children of current interleave first. remove them from actualChildren. Remove from interleaveLists as well
         var currentList = interleaveLists[i];
         var len = currentList.length;
         for(var j=0;j<=actualChildren.length-len;j++){
@@ -254,12 +255,86 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
         }
     }
 
-    if(interleaveLists.length == 0){
-        console.log("successful");
-    } else{
-        alert("Some interleaves not implemented");
+    for(var i=0;i<expectedChildren.length;i++){     //validate immediate children of interleave being checked. Remove them from actual and expected lists
+        var index = actualChildren.indexOf( expectedChildren[i] );
+        if( index != -1){
+            expectedChildren.splice(i,1);
+            actualChildren.splice(index,1);
+            i--;
+        } else{
+            alert(errorContext + ":" + expectedChildren[i] + " needs to be used" );
+            validationResponse = false;
+        }
+    }
+
+    for(var i=0;i<oneOrMoreChildren.length;i++){
+        var index = actualChildren.indexOf(oneOrMoreChildren[i]);
+        if(index == -1){
+            alert(errorContext + ":" + oneOrMoreChildren[i] + " needs to be used at least once");
+            validationResponse = false;
+        } else{
+            var startIndex = index;
+            while(actualChildren[index] == oneOrMoreChildren[i]){
+                index++;
+            }
+            actualChildren.splice(startIndex, index-startIndex);
+            oneOrMoreChildren.splice(i,1);
+            i--;
+        }
+    }
+
+    for(var i=0;i<actualChildren.length;i++){   //check after loop if choiceChildren length is 0
+        for(var j=0;j<choiceChildren.length;j++){
+            if(choiceChildren[j].indexOf(actualChildren[i]) != -1){
+                choiceChildren.splice(j,1);
+                actualChildren.splice(i,1);
+                i--;
+                break;
+            }
+        }
+        if(choiceChildren.length == 0){
+            break;
+        }
+    }
+
+    if(choiceChildren.length > 0){
+        for(var i=0;i<choiceChildren.length;i++){
+            alert(errorContext + " : " + "Please choose at least one block from : "+choiceChildren[i]);
+        }
+    }
+
+    for(var i=0;i<actualChildren.length;i++){
+        var index = optionalChildren.indexOf(actualChildren[i]);
+        if( index != -1 ){
+            actualChildren.splice(i,1);
+            optionalChildren.splice(index,1);
+            i--;
+        } else{
+            index = zeroOrMoreChildren.indexOf(actualChildren[i]);
+            if(index != -1){
+                var startIndex = i;
+                while(actualChildren[i] == zeroOrMoreChildren[index]){
+                    i++;
+                }
+                actualChildren.splice(startIndex, i-startIndex);
+                zeroOrMoreChildren.splice(index,1);
+                i = startIndex-1;
+            }
+        }
+    }
+
+    if(actualChildren.length != 0){
+        alert(errorContext + " : " + " The following extra blocks were found : " + actualChildren);
+        validationResponse = false;
+    }
+
+    if(interleaveLists.length != 0){
+        for(var i=0;i<interleaveLists.length;i++){
+            alert(errorContext + " : " + "The following interleave has not been implemented correctly: " + interleaveLists[i] );
+        }
     }
     console.log(expectedChildren);
+    return validationResponse;
 }
 
 
