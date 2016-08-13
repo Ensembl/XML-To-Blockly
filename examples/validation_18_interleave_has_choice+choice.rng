@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<element name="addressBook">
+			<interleave>
+
+				<attribute name="first"/>
+				<attribute name="second"/>
+				<attribute name="third"/>
+
+				<choice>
+					<attribute name="a"/>
+					<attribute name="b"/>
+					<attribute name="c"/>
+				</choice>
+
+				<choice>
+					<attribute name="ch_1"/>
+					<attribute name="ch_2"/>
+					<attribute name="ch_3"/>
+				</choice>
+
+			</interleave>
+		</element>
+	</start>
+</grammar>
