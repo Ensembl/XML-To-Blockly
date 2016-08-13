@@ -416,7 +416,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 		} else{
             //indentationLevel--; //as this one attaches itself at its parent's level
             var displayName = getNodeDisplayName(node.parentNode);
-			blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+parentName+"');";
+			blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+displayName+"');";
 		}
 
     }
