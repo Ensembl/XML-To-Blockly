@@ -255,18 +255,6 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
         }
     }
 
-    for(var i=0;i<expectedChildren.length;i++){     //validate immediate children of interleave being checked. Remove them from actual and expected lists
-        var index = actualChildren.indexOf( expectedChildren[i] );
-        if( index != -1){
-            expectedChildren.splice(i,1);
-            actualChildren.splice(index,1);
-            i--;
-        } else{
-            alert(errorContext + ":" + expectedChildren[i] + " needs to be used" );
-            validationResponse = false;
-        }
-    }
-
     for(var i=0;i<oneOrMoreChildren.length;i++){
         var index = actualChildren.indexOf(oneOrMoreChildren[i]);
         if(index == -1){
@@ -280,6 +268,18 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
             actualChildren.splice(startIndex, index-startIndex);
             oneOrMoreChildren.splice(i,1);
             i--;
+        }
+    }
+
+    for(var i=0;i<expectedChildren.length;i++){     //validate immediate children of interleave being checked. Remove them from actual and expected lists
+        var index = actualChildren.indexOf( expectedChildren[i] );
+        if( index != -1){
+            expectedChildren.splice(i,1);
+            actualChildren.splice(index,1);
+            i--;
+        } else{
+            alert(errorContext + ":" + expectedChildren[i] + " needs to be used" );
+            validationResponse = false;
         }
     }
 
