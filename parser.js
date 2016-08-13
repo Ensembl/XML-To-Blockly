@@ -90,6 +90,16 @@ var defaultProperties = {
 
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
+    // a helper to find an element in a list
+Object.prototype.isOneOf = function(list) {
+    for(i=0;i<list.length;i++) {
+        if(this == list[i]) {
+            return true;
+        }
+    }
+    return false;
+};
+
 //init function for initializing the Blockly block area
 function init(){
 	blocklyWorkspace = Blockly.inject('blocklyDiv', {
@@ -307,16 +317,17 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         var singleChild = ['text', 'data', 'value'];
-		if(! (children.length == 1 && singleChild.indexOf(children[0].nodeName)!=-1) ) {
+		if(! (children.length == 1 && children[0].nodeName.isOneOf(singleChild) ) ) {
             blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+displayName+"');";  // a label for the (non-empty) parent
         }
 
 		if(children.length == 1){
-			var childData="";
-			childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
-			//childData will contain the parent element's name only if it is being returned by a choice containing values. In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
-			//So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
-			//Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children. Assumption made is that such an element cannot have any other children along with choice+lost of values.
+			var childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
+                // childData will contain the parent element's name only if it is being returned by a choice containing values.
+                // In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
+                // So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
+                // Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children.
+                // Assumption made is that such an element cannot have any other children along with choice+list of values.
 			if( childData!=null && childData.indexOf("'" + displayName + "'") != -1 ){
 				blocklyCode = childData;
 			}else{
@@ -352,7 +363,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 			}
 		}
 
-        //if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
+            // if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
         if( blocklyCode.indexOf("appendField('"+displayName) ==-1 ){
             var displayStatement = "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + displayName + "');";
             blocklyCode = displayStatement + blocklyCode;
@@ -385,19 +396,12 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 	//currently data ignores any <param> tags that it may contain
 	else if(nodeType == "data"){
         //indentationLevel--; //reduce indentation level as this tag creates the entire field for its parent.
-		var type=node.getAttribute("type");
-		if(type!=null){
-			if(numberTypes.indexOf(type)!=-1){
-				type="Blockly.FieldTextInput.numberValidator";
-			}else{
-				type=null;
-			}
-		}
-		var name = path + "DAT_";
-        var parentName = getNodeDisplayName(node.parentNode);
+        var type        = node.getAttribute("type");
+        var displayName = getNodeDisplayName(node.parentNode) + " (" + type + ")";
+        var typeChecker = (type||'').isOneOf(numberTypes) ? "Blockly.FieldTextInput.numberValidator" : "null";
+        var name        = path + "DAT_";
 
-        var displayName = parentName + " (" + node.getAttribute("type") + ")";
-		blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput('',"+type+" ), '"+name+"');";
+		blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput('',"+ typeChecker +" ), '"+name+"');";
 	}
 
 

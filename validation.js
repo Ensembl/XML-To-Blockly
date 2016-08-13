@@ -114,7 +114,7 @@ function validateChoiceNotch(slotContents, thisNotchProperties, errorContext){
                 var ans = false;
                 currentList.sort();
                 ans = (currentList.length == actualChildren.length) && (currentList.every(function(element, index){ return element == actualChildren[index]; }));
-                if(ans == true){
+                if(ans){
                     return true;
                 }
             }
@@ -412,8 +412,7 @@ function isRepetitiveChild(expectedChildren, name){
     if(index == 0){
         return false;
     }
-    var ans = ( repetitiveTypes.indexOf(expectedChildren[index-1]) != -1 ) ? true : false;
-    return ans;
+    return expectedChildren[index-1].isOneOf(repetitiveTypes);
 }
 
 //checks if current block name belongs to some interleave
