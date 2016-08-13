@@ -729,27 +729,26 @@ function getNotchProperties(node, inheritedProperties){
 
 //Removes #text nodes
 //These are string elements present in the XML document between tags. The
-//RNG specification only allows these strings to be composed of whitespace.
-//They don't carry any information and can be removed
+//RNG specification only allows these strings to be composed of whitespace
+//except inside <value>
 function removeRedundantText(node) {
-	_removeNodeNameRecursively(node, "#text");
+    _removeNodesRecursively(node, function(n, p) {return n.nodeName == "#text" && p.nodeName != "value"});
 }
 
 // Remove #comment nodes because they we want to exclude them from children.length
 function removeXMLComments(node) {
-	_removeNodeNameRecursively(node, "#comment");
+    _removeNodesRecursively(node, function(n, p) {return n.nodeName == "#comment"});
 }
 
-// Generic method to remove all the nodes with a given name
-function _removeNodeNameRecursively(node, name) {
+// Generic method to remove all the nodes that match a condition
+function _removeNodesRecursively(node, canRemove) {
 	var children=node.childNodes;
 	for(var i=0;i<children.length;i++){
-		if( (name == "#comment" && children[i].nodeName == name) || (children[i].nodeName == name && children[i].nodeValue.trim()=="") ){
+		if (canRemove(children[i], node)) {
 			children[i].parentNode.removeChild(children[i]);
 			i--;
-			continue;
 		}else{
-			_removeNodeNameRecursively(children[i], name);
+			_removeNodesRecursively(children[i], canRemove);
 		}
 	}
 }
