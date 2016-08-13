@@ -248,7 +248,10 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
             partOfActualChildren.sort();
             if( currentList.every(function(element, index){ return element == partOfActualChildren[index]; }) ){
                 interleaveLists.splice(i, 1);
-                actualChildren.splice(j, len);
+                for(var k=j;k<(j+len);k++){
+                    actualChildren[k] = "";
+                }
+                //actualChildren.splice(j, len);
                 i--;
                 break;
             }
@@ -265,7 +268,10 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
             while(actualChildren[index] == oneOrMoreChildren[i]){
                 index++;
             }
-            actualChildren.splice(startIndex, index-startIndex);
+            for(var j=startIndex;j<index;j++){
+                actualChildren[j] = "";
+            }
+            //actualChildren.splice(startIndex, index-startIndex);
             oneOrMoreChildren.splice(i,1);
             i--;
         }
@@ -275,7 +281,8 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
         var index = actualChildren.indexOf( expectedChildren[i] );
         if( index != -1){
             expectedChildren.splice(i,1);
-            actualChildren.splice(index,1);
+            actualChildren[index] = "";
+            //actualChildren.splice(index,1);
             i--;
         } else{
             alert(errorContext + ":" + expectedChildren[i] + " needs to be used" );
@@ -287,8 +294,9 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
         for(var j=0;j<choiceChildren.length;j++){
             if(choiceChildren[j].indexOf(actualChildren[i]) != -1){
                 choiceChildren.splice(j,1);
-                actualChildren.splice(i,1);
-                i--;
+                actualChildren[i] = "";
+                //actualChildren.splice(i,1);
+                //i--;
                 break;
             }
         }
@@ -298,6 +306,7 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
     }
 
     if(choiceChildren.length > 0){
+        validationResponse = false;
         for(var i=0;i<choiceChildren.length;i++){
             alert(errorContext + " : " + "Please choose at least one block from : "+choiceChildren[i]);
         }
@@ -306,9 +315,10 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
     for(var i=0;i<actualChildren.length;i++){
         var index = optionalChildren.indexOf(actualChildren[i]);
         if( index != -1 ){
-            actualChildren.splice(i,1);
+            actualChildren[i] = "";
+            //actualChildren.splice(i,1);
             optionalChildren.splice(index,1);
-            i--;
+            //i--;
         } else{
             index = zeroOrMoreChildren.indexOf(actualChildren[i]);
             if(index != -1){
@@ -316,19 +326,25 @@ function validateInterleaveNotch(slotContents, thisNotchProperties, errorContext
                 while(actualChildren[i] == zeroOrMoreChildren[index]){
                     i++;
                 }
-                actualChildren.splice(startIndex, i-startIndex);
+                for(var j=startIndex;j<i;j++){
+                    actualChildren[j] = "";
+                }
+                //actualChildren.splice(startIndex, i-startIndex);
                 zeroOrMoreChildren.splice(index,1);
-                i = startIndex-1;
+                //i = startIndex-1;
             }
         }
     }
 
-    if(actualChildren.length != 0){
-        alert(errorContext + " : " + " The following extra blocks were found : " + actualChildren);
-        validationResponse = false;
+    for(var i=0;i<actualChildren.length;i++){
+        if(actualChildren[i] != ""){
+            alert(errorContext + " : " + " The following extra block was found : " + actualChildren[i]);
+            validationResponse = false;
+        }
     }
 
     if(interleaveLists.length != 0){
+        validationResponse = false;
         for(var i=0;i<interleaveLists.length;i++){
             alert(errorContext + " : " + "The following interleave has not been implemented correctly: " + interleaveLists[i] );
         }
