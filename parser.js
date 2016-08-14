@@ -19,9 +19,6 @@ var currentlyCreatingOptiField;
 var notchProperties = {};
 var unicode_pattern_for_prev_level = "";
 
-var queueIndex_2_blockType;
-var blockTypeToDisplayNameMapper;
-
 var non_last_child  = "\u2503       ";
 var     last_child  = "        ";
 var non_last_branch = "\u2523\u2501\u2501 ";
@@ -194,6 +191,9 @@ function RNG2Blockly(rngDoc) {
     this.allCode         = [];
     this.hue             = new HueGenerator();
 
+    this.queueIndex_2_blockType         = {};
+    this.blockTypeToDisplayNameMapper   = {};
+
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry   = blockOrder[blockOrderIndex];
 
@@ -204,9 +204,9 @@ function RNG2Blockly(rngDoc) {
         var queueIndices    = dictEntry.queueIndices;
 
         for (var i=0; i<queueIndices.length; i++){
-            queueIndex_2_blockType[ queueIndices[i] ] = blockType;
+            this.queueIndex_2_blockType[ queueIndices[i] ] = blockType;
         }
-        blockTypeToDisplayNameMapper[blockType] = blockDisplayName;
+        this.blockTypeToDisplayNameMapper[blockType] = blockDisplayName;
 
         this.toolboxXML += "<block type='" + blockType + "'></block>";
 
