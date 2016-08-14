@@ -497,23 +497,6 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
                         var currentContext = currentChild.getAttribute("context");
                         var childrenOfCurrentChild = this.substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
 
-                        /*if(childrenOfCurrentChild.length == 1 && magicType.hasOwnProperty(childrenOfCurrentChild[0].nodeName)){
-                            //var name = testBlockName + "_" + currentChild.nodeName.substring(0,3) + "_0" ;
-                            var childPath = testBlockName + '0';
-                            this.setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
-                            var child = childrenOfCurrentChild[0];
-
-                            if(bottom != "[]"){
-                                //if current tag has bottom notch, propagate its bottom notch to children
-                                bottom = true;
-                            }else{
-                                bottom = false;
-                            }
-                            dontIncrementSlot=true;
-
-                            blocklyCode = this.handleMagicBlock(child, haveAlreadySeenStr, childPath, bottom, common_prefix+child_suffix, true);
-                        }*/
-
                         if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
                             var arrayOfChildren = [];
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
