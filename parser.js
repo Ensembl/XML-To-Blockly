@@ -123,8 +123,6 @@ function handleRNG( unparsedRNG ){
     var xmlParser=new DOMParser();
     var rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
 
-    hue.reset();    // start each batch of hues from 0
-
     var rng2Blockly = new RNG2Blockly(rngDoc);
 
     document.getElementById('toolbox').innerHTML = rng2Blockly.toolboxXML;
@@ -194,6 +192,7 @@ function RNG2Blockly(rngDoc) {
 
     this.toolboxXML      = "";
     this.allCode         = [];
+    this.hue             = new HueGenerator();
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry   = blockOrder[blockOrderIndex];
@@ -216,21 +215,12 @@ function RNG2Blockly(rngDoc) {
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
                     + "this.setNextStatement(" + bottomText + ");"
-                    + "this.setColour(" + hue.generate() + ");"
+                    + "this.setColour(" + this.hue.generate() + ");"
                     + "}};";
 
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
         this.allCode.push(blockCode);
     }
-}
-
-
-var hue = new function() {      // maintain a closure around nextHue
-    var hueStep = 211;
-    var nextHue = 0;
-
-    this.reset    = function() { nextHue = 0; }
-    this.generate = function() { var currHue=nextHue; nextHue = (currHue+hueStep)%360; return currHue; }
 }
 
 
