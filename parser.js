@@ -12,8 +12,6 @@
  * limitations under the License.
  */
 
-var blocklyWorkspace;
-
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
 var currentlyCreatingOptiField;
 var notchProperties = {};
@@ -94,42 +92,6 @@ Object.prototype.isOneOf = function(list) {
     return false;
 };
 
-//init function for initializing the Blockly block area
-function init(){
-	blocklyWorkspace = Blockly.inject('blocklyDiv', {
-        toolbox: document.getElementById('toolbox'),
-        collapse: true
-	});
-}
-
-// loads the file into RNG textarea and leaves it there for potential manual edit
-function readFile(event) {
-    var filename=event.target.files[0];
-    var reader=new FileReader();
-    reader.readAsText(filename);
-    reader.onload=function(e){
-        document.getElementById('rng_area').value = e.target.result;
-    }
-}
-
-//handles xml by creating blocks as per RNG rules
-function handleRNG( unparsedRNG ){
-    queueIndex_2_blockType = {};
-    blockTypeToDisplayNameMapper = {};
-
-    var xmlParser=new DOMParser();
-    var rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
-
-    var rng2Blockly = new RNG2Blockly(rngDoc);
-
-    document.getElementById('toolbox').innerHTML = rng2Blockly.toolboxXML;
-    document.getElementById('results').innerHTML = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
-
-    eval(rng2Blockly.allCode.join(""));
-
-    blocklyWorkspace.clear();
-    blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
-}
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
