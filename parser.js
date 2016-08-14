@@ -413,7 +413,8 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
             var count = blocklyCode.split("this.appendDummyInput");
 
             if(count.length == 2){
-                var childPartToBeAdded = count[1].split(".appendField('"+common_prefix + child_suffix + last_branch+"')")[1];
+                var xxx = count[1].indexOf('.appendField(', 4); // to skip the first one
+                var childPartToBeAdded = count[1].substring(xxx);
                 blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox')" + childPartToBeAdded;
             } else{
                 blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '"+name+"_checkbox').appendField('"+name+"');" + blocklyCode;
