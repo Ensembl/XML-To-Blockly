@@ -730,6 +730,11 @@ function getNotchProperties(node, inheritedProperties){
 }
 
 
+
+/*
+ * Helper methods to process the RNG document
+ *********************************************/
+
 //Removes #text nodes
 //These are string elements present in the XML document between tags. The
 //RNG specification only allows these strings to be composed of whitespace
