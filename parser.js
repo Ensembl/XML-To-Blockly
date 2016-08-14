@@ -13,10 +13,7 @@
  */
 
 var blocklyWorkspace;
-var rngDoc;
-var slotNumber;
 
-var _nextQueueIndex;
 var successfulOptiField;   //true or false depending on whether optiField can be created or not
 var currentlyCreatingOptiField;
 var notchProperties = {};
@@ -120,32 +117,46 @@ function readFile(event) {
 
 //handles xml by creating blocks as per RNG rules
 function handleRNG( unparsedRNG ){
-	slotNumber = 0;	//re-initialize each time the user chooses a new file
     queueIndex_2_blockType = {};
     blockTypeToDisplayNameMapper = {};
 
     var xmlParser=new DOMParser();
-    rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
-
-	removeRedundantText(rngDoc.documentElement);
-	removeXMLComments(rngDoc.documentElement);
+    var rngDoc=xmlParser.parseFromString(unparsedRNG, "text/xml");
 
     hue.reset();    // start each batch of hues from 0
+
+    var rng2Blockly = new RNG2Blockly(rngDoc);
+
+    document.getElementById('toolbox').innerHTML = rng2Blockly.toolboxXML;
+    document.getElementById('results').innerHTML = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
+
+    eval(rng2Blockly.allCode.join(""));
+
+    blocklyWorkspace.clear();
+    blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
+}
+
+function RNG2Blockly(rngDoc) {
+    this.rngDoc = rngDoc;
 
     var rootElement = rngDoc.documentElement;
     var startContent = (rootElement.nodeName == "grammar")
         ? rngDoc.getElementsByTagName("start")[0].childNodes
         : [ rootElement ];
 
+    removeRedundantText(rootElement);
+    removeXMLComments(rootElement);
+
     var codeDict            = {};   // maps block names to the code (to be reviewed)
-    var blockRequestQueue   = [];   // a queue that holds requests to create new blocks
+    this.blockRequestQueue  = [];   // a queue that holds requests to create new blocks
     var blockOrder          = [];   // the block descriptions, ordered by their position in the queue
 
-    _nextQueueIndex = 0;
-    pushToQueue(blockRequestQueue, "start", substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
+    this._nextQueueIndex = 0;
+    this.pushToQueue("start", this.substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
+    this.slotNumber = 0;            //re-initialize each time the user chooses a new file
 
-    while(blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
-        var blockRequest        = blockRequestQueue.shift();
+    while(this.blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
+        var blockRequest        = this.blockRequestQueue.shift();
 
         var children            = blockRequest.children;
         var blockDisplayName    = blockRequest.blockDisplayName;
@@ -156,7 +167,7 @@ function handleRNG( unparsedRNG ){
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
         for(var i=0;i<children.length;i++){
-            blockCode += goDeeper( blockRequestQueue, children[i], "{}", i , '', undefined);
+            blockCode += this.goDeeper(children[i], "{}", i , '', undefined);
         }
 
             // We want to always have a start block and here we force its blockCode to be unique
@@ -181,9 +192,8 @@ function handleRNG( unparsedRNG ){
         }
     }
 
-    var toolboxXML      = "";
-    var allCode         = [];
-    var blockCode;
+    this.toolboxXML      = "";
+    this.allCode         = [];
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry   = blockOrder[blockOrderIndex];
@@ -199,9 +209,9 @@ function handleRNG( unparsedRNG ){
         }
         blockTypeToDisplayNameMapper[blockType] = blockDisplayName;
 
-        toolboxXML  += "<block type='" + blockType + "'></block>";
+        this.toolboxXML += "<block type='" + blockType + "'></block>";
 
-        blockCode   = "Blockly.Blocks['" + blockType + "']={ init:function() {"
+        var blockCode = "Blockly.Blocks['" + blockType + "']={ init:function() {"
                     + "this.appendDummyInput().appendField('====[ " + blockType + ": " + blockDisplayName + " ]====');\n"
                     + dictEntry.blockCode
                     + "this.setPreviousStatement(" + topText + ");"
@@ -210,15 +220,8 @@ function handleRNG( unparsedRNG ){
                     + "}};";
 
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
-        allCode.push(blockCode);
+        this.allCode.push(blockCode);
     }
-    document.getElementById('toolbox').innerHTML = toolboxXML;
-    document.getElementById('results').innerHTML = "<pre>" + allCode.join("</pre><pre>") + "</pre>";
-
-    eval(allCode.join(""));
-
-    blocklyWorkspace.clear();
-    blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
 }
 
 
@@ -231,7 +234,7 @@ var hue = new function() {      // maintain a closure around nextHue
 }
 
 
-function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
+RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenStr, substContext) {
     var substChildren = [];
 
     for(var i=0;i<children.length;i++) {
@@ -247,9 +250,9 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 
             } else {
                 currChildHasSeen[nodeName] = true;
-                var defKids = findOneNodeByTagAndName(rngDoc, "define", nodeName).childNodes;
+                var defKids = findOneNodeByTagAndName(this.rngDoc, "define", nodeName).childNodes;
 
-                var substKids = substitutedNodeList(defKids, JSON.stringify(currChildHasSeen), nodeName);
+                var substKids = this.substitutedNodeList(defKids, JSON.stringify(currChildHasSeen), nodeName);
                 Array.prototype.push.apply( substChildren, substKids);
             }
         } else {
@@ -269,7 +272,7 @@ function substitutedNodeList(children, haveAlreadySeenStr, substContext) {
 }
 
 
-function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_prefix, last_sibling) {
+RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common_prefix, last_sibling) {
     if(currentlyCreatingOptiField == true && successfulOptiField == false){
         return null;
     }
@@ -295,7 +298,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         var displayName;
 
         if(node.parentNode.childNodes.length == 1 && node.parentNode.getAttribute("name")){
-            displayName = getNodeDisplayName(node.parentNode);
+            displayName = this.getNodeDisplayName(node.parentNode);
             unicode_pattern = unicode_pattern_for_prev_level;
         } else{
             displayName = node.getAttribute("blockly:blockName") || "text";
@@ -309,12 +312,12 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         unicode_pattern_for_prev_level = unicode_pattern;
 
         var nodeName = node.getAttribute("name");
-        var displayName = getNodeDisplayName(node);
+        var displayName = this.getNodeDisplayName(node);
 
         var name = path + "ELM_" + nodeName;
         var context = node.getAttribute("context");
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
-        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         var singleChild = ['text', 'data', 'value'];
 		if(! (children.length == 1 && children[0].nodeName.isOneOf(singleChild) ) ) {
@@ -322,7 +325,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         }
 
 		if(children.length == 1){
-			var childData = goDeeper( blockRequestQueue, children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
+            var childData = this.goDeeper(children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
                 // childData will contain the parent element's name only if it is being returned by a choice containing values.
                 // In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
                 // So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
@@ -336,7 +339,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 		}else{
 			for(var i=0;i<children.length;i++){
                 var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
+                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
             }
 		}
 
@@ -347,19 +350,19 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
         unicode_pattern_for_prev_level = unicode_pattern;
 
         var nodeName = node.getAttribute("name");
-        var displayName = getNodeDisplayName(node);
+        var displayName = this.getNodeDisplayName(node);
 
         var name = path + "ATT_" + nodeName;
         var context = node.getAttribute("context");
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
-        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         if( children.length == 0 ){
 			blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + displayName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 		} else{
 			for(var i=0;i<children.length;i++){
                 var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
+                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
 			}
 		}
 
@@ -373,15 +376,15 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
 	else if(nodeType == "group"){
 		var context = node.getAttribute("context");
-		var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";
 
-        var displayName = getNodeDisplayName(node) || "group";
+        var displayName = this.getNodeDisplayName(node) || "group";
 		blocklyCode = "this.appendDummyInput('"+name+"').appendField('" + unicode_pattern + "').appendField('"+displayName+"');";
 
 		for(var i=0;i<children.length;i++){
             var this_is_last_sibling = (i == children.length-1);
-			blocklyCode += goDeeper( blockRequestQueue, children[i], haveAlreadySeenStr, name + i , common_prefix + child_suffix, this_is_last_sibling);
+            blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i , common_prefix + child_suffix, this_is_last_sibling);
 		}
 	}
 	/*
@@ -397,7 +400,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 	else if(nodeType == "data"){
         //indentationLevel--; //reduce indentation level as this tag creates the entire field for its parent.
         var type        = node.getAttribute("type");
-        var displayName = getNodeDisplayName(node.parentNode) + " (" + type + ")";
+        var displayName = this.getNodeDisplayName(node.parentNode) + " (" + type + ")";
         var typeChecker = (type||'').isOneOf(numberTypes) ? "Blockly.FieldTextInput.numberValidator" : "null";
         var name        = path + "DAT_";
 
@@ -412,10 +415,10 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
                 successfulOptiField = false;
                 return null;
             }
-			blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
+            blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 		} else{
             //indentationLevel--; //as this one attaches itself at its parent's level
-            var displayName = getNodeDisplayName(node.parentNode);
+            var displayName = this.getNodeDisplayName(node.parentNode);
 			blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+displayName+"');";
 		}
 
@@ -426,7 +429,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             successfulOptiField = false;
             return null;
         }
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
+        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 	}
 
 	else if(nodeType == "optional"){
@@ -437,7 +440,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
     	var context = node.getAttribute("context");
         //var context_child_idx = node.getAttribute("context_child_idx");
-        var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
     	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");
         currentlyCreatingOptiField = true;
         successfulOptiField = true;
@@ -449,7 +452,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
                 break;
             } else{
                 var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += goDeeper(blockRequestQueue, children[i], haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
+                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
             }
         }
 
@@ -469,7 +472,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
         } else{
             currentlyCreatingOptiField = false;
-            blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
+            blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
         }
 
 	}
@@ -479,7 +482,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             successfulOptiField = false;
             return null;
         }
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
+        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 	}
 
 	else if(nodeType == "oneOrMore"){
@@ -487,7 +490,7 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
             successfulOptiField = false;
             return null;
         }
-		blocklyCode = handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
+        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 	}
 
     return blocklyCode + "\n";
@@ -495,11 +498,11 @@ function goDeeper(blockRequestQueue, node, haveAlreadySeenStr, path, common_pref
 
 
 //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bottomNotchOverride, common_prefix, last_sibling, inheritedProperties){
+RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path, bottomNotchOverride, common_prefix, last_sibling, inheritedProperties){
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
-    var children = substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+    var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
     var head_suffix = (last_sibling == undefined)? '': last_sibling? last_branch: non_last_branch;
@@ -509,7 +512,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
     var properties = getNotchProperties(node, inheritedProperties);
 
     //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
-	var topListStr      = "["+slotNumber+"]";
+    var topListStr      = "["+this.slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
     if(! node.hasAttribute("visited") ) {
         //Rule 1
@@ -517,7 +520,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
         if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
             blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+name+"');";
             var childPath = name + '0';
-            setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
+            this.setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
             var child = children[0];
 
             if(bottomListStr != "[]"){
@@ -527,7 +530,7 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                 bottomNotchOverride = false;
             }
 
-            blocklyCode += handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true, properties);
+            blocklyCode += this.handleMagicBlock(child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true, properties);
         }else{
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 var childrenDisplayNames = [];
@@ -540,12 +543,12 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                         var bottomForThisChild = (bottomListStr == "[]") ? false : true;
                         var bottom = ( bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
                         var currentContext = currentChild.getAttribute("context");
-                        var childrenOfCurrentChild = substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
+                        var childrenOfCurrentChild = this.substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
 
                         /*if(childrenOfCurrentChild.length == 1 && magicType.hasOwnProperty(childrenOfCurrentChild[0].nodeName)){
                             //var name = testBlockName + "_" + currentChild.nodeName.substring(0,3) + "_0" ;
                             var childPath = testBlockName + '0';
-                            setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
+                            this.setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
                             var child = childrenOfCurrentChild[0];
 
                             if(bottom != "[]"){
@@ -556,15 +559,15 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             }
                             dontIncrementSlot=true;
 
-                            blocklyCode = handleMagicBlock(blockRequestQueue, child, haveAlreadySeenStr, childPath, bottom, common_prefix+child_suffix, true);
+                            blocklyCode = this.handleMagicBlock(child, haveAlreadySeenStr, childPath, bottom, common_prefix+child_suffix, true);
                         }*/
 
                         if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
                             var arrayOfChildren = [];
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
-                                var childBlockName = getNodeDisplayName(childrenOfCurrentChild[j], true);
+                                var childBlockName = this.getNodeDisplayName(childrenOfCurrentChild[j], true);
                                 childrenDisplayNames.push(childBlockName);
-                                pushToQueue(blockRequestQueue, childBlockName, [ childrenOfCurrentChild[j] ], topListStr, bottom);
+                                this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, bottom);
                                 arrayOfChildren.push(childBlockName);
                             }
                             if(currentChild.nodeName == "interleave"){ //if child does not have a bottom notch, it is interleave
@@ -584,45 +587,45 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
                             }
 
                         }else{        //choice/interleave has a oneOrMore/zeroOrMore/optional child
-                            var childBlockName = getNodeDisplayName(currentChild, true);
+                            var childBlockName = this.getNodeDisplayName(currentChild, true);
                             childrenDisplayNames.push(childBlockName);
-                            pushToQueue(blockRequestQueue, childBlockName, childrenOfCurrentChild, topListStr, bottom);
+                            this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, bottom);
                             childrenInfo.push( "startRepetition_" + currentChild.nodeName );
                             childrenInfo.push(childBlockName);
                             childrenInfo.push( "_endRepetition");
                         }
                     }
                     else{           //child of choice/interleave is a normal one
-                        var childBlockName = getNodeDisplayName(currentChild, true);
+                        var childBlockName = this.getNodeDisplayName(currentChild, true);
                         childrenDisplayNames.push(childBlockName);
-                        pushToQueue(blockRequestQueue, childBlockName, [currentChild], topListStr, bottomListStr);
+                        this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
                         childrenInfo.push(childBlockName);
                     }
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 node.setAttribute("name", childrenDisplayNames);
-                blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
+                blocklyCode = "this.appendStatementInput('"+this.slotNumber+"').setCheck(["+this.slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childrenDisplayNames+"');";
 
-                notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
+                notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                 if(childrenInfo.length > 0) {   // add childrenInfo if it is available
-                    notchProperties[slotNumber].childrenInfo = JSON.parse(JSON.stringify(childrenInfo));
+                    notchProperties[this.slotNumber].childrenInfo = JSON.parse(JSON.stringify(childrenInfo));
                 }
 
-                console.log(notchProperties[slotNumber]);
+                console.log(notchProperties[this.slotNumber]);
 			} else{      //current node is oneOrMore, zeroOrMore, optional
 
                     var childBlockName = (children.length == 1)
-                                            ? getNodeDisplayName(children[0], true)
-                                            : _nextQueueIndex;
+                                            ? this.getNodeDisplayName(children[0], true)
+                                            : this._nextQueueIndex;
 
-                    pushToQueue(blockRequestQueue, childBlockName, children, topListStr, bottomListStr);
+                    this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     node.setAttribute("name", childBlockName);
-                    blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
-                    notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
-                    console.log(notchProperties[slotNumber]);
+                    blocklyCode = "this.appendStatementInput('"+this.slotNumber+"').setCheck(["+this.slotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+childBlockName + magicType[node.nodeName].prettyIndicator +"');";
+                    notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
+                    console.log(notchProperties[this.slotNumber]);
             }
 
-            setVisitedAndSlotNumber(node, slotNumber);
+            this.setVisitedAndSlotNumber(node, this.slotNumber);
 
         }
     } else if(magicType[nodeType].hasLoopRisk) {
@@ -633,37 +636,37 @@ function handleMagicBlock(blockRequestQueue, node, haveAlreadySeenStr, path, bot
 
             var assignedSlotNumber = node.getAttribute("slotNumber");
             var prettyName = node.getAttribute("name");
-            blocklyCode = "this.appendStatementInput('"+slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
-            //notchProperties[slotNumber] = getNotchProperties(node, inheritedProperties);
-            notchProperties[slotNumber] = notchProperties[assignedSlotNumber];
-            console.log(notchProperties[slotNumber]);
-            slotNumber++;
+            blocklyCode = "this.appendStatementInput('"+this.slotNumber+"').setCheck(["+assignedSlotNumber+"]).appendField('" + unicode_pattern + "').appendField('"+prettyName+ magicType[node.nodeName].prettyIndicator +"');";
+            //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
+            notchProperties[this.slotNumber] = notchProperties[assignedSlotNumber];
+            console.log(notchProperties[this.slotNumber]);
+            this.slotNumber++;
 	}
 	return blocklyCode;
 }
 
-function pushToQueue(blockRequestQueue, blockDisplayName, children, topListStr, bottomListStr) {
-    blockRequestQueue.push({
+RNG2Blockly.prototype.pushToQueue = function(blockDisplayName, children, topListStr, bottomListStr) {
+    this.blockRequestQueue.push({
         "blockDisplayName"  : blockDisplayName,
         "children"          : children,
         "topList"           : JSON.parse(topListStr),
         "bottomList"        : JSON.parse(bottomListStr),
-        "queueIndex"        : _nextQueueIndex
+        "queueIndex"        : this._nextQueueIndex
     } );
-    _nextQueueIndex++;
+    this._nextQueueIndex++;
 }
 
-function setVisitedAndSlotNumber(node, slot){
+RNG2Blockly.prototype.setVisitedAndSlotNumber = function(node, slot) {
     node.setAttribute("visited", "true");
     if(slot != undefined){
         node.setAttribute("slotNumber", slot);
-        slotNumber++;
+        this.slotNumber++;
     }
 }
 
 
-function getNodeDisplayName(node, tryEBN){
-    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN && _nextQueueIndex) );
+RNG2Blockly.prototype.getNodeDisplayName = function(node, tryEBN){
+    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN && this._nextQueueIndex) );
 }
 
 
