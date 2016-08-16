@@ -236,6 +236,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
     var unicode_pattern = common_prefix + head_suffix;
 
     var nodeType = (node == null) ? "null" : node.nodeName;
+    var context = (node == null) ? undefined : node.getAttribute("context");
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
 
@@ -269,7 +270,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
         var displayName = this.getNodeDisplayName(node);
 
         var name = path + "ELM_" + nodeName;
-        var context = node.getAttribute("context");
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
@@ -307,7 +307,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
         var displayName = this.getNodeDisplayName(node);
 
         var name = path + "ATT_" + nodeName;
-        var context = node.getAttribute("context");
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
@@ -329,7 +328,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 
 
 	else if(nodeType == "group"){
-		var context = node.getAttribute("context");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";
 
@@ -378,7 +376,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
             return null;
         }
 
-    	var context = node.getAttribute("context");
         //var context_child_idx = node.getAttribute("context_child_idx");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
     	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");
