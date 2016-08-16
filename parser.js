@@ -627,20 +627,6 @@ function allChildrenValueTags(node){
 }
 
 
-function getDisplayName(node){
-    var displayName = node.getAttribute("name");
-    if(displayName){
-        return displayName;
-    } else{
-        var parentName = node.parentNode.getAttribute("name");
-        if(parentName){
-            return parentName;
-        } else{
-            return node.nodeName;
-        }
-    }
-}
-
 
 function getNotchProperties(node, inheritedProperties){
     var properties = JSON.parse(JSON.stringify(defaultProperties[node.nodeName]));;
