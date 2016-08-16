@@ -362,29 +362,14 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 	}
 
 
-	else if(nodeType == "choice") {
+    // FIXME: don't call allChildrenValueTags twice
+    else if ((nodeType == "choice") && allChildrenValueTags(node)) {
 		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
-		if(values == false){
-            if(currentlyCreatingOptiField){
-                successfulOptiField = false;
-                return null;
-            }
-            blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
-		} else{
             //indentationLevel--; //as this one attaches itself at its parent's level
             var displayName = this.getNodeDisplayName(node.parentNode);
             blocklyCode = this.makeBlocklyCode_DropDown(unicode_pattern_for_prev_level, displayName, path + "CHO", values);
-		}
 
     }
-
-	else if(nodeType == "interleave"){
-        if(currentlyCreatingOptiField){
-            successfulOptiField = false;
-            return null;
-        }
-        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
-	}
 
 	else if(nodeType == "optional"){
         if(currentlyCreatingOptiField){
@@ -434,15 +419,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 
 	}
 
-	else if(nodeType == "zeroOrMore"){
-        if(currentlyCreatingOptiField){
-            successfulOptiField = false;
-            return null;
-        }
-        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
-	}
-
-	else if(nodeType == "oneOrMore"){
+    else if (magicType.hasOwnProperty(nodeType)) {      // interleave, zeroOrMore, oneOrMore, and some choice
         if(currentlyCreatingOptiField){
             successfulOptiField = false;
             return null;
