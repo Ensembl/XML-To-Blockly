@@ -13,12 +13,6 @@
  */
 
 var notchProperties = {};
-var unicode_pattern_for_prev_level = "";
-
-var non_last_child  = "\u2503       ";
-var     last_child  = "        ";
-var non_last_branch = "\u2523\u2501\u2501 ";
-var     last_branch = "\u2517\u2501\u2501 ";
 var cleanRNG;
 
 var magicType = {
@@ -110,6 +104,7 @@ function RNG2Blockly(rngDoc) {
     this._nextQueueIndex = 0;
     this.pushToQueue("start", this.substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
     this.slotNumber = 0;            //re-initialize each time the user chooses a new file
+    this.uni = new UnicodeIndenter();
 
     while(this.blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest        = this.blockRequestQueue.shift();
@@ -122,11 +117,13 @@ function RNG2Blockly(rngDoc) {
 
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
+        this.uni.reset();
+
         this.successfulOptiField            = false;    //true or false depending on whether optiField can be created or not
         this.currentlyCreatingOptiField     = false;
 
         for(var i=0;i<children.length;i++){
-            blockCode += this.goDeeper(children[i], "{}", i , '', undefined);
+            blockCode += this.goDeeper(children[i], "{}", i);
         }
 
             // We want to always have a start block and here we force its blockCode to be unique
@@ -226,14 +223,10 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
 }
 
 
-RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common_prefix, last_sibling) {
+RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
     if(this.currentlyCreatingOptiField == true && this.successfulOptiField == false){
         return null;
     }
-
-    var head_suffix = (last_sibling == undefined)? '': last_sibling? last_branch: non_last_branch;
-    var child_suffix = (last_sibling == undefined)? '': last_sibling? last_child: non_last_child;
-    var unicode_pattern = common_prefix + head_suffix;
 
     var nodeType = (node == null) ? "null" : node.nodeName;
     var context = (node == null) ? undefined : node.getAttribute("context");
@@ -249,125 +242,70 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 	else if(nodeType == "text") {
 
         var name = path + "TXT";
+        var displayName = this.getNodeDisplayName(node);
 
-        var displayName;
-
-        if(node.parentNode.childNodes.length == 1 && node.parentNode.getAttribute("name")){
-            displayName = this.getNodeDisplayName(node.parentNode);
-            unicode_pattern = unicode_pattern_for_prev_level;
-        } else{
-            displayName = this.getNodeDisplayName(node);
-        }
-
-        blocklyCode += this.makeBlocklyCode_TextField(unicode_pattern, displayName, name);
+        blocklyCode += this.makeBlocklyCode_TextField(displayName, name);
 
     }
 
-	else if(nodeType == "element") {
-        unicode_pattern_for_prev_level = unicode_pattern;
+    else if ((nodeType == "element") || (nodeType == "attribute")) {
 
         var nodeName = node.getAttribute("name");
         var displayName = this.getNodeDisplayName(node);
 
-        var name = path + "ELM_" + nodeName;
-        haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
-        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-
-        var singleChild = ['text', 'data', 'value'];
-		if(! (children.length == 1 && children[0].nodeName.isOneOf(singleChild) ) ) {
-            blocklyCode += this.makeBlocklyCode_Label(unicode_pattern, displayName);  // a label for the (non-empty) parent
-        }
-
-		if(children.length == 1){
-            var childData = this.goDeeper(children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
-                // childData will contain the parent element's name only if it is being returned by a choice containing values.
-                // In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
-                // So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
-                // Assumption: Consider an element which contains a choice, which, in turn, has a list of values as its children.
-                // Assumption made is that such an element cannot have any other children along with choice+list of values.
-			if( childData!=null && childData.indexOf("'" + displayName + "'") != -1 ){
-				blocklyCode = childData;
-			}else{
-				blocklyCode += childData;
-			}
-		}else{
-			for(var i=0;i<children.length;i++){
-                var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
-            }
-		}
-
-    }
-
-
-	else if(nodeType == "attribute") {
-        unicode_pattern_for_prev_level = unicode_pattern;
-
-        var nodeName = node.getAttribute("name");
-        var displayName = this.getNodeDisplayName(node);
-
-        var name = path + "ATT_" + nodeName;
+        var name = path + (nodeType == "element" ? "ELM" : "ATT") + "_" + nodeName;
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         if( children.length == 0 ){
-            blocklyCode += this.makeBlocklyCode_TextField(unicode_pattern, displayName, name);
-		} else{
-			for(var i=0;i<children.length;i++){
-                var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
-			}
-		}
 
-            // if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
-        if( blocklyCode.indexOf("appendField('"+displayName) ==-1 ){
-            var displayStatement = this.makeBlocklyCode_Label(unicode_pattern, displayName);
-            blocklyCode = displayStatement + blocklyCode;
+            if (nodeType == "element") {
+                blocklyCode = this.makeBlocklyCode_Label(displayName);
+            } else {
+                blocklyCode = this.makeBlocklyCode_TextField(displayName, name);
+            }
+
+        } else if ((children.length == 1) && (children[0].nodeName == "text")) {
+
+            blocklyCode = this.makeBlocklyCode_TextField(displayName, name);
+
+        } else if ((children.length == 1) && (children[0].nodeName == "data")) {
+
+            // TODO currently data ignores any <param> tags that it may contain
+            var type        = children[0].getAttribute("type");
+            var typeChecker = (type||'').isOneOf(numberTypes) ? "Blockly.FieldTextInput.numberValidator" : "null";
+
+            if (type) {
+                displayName += " (" + type + ")";
+            }
+
+            blocklyCode = this.makeBlocklyCode_TextField(displayName, name, typeChecker);
+
+        // FIXME: We shouldn't be calling allChildrenValueTags() twice
+        } else if ((children.length == 1) && (children[0].nodeName == "choice") && allChildrenValueTags(children[0])) {
+
+            var values = allChildrenValueTags(children[0]);     //returns array of all values if all children are value tags, otherwise returns false
+            blocklyCode = this.makeBlocklyCode_DropDown(displayName, name, values);
+
+        } else {
+
+            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name);
         }
     }
 
 
 	else if(nodeType == "group"){
+        haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";
 
         var displayName = this.getNodeDisplayName(node);
-        blocklyCode = this.makeBlocklyCode_TextField(unicode_pattern, displayName); // The internal name $name is not passed
 
-		for(var i=0;i<children.length;i++){
-            var this_is_last_sibling = (i == children.length-1);
-            blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i , common_prefix + child_suffix, this_is_last_sibling);
-		}
-	}
-	/*
-	//we'll reach here only if a node has value as one child and has some other types of children along with it(unlikely situation)
-	else if(nodeType == "value"){
-		var name = path + "VAL_";
-		var content = node.textContent;
-		blocklyCode = "this.appendDummyInput('"+name+"').appendField('"+name+"').appendField('\t"+content+"');";
-	}
-	*/
-
-	//currently data ignores any <param> tags that it may contain
-	else if(nodeType == "data"){
-        //indentationLevel--; //reduce indentation level as this tag creates the entire field for its parent.
-        var type        = node.getAttribute("type");
-        var displayName = this.getNodeDisplayName(node.parentNode) + " (" + type + ")";
-        var typeChecker = (type||'').isOneOf(numberTypes) ? "Blockly.FieldTextInput.numberValidator" : "null";
-        var name        = path + "DAT_";
-
-
-        blocklyCode += this.makeBlocklyCode_TextField(unicode_pattern_for_prev_level, displayName, name, typeChecker);
-	}
-
-
-    // FIXME: don't call allChildrenValueTags twice
-    else if ((nodeType == "choice") && allChildrenValueTags(node)) {
-		var values = allChildrenValueTags(node);	//returns array of all values if all children are value tags, otherwise returns false
-            //indentationLevel--; //as this one attaches itself at its parent's level
-            var displayName = this.getNodeDisplayName(node.parentNode);
-            blocklyCode = this.makeBlocklyCode_DropDown(unicode_pattern_for_prev_level, displayName, path + "CHO", values);
-
+        if (displayName) {
+            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name);
+        } else {
+            blocklyCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name);
+        }
     }
 
 	else if(nodeType == "optional"){
@@ -388,8 +326,9 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
                 this.successfulOptiField = false;
                 break;
             } else{
-                var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
+                this.uni.indent( i == children.length-1 );
+                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i);
+                this.uni.unindent();
             }
         }
 
@@ -402,13 +341,13 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
             if(count.length == 2){
                 var xxx = count[1].indexOf('.appendField(', 4); // to skip the first one
                 var childPartToBeAdded = count[1].substring(xxx);
-                blocklyCode = this.makeBlocklyCode_OptiField(unicode_pattern, displayName, name, childPartToBeAdded, false);
+                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, childPartToBeAdded, false);
             } else{
-                blocklyCode = this.makeBlocklyCode_OptiField(unicode_pattern, displayName, name, blocklyCode, true);
+                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, blocklyCode, true);
             }
 
         } else{
-            blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
+            blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, {});
         }
 
         this.currentlyCreatingOptiField = false;
@@ -420,12 +359,33 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
             this.successfulOptiField = false;
             return null;
         }
-        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
+        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, {});
 	}
+
+    else {
+        blocklyCode = this.makeBlocklyCode_Label("unhandled '" + nodeType + "' tag");
+    }
 
     return blocklyCode + "\n";
 }
 
+RNG2Blockly.prototype.goDeeper_makeTreeWithKids = function(headerName, children, haveAlreadySeenStr, path) {
+    var blocklyCode = this.makeBlocklyCode_Label(headerName);
+    for(var i=0;i<children.length;i++){
+        this.uni.indent( i == children.length-1 );
+        blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, path + "_" + i);
+        this.uni.unindent();
+    }
+    return blocklyCode;
+}
+
+RNG2Blockly.prototype.goDeeper_iterateOverKids = function(children, haveAlreadySeenStr, path) {
+    var blocklyCode = "";
+    for(var i=0;i<children.length;i++){
+        blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, path + "_" + i);
+    }
+    return blocklyCode;
+}
 
 
 /*
@@ -436,21 +396,21 @@ RNG2Blockly.prototype.makeBlocklyCode_UnindentedLabel = function(label) {
     return "this.appendDummyInput().appendField('" + label + "');";
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_Label = function(indentation, label) {
-    return "this.appendDummyInput().appendField('" + indentation + "').appendField('" + label + "');";
+RNG2Blockly.prototype.makeBlocklyCode_Label = function(label) {
+    return "this.appendDummyInput().appendField('" + this.uni.getIndentation() + "').appendField('" + label + "');";
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_TextField = function(indentation, label, internalName, typeChecker) {
+RNG2Blockly.prototype.makeBlocklyCode_TextField = function(label, internalName, typeChecker) {
     // There could be another parameter for the initial value
-    return "this.appendDummyInput().appendField('" + indentation + "').appendField('" + label + "').appendField(new Blockly.FieldTextInput(''" + (typeChecker ? "," + typeChecker : "") + "),'" + internalName + "');";
+    return "this.appendDummyInput().appendField('" + this.uni.getIndentation() + "').appendField('" + label + "').appendField(new Blockly.FieldTextInput(''" + (typeChecker ? "," + typeChecker : "") + "),'" + internalName + "');";
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_DropDown = function(indentation, label, internalName, values) {
-    return "this.appendDummyInput().appendField('" + indentation + "').appendField('" + label + "').appendField(new Blockly.FieldDropdown([" + values + "]),'" + internalName + "');";
+RNG2Blockly.prototype.makeBlocklyCode_DropDown = function(label, internalName, values) {
+    return "this.appendDummyInput().appendField('" + this.uni.getIndentation() + "').appendField('" + label + "').appendField(new Blockly.FieldDropdown([" + values + "]),'" + internalName + "');";
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(indentation, label, internalName, content, needLabel) {
-    var code = "this.appendDummyInput('" + internalName + "').appendField('" + indentation + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '" + internalName + "_checkbox')";
+RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, content, needLabel) {
+    var code = "this.appendDummyInput('" + internalName + "').appendField('" + this.uni.getIndentation() + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '" + internalName + "_checkbox')";
     if (needLabel) {
         code += ".appendField('" + label + "');" + content;
     } else {
@@ -459,25 +419,22 @@ RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(indentation, label, i
     return code + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);";  //hidden field to detect end of optiField
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(indentation, label, internalName, slotName) {
-    return "this.appendStatementInput('" + internalName + "').setCheck([" + slotName + "]).appendField('" + indentation + "').appendField('" + label + "');";
+RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(label, internalName, slotName) {
+    return "this.appendStatementInput('" + internalName + "').setCheck([" + slotName + "]).appendField('" + this.uni.getIndentation() + "').appendField('" + label + "');";
 };
 
 
 
 //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path, bottomNotchOverride, common_prefix, last_sibling, inheritedProperties){
+RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path, bottomNotchOverride, inheritedProperties){
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
     var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
 
-    var head_suffix = (last_sibling == undefined)? '': last_sibling? last_branch: non_last_branch;
-    var child_suffix = (last_sibling == undefined)? '': last_sibling? last_child: non_last_child;
-    var unicode_pattern = common_prefix + head_suffix;
-
     var properties = getNotchProperties(node, inheritedProperties);
+    var blocklyCode = "";
 
     //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
     var topListStr      = "["+this.slotNumber+"]";
@@ -486,7 +443,7 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
         //Rule 1
         //if any magic node has another magic node as its only child, inline the child
         if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
-            blocklyCode = this.makeBlocklyCode_Label(unicode_pattern, name);
+            blocklyCode = this.makeBlocklyCode_Label(name);
             var childPath = name + '0';
             this.setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
             var child = children[0];
@@ -498,7 +455,9 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
                 bottomNotchOverride = false;
             }
 
-            blocklyCode += this.handleMagicBlock(child, haveAlreadySeenStr, childPath, bottomNotchOverride, common_prefix+child_suffix, true, properties);
+            this.uni.indent(true);
+            blocklyCode += this.handleMagicBlock(child, haveAlreadySeenStr, childPath, bottomNotchOverride, properties);
+            this.uni.unindent();
         }else{
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 var childrenDisplayNames = [];
@@ -555,7 +514,7 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
                 }
                 childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 node.setAttribute("name", childrenDisplayNames);
-                blocklyCode = this.makeBlocklyCode_StatementInput(unicode_pattern, childrenDisplayNames, this.slotNumber, this.slotNumber);
+                blocklyCode = this.makeBlocklyCode_StatementInput(childrenDisplayNames, this.slotNumber, this.slotNumber);
 
                 notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                 if(childrenInfo.length > 0) {   // add childrenInfo if it is available
@@ -571,7 +530,7 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     node.setAttribute("name", childBlockName);
-                    blocklyCode = this.makeBlocklyCode_StatementInput(unicode_pattern, childBlockName + magicType[node.nodeName].prettyIndicator, this.slotNumber, this.slotNumber);
+                    blocklyCode = this.makeBlocklyCode_StatementInput(childBlockName + magicType[node.nodeName].prettyIndicator, this.slotNumber, this.slotNumber);
                     notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                     console.log(notchProperties[this.slotNumber]);
             }
@@ -587,7 +546,7 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
 
             var assignedSlotNumber = node.getAttribute("slotNumber");
             var prettyName = node.getAttribute("name");
-            blocklyCode = this.makeBlocklyCode_StatementInput(unicode_pattern, prettyName + magicType[node.nodeName].prettyIndicator, this.slotNumber, assignedSlotNumber);
+            blocklyCode = this.makeBlocklyCode_StatementInput(prettyName + magicType[node.nodeName].prettyIndicator, this.slotNumber, assignedSlotNumber);
             //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
             notchProperties[this.slotNumber] = notchProperties[assignedSlotNumber];
             console.log(notchProperties[this.slotNumber]);
