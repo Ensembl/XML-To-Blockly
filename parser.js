@@ -124,7 +124,7 @@ function RNG2Blockly(rngDoc) {
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
         for(var i=0;i<children.length;i++){
-            blockCode += this.goDeeper(children[i], "{}", i , '', undefined);
+            blockCode += this.goDeeper(children[i], undefined, "{}", i , '', undefined);
         }
 
             // We want to always have a start block and here we force its blockCode to be unique
@@ -224,7 +224,7 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
 }
 
 
-RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common_prefix, last_sibling) {
+RNG2Blockly.prototype.goDeeper = function(node, parentNode, haveAlreadySeenStr, path, common_prefix, last_sibling) {
     if(currentlyCreatingOptiField == true && successfulOptiField == false){
         return null;
     }
@@ -249,8 +249,8 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 
         var displayName;
 
-        if(node.parentNode.childNodes.length == 1 && node.parentNode.getAttribute("name")){
-            displayName = this.getNodeDisplayName(node.parentNode);
+        if(parentNode.childNodes.length == 1 && parentNode.getAttribute("name")){
+            displayName = this.getNodeDisplayName(parentNode);
             unicode_pattern = unicode_pattern_for_prev_level;
         } else{
             displayName = node.getAttribute("blockly:blockName") || "text";
@@ -277,7 +277,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
         }
 
 		if(children.length == 1){
-            var childData = this.goDeeper(children[0], haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
+            var childData = this.goDeeper(children[0], node, haveAlreadySeenStr, name + '_' + 0, common_prefix+child_suffix, true );
                 // childData will contain the parent element's name only if it is being returned by a choice containing values.
                 // In that case, we need to remove the dummyInput+label that we had set for the element in the above if statement as the child itself sends the label also.
                 // So, we replace blocklyCode with childData in this case otherwise we always add data returned by the child to blocklyCode.
@@ -291,7 +291,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 		}else{
 			for(var i=0;i<children.length;i++){
                 var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
+                blocklyCode += this.goDeeper(children[i], node, haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
             }
 		}
 
@@ -314,7 +314,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 		} else{
 			for(var i=0;i<children.length;i++){
                 var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
+                blocklyCode += this.goDeeper(children[i], node, haveAlreadySeenStr, name + '_' + i , common_prefix+child_suffix, this_is_last_sibling);
 			}
 		}
 
@@ -336,7 +336,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 
 		for(var i=0;i<children.length;i++){
             var this_is_last_sibling = (i == children.length-1);
-            blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i , common_prefix + child_suffix, this_is_last_sibling);
+            blocklyCode += this.goDeeper(children[i], node, haveAlreadySeenStr, name + i , common_prefix + child_suffix, this_is_last_sibling);
 		}
 	}
 	/*
@@ -352,7 +352,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
 	else if(nodeType == "data"){
         //indentationLevel--; //reduce indentation level as this tag creates the entire field for its parent.
         var type        = node.getAttribute("type");
-        var displayName = this.getNodeDisplayName(node.parentNode) + " (" + type + ")";
+        var displayName = this.getNodeDisplayName(parentNode) + " (" + type + ")";
         var typeChecker = (type||'').isOneOf(numberTypes) ? "Blockly.FieldTextInput.numberValidator" : "null";
         var name        = path + "DAT_";
 
@@ -370,7 +370,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
             blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
 		} else{
             //indentationLevel--; //as this one attaches itself at its parent's level
-            var displayName = this.getNodeDisplayName(node.parentNode);
+            var displayName = this.getNodeDisplayName(parentNode);
 			blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern_for_prev_level + "').appendField('"+displayName+"').appendField(new Blockly.FieldDropdown(["+values+"]),'"+displayName+"');";
 		}
 
@@ -404,7 +404,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
                 break;
             } else{
                 var this_is_last_sibling = (i == children.length-1);
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
+                blocklyCode += this.goDeeper(children[i], node, haveAlreadySeenStr, name + i, common_prefix + child_suffix, this_is_last_sibling);
             }
         }
 
