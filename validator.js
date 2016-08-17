@@ -123,13 +123,6 @@ Validator.prototype.validate = function(list) {
     return x.hasEndOfList(this);
 };
 
-// Returns the simplest instance of a IndexSet that reports that the
-// list is fully validated. This is used to discard partial matches and
-// prune parts of the search tree (some kind of branch-and-bound approach)
-Validator.prototype.bestResult = function(r) {
-    return new IndexSet(this._list.length);
-};
-
 // Helper method to print indented debug statements to the console
 Validator.prototype.debug = function() {
     var args = Array.prototype.slice.call(arguments);
@@ -271,7 +264,7 @@ Validator.prototype._named_dispatcher = function(magic_name, content, i, mustUse
     if (mustUseAll && x.hasEndOfList(this)) {
         // All we are interested in is the fact there is a full match
         // We can discard the other indexes
-        x = this.bestResult();
+        x = new IndexSet(this._list.length);
     }
 
     this._indent = back_indent;
