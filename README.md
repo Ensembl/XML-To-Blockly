@@ -35,3 +35,30 @@ The project submitted to Google is not specific to eHive and the proposed editor
 7. [ ] Javascript code to export of the diagram to XML. _In progress_
 8. [ ] Javascript code to import of an XML to the Blockly workspace
 
+# RNG to Blockly mapping
+
+Here is how RNG patterns are mapped to Blockly content.
+
+| RNG pattern | Blockly _InputStatements_ and _Fields_ |
+|---|---|
+| `<text/>` | TextField (unnamed) |
+| `<attribute/>` | TextField (named) |
+| `<attribute> <text> ... </text> </attribute>` | TextField (named) |
+| `<attribute> <data type="string"> ... </data> </attribute>`| TextField (named) + typeChecker |
+| `<attribute> <choice> [values] </choice> </attribute>` | DropDown (named) |
+| `<attribute> [all other cases] </attribute>` | DisplayLabel with a tree-display of all the children |
+| `<element/>` | DisplayLabel |
+| `<element> <text> ... </text> </element>` | TextField (named) |
+| `<element> <data type="string"> ... </data> </element>` | TextField (named) + typeChecker |
+| `<element> <choice> [values] </choice> </element>` | DropDown (named) |
+| `<element> [all other cases] </element>` | DisplayLabel with a tree-display of all the children |
+| `<group> ... </group>` | All the children stacked vertically |
+| `<group name=".."> ... </group>` | DisplayLabel with a tree-display of all the children |
+| `<optional> [tree with no magic block] </optional>` | CheckBox that controls a tree-display of all the children |
+
+We call _magic tag_ the `<oneOrMore>`, `<zeroOrMore>`, `<optional>`,
+`<choice>` and `interleave` tags because their content is variable and
+cannot be fixed in a single block. They lead to the creation of additional
+blocks. The only two exceptions are special occurrences of `<optional>` and
+`<choice>` (see above).
+
