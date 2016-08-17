@@ -162,7 +162,7 @@ Validator.prototype._validate_oneOrMore = function(patterns, i, mustUseAll) {
         var x = this._pair_dispatcher(patterns[0], j, mustUseAll);
         if (mustUseAll && x.hasEndOfList(this)) {
             // quick bail-out
-            return this.bestResult();
+            return x;
         } else if (!x.isEmpty()) {
             result.extendWithOtherSet(x);
             Array.prototype.push.apply(indexes_to_test, x.getIndexes());
@@ -215,7 +215,7 @@ Validator.prototype._validate_choice = function(patterns, i, mustUseAll) {
         var x = this._pair_dispatcher(patterns[ind], i, mustUseAll);
         if (mustUseAll && x.hasEndOfList(this)) {
             // quick bail-out
-            return this.bestResult();
+            return x;
         }
         result.extendWithOtherSet(x);
     }
@@ -242,7 +242,7 @@ Validator.prototype._validate_interleave = function(patterns, i, mustUseAll) {
                 var y = this._named_dispatcher("interleave", remaining_patterns, all_indexes[ind2], mustUseAll);
                 if (mustUseAll && y.hasEndOfList(this)) {
                     // quick bail-out
-                    return this.bestResult();
+                    return y;
                 }
                 result.extendWithOtherSet(y);
             }
