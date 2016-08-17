@@ -45,8 +45,8 @@
  * Validator is the object that will do the recursion.  Validator
  * implements a validator per magic_name and a dispatcher that calls the
  * right _validate method for the current magic_name.  It uses
- * ValidatorResult as an intermediate way of storing the matches.
- * ValidatorResult contains the first index of the list that is not yet
+ * IndexSet as an intermediate way of storing the matches.
+ * IndexSet contains the first index of the list that is not yet
  * matched.  For instance, if we've validated the first two elements of a
  * list, _indexes will be [2]. The validator may then try to extend the
  * validation for position 2 onwards. _indexes is empty if nothing has
@@ -62,25 +62,25 @@
  * Structure that holds the result of the validator.
  * *************/
 
-function ValidatorResult() {
+function IndexSet() {
     this._indexes_lookup = {};  // To keep distinct indexes
     this._indexes = [];         // All the keys in the object are transformed to string, so we keep the integers in this list
     Array.prototype.slice.call(arguments).map(this.addIndex, this);     // Extra constructor parameters are assumed to be indexes to add
 }
 
 // The validation is a success if _indexes is not empty
-ValidatorResult.prototype.pass = function() {
-    return this._indexes.length > 0;
+IndexSet.prototype.isEmpty = function() {
+    return this._indexes.length == 0;
 };
 
 // getter to protect the internal variable
-ValidatorResult.prototype.getIndexes = function() {
+IndexSet.prototype.getIndexes = function() {
     // Returns a copy to make sure the caller doesn't modify our internal structure
     return this._indexes.slice();
 };
 
 // add a new index to the list, avoiding repetitions
-ValidatorResult.prototype.addIndex = function(i) {
+IndexSet.prototype.addIndex = function(i) {
     if (!(i in this._indexes_lookup)) {
         this._indexes_lookup[i] = 1;
         this._indexes.push(i);
@@ -88,15 +88,20 @@ ValidatorResult.prototype.addIndex = function(i) {
     return this;
 };
 
-// wrapper around addIndex to add all the indexes of a ValidatorResult into another
-ValidatorResult.prototype.blendWithResult = function(r) {
+// wrapper around addIndex to add all the indexes of a IndexSet into another
+IndexSet.prototype.extendWithOtherSet = function(r) {
     r.getIndexes().map(this.addIndex, this);
     return this;
 };
 
+// tells whether the set contains the index of the end of a Validator's list
+IndexSet.prototype.hasEndOfList = function(v) {
+    return (v._list.length in this._indexes_lookup);
+};
+
 // string representation
-ValidatorResult.prototype.toString = function() {
-    return "ValidatorResult: " + (this.pass() ? "pass at indexes " + JSON.stringify(this.getIndexes()) : "fail");
+IndexSet.prototype.toString = function() {
+    return "Matching indexes: " + (this.isEmpty() ? "empty" : JSON.stringify(this.getIndexes()));
 };
 
 
@@ -115,19 +120,14 @@ Validator.prototype.validate = function(list) {
     this._indent = "";
     this._cache = {};
     var x = this._pair_dispatcher(this._grammar, 0, true);
-    return this.isFullyValidated(x);
+    return x.hasEndOfList(this);
 };
 
-// Helper method to check whether the whole list has been validated by a ValidatorResult
-Validator.prototype.isFullyValidated = function(r) {
-    return (this._list.length in r._indexes_lookup);
-};
-
-// Returns the simplest instance of a ValidatorResult that reports that the
+// Returns the simplest instance of a IndexSet that reports that the
 // list is fully validated. This is used to discard partial matches and
 // prune parts of the search tree (some kind of branch-and-bound approach)
 Validator.prototype.bestResult = function(r) {
-    return new ValidatorResult(this._list.length);
+    return new IndexSet(this._list.length);
 };
 
 // Helper method to print indented debug statements to the console
@@ -137,21 +137,20 @@ Validator.prototype.debug = function() {
     Function.apply.call(console.log, console, args);
 };
 
-Validator.prototype._validate_block = function(content, i, mustUseAll) {
-    // We can assume that content is a string
+Validator.prototype._validate_block = function(expectedBlockName, i, mustUseAll) {
     if (i == this._list.length) {
         this.debug("!", "exhausted");
-        return new ValidatorResult();
-    } else if (this._list[i] == content) {
-        return new ValidatorResult(i+1);
+        return new IndexSet();
+    } else if (this._list[i] == expectedBlockName) {
+        return new IndexSet(i+1);
     } else {
-        return new ValidatorResult();
+        return new IndexSet();
     }
 };
 
-Validator.prototype._validate_oneOrMore = function(content, i, mustUseAll) {
-    // We can assume that content is a list with a single element
-    var result = new ValidatorResult();
+Validator.prototype._validate_oneOrMore = function(patterns, i, mustUseAll) {
+    // We can assume that patterns is a list with a single element
+    var result = new IndexSet();
     var indexes_to_test = [i];
     var indexes_tested = {};
     while (indexes_to_test.length > 0) {
@@ -160,91 +159,92 @@ Validator.prototype._validate_oneOrMore = function(content, i, mustUseAll) {
             continue;
         }
         indexes_tested[j] = 1;
-        var x = this._pair_dispatcher(content[0], j, mustUseAll);
-        if (mustUseAll && this.isFullyValidated(x)) {
+        var x = this._pair_dispatcher(patterns[0], j, mustUseAll);
+        if (mustUseAll && x.hasEndOfList(this)) {
             // quick bail-out
             return this.bestResult();
-        } else if (x.pass()) {
-            result.blendWithResult(x);
+        } else if (!x.isEmpty()) {
+            result.extendWithOtherSet(x);
             Array.prototype.push.apply(indexes_to_test, x.getIndexes());
         }
     }
     return result;
 };
 
-Validator.prototype._validate_zeroOrMore = function(content, i, mustUseAll) {
+Validator.prototype._validate_zeroOrMore = function(patterns, i, mustUseAll) {
     // Don't bother with the empty match in mustUseAll mode
     if (mustUseAll) {
         if (i == this._list.length) {
             // quick bail-out
             return this.bestResult();
         }
-        return this._named_dispatcher("oneOrMore", content, i, true);
+        return this._named_dispatcher("oneOrMore", patterns, i, true);
     }
     // zeroOrMore always matches, but we need to call validate_oneOrMore
     // too to check for potential repetitions
-    var result = new ValidatorResult(i);
-    var x = this._named_dispatcher("oneOrMore", content, i, false);
-    result.blendWithResult(x);
+    var result = new IndexSet(i);
+    var x = this._named_dispatcher("oneOrMore", patterns, i, false);
+    result.extendWithOtherSet(x);
     return result;
 };
 
-Validator.prototype._validate_optional = function(content, i, mustUseAll) {
+Validator.prototype._validate_optional = function(patterns, i, mustUseAll) {
     // Don't bother with the empty match in mustUseAll mode
     if (mustUseAll) {
         if (i == this._list.length) {
             // quick bail-out
             return this.bestResult();
         }
-        return this._pair_dispatcher(content[0], i, true);
+        return this._pair_dispatcher(patterns[0], i, true);
     }
-    // We can assume that content is a list with a single element
-    var result = new ValidatorResult(i);
-    var x = this._pair_dispatcher(content[0], i, false);
-    result.blendWithResult(x);
+    // optional always matches, but we need to check the actual pattern too
+    // We can assume that patterns is a list with a single element
+    var result = new IndexSet(i);
+    var x = this._pair_dispatcher(patterns[0], i, false);
+    result.extendWithOtherSet(x);
     return result;
 };
 
-Validator.prototype._validate_choice = function(content, i, mustUseAll) {
-    if (content.length == 0) {
-        return new ValidatorResult(i);
+Validator.prototype._validate_choice = function(patterns, i, mustUseAll) {
+    if (patterns.length == 0) {
+        return new IndexSet(i);
     }
-    // Simply test each element of content
-    var result = new ValidatorResult();
-    for(var ind=0; ind<content.length; ind++) {
-        var x = this._pair_dispatcher(content[ind], i, mustUseAll);
-        if (mustUseAll && this.isFullyValidated(x)) {
+    // Simply test each element of patterns
+    var result = new IndexSet();
+    for(var ind=0; ind<patterns.length; ind++) {
+        var x = this._pair_dispatcher(patterns[ind], i, mustUseAll);
+        if (mustUseAll && x.hasEndOfList(this)) {
             // quick bail-out
             return this.bestResult();
         }
-        result.blendWithResult(x);
+        result.extendWithOtherSet(x);
     }
     return result;
 };
 
-Validator.prototype._validate_interleave = function(content, i, mustUseAll) {
-    if (content.length == 0) {
-        return new ValidatorResult(i);
-    } else if (content.length == 1) {
+Validator.prototype._validate_interleave = function(patterns, i, mustUseAll) {
+    if (patterns.length == 0) {
+        return new IndexSet(i);
+    } else if (patterns.length == 1) {
         // Trivial interleave, defer
-        return this._pair_dispatcher(content[0], i, mustUseAll);
+        return this._pair_dispatcher(patterns[0], i, mustUseAll);
     }
     // We try to validate each element
-    var result = new ValidatorResult();
-    for(var ind=0; ind<content.length; ind++) {
-        var x = this._pair_dispatcher(content[ind], i, false);
-        if (x.pass()) {
-            // Whenever there is a match we try to validate an interleave made of the remaining elements
-            var new_content = JSON.parse(JSON.stringify(content));
-            new_content.splice(ind, 1);
+    var result = new IndexSet();
+    for(var ind=0; ind<patterns.length; ind++) {
+        var x = this._pair_dispatcher(patterns[ind], i, false);
+        if (!x.isEmpty()) {
+            // Whenever there is a match we try to validate an interleave made of the remaining patterns
+            var remaining_patterns = JSON.parse(JSON.stringify(patterns));
+            remaining_patterns.splice(ind, 1);
             var all_indexes = x.getIndexes();
             for(var ind2=0; ind2<all_indexes.length; ind2++) {
-                var y = this._named_dispatcher("interleave", new_content, all_indexes[ind2], mustUseAll);
-                if (mustUseAll && this.isFullyValidated(y)) {
+                var y = this._named_dispatcher("interleave", remaining_patterns, all_indexes[ind2], mustUseAll);
+                if (mustUseAll && y.hasEndOfList(this)) {
                     // quick bail-out
                     return this.bestResult();
                 }
-                result.blendWithResult(y);
+                result.extendWithOtherSet(y);
             }
         }
     }
@@ -277,7 +277,9 @@ Validator.prototype._named_dispatcher = function(magic_name, content, i, mustUse
     }[magic_name];
     var x = f.call(this, content, i, mustUseAll);
 
-    if (mustUseAll && this.isFullyValidated(x)) {
+    if (mustUseAll && x.hasEndOfList(this)) {
+        // All we are interested in is the fact there is a full match
+        // We can discard the other indexes
         x = this.bestResult();
     }
 
