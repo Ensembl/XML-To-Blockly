@@ -249,18 +249,15 @@ RNG2Blockly.prototype.goDeeper = function(node, parentNode, haveAlreadySeenStr, 
         var name = path + "TXT";
 
         var displayName;
-        var nodeIdentifier = "";
 
         if(parentNode.childNodes.length == 1 && parentNode.getAttribute("name")){
             displayName = this.getNodeDisplayName(parentNode);
             unicode_pattern = unicode_pattern_for_prev_level;
-            nodeIdentifier = node.parentNode.nodeName;
         } else{
             displayName = node.getAttribute("blockly:blockName") || "text";
-            nodeIdentifier = "text";
         }
 
-        blocklyCode += "this.appendDummyInput('"+nodeIdentifier+"').appendField('" + unicode_pattern + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+        blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+displayName+"').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 
     }
 
@@ -277,7 +274,7 @@ RNG2Blockly.prototype.goDeeper = function(node, parentNode, haveAlreadySeenStr, 
 
         var singleChild = ['text', 'data', 'value'];
 		if(! (children.length == 1 && children[0].nodeName.isOneOf(singleChild) ) ) {
-            blocklyCode += "this.appendDummyInput('element').appendField('" + unicode_pattern + "').appendField('"+displayName+"');";  // a label for the (non-empty) parent
+            blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+displayName+"');";  // a label for the (non-empty) parent
         }
 
 		if(children.length == 1){
@@ -314,7 +311,7 @@ RNG2Blockly.prototype.goDeeper = function(node, parentNode, haveAlreadySeenStr, 
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         if( children.length == 0 ){
-			blocklyCode += "this.appendDummyInput('attribute').appendField('" + unicode_pattern + "').appendField('" + displayName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
+			blocklyCode += "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + displayName + "').appendField(new Blockly.FieldTextInput(''),'" + name + "');";
 		} else{
 			for(var i=0;i<children.length;i++){
                 var this_is_last_sibling = (i == children.length-1);
@@ -324,7 +321,7 @@ RNG2Blockly.prototype.goDeeper = function(node, parentNode, haveAlreadySeenStr, 
 
             // if there are multiple children of an attribte (like two text tags), its name won't be added by its children and we need to add it here
         if( blocklyCode.indexOf("appendField('"+displayName) ==-1 ){
-            var displayStatement = "this.appendDummyInput('attribute').appendField('" + unicode_pattern + "').appendField('" + displayName + "');";
+            var displayStatement = "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('" + displayName + "');";
             blocklyCode = displayStatement + blocklyCode;
         }
     }
@@ -336,7 +333,7 @@ RNG2Blockly.prototype.goDeeper = function(node, parentNode, haveAlreadySeenStr, 
 		var name = path + "GRO_";
 
         var displayName = this.getNodeDisplayName(node) || "group";
-		blocklyCode = "this.appendDummyInput('group').appendField('" + unicode_pattern + "').appendField('"+displayName+"');";
+		blocklyCode = "this.appendDummyInput().appendField('" + unicode_pattern + "').appendField('"+displayName+"');";
 
 		for(var i=0;i<children.length;i++){
             var this_is_last_sibling = (i == children.length-1);
