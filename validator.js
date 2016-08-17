@@ -278,9 +278,3 @@ Validator.prototype._pair_dispatcher = function(pair, i, mustUseAll) {
     return this._named_dispatcher(pair[0], pair[1], i, mustUseAll);
 };
 
-function assert_Validator(grammar, list, expected) {
-    var v = new Validator(grammar);
-    var x = v.validate(list);
-    console.log(expected == x ? "OK" : "FAIL", JSON.stringify(list), "vs", JSON.stringify(grammar));
-}
-
