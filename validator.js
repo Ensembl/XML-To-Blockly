@@ -163,10 +163,9 @@ Validator.prototype._validate_oneOrMore = function(patterns, i, mustUseAll) {
         if (mustUseAll && x.hasEndOfList(this)) {
             // quick bail-out
             return x;
-        } else if (!x.isEmpty()) {
-            result.extendWithOtherSet(x);
-            Array.prototype.push.apply(indexes_to_test, x.getIndexes());
         }
+        result.extendWithOtherSet(x);
+        Array.prototype.push.apply(indexes_to_test, x.getIndexes());
     }
     return result;
 };
