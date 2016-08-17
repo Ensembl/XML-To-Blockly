@@ -255,7 +255,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
             displayName = this.getNodeDisplayName(node.parentNode);
             unicode_pattern = unicode_pattern_for_prev_level;
         } else{
-            displayName = node.getAttribute("blockly:blockName") || "text";
+            displayName = this.getNodeDisplayName(node);
         }
 
         blocklyCode += this.makeBlocklyCode_TextField(unicode_pattern, displayName, name);
@@ -333,7 +333,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 		var name = path + "GRO_";
 
-        var displayName = this.getNodeDisplayName(node) || "group";
+        var displayName = this.getNodeDisplayName(node);
         blocklyCode = this.makeBlocklyCode_TextField(unicode_pattern, displayName); // The internal name $name is not passed
 
 		for(var i=0;i<children.length;i++){
@@ -401,8 +401,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
             // FIXME: we shouldn't have to split the Blockly code
             var count = blocklyCode.split("this.appendDummyInput");
 
-            // We don't have display names for OptiFields, yet, so we just use the internal name
-            var displayName = "pretty " + name;
+            var displayName = this.getNodeDisplayName(node);
             if(count.length == 2){
                 var xxx = count[1].indexOf('.appendField(', 4); // to skip the first one
                 var childPartToBeAdded = count[1].substring(xxx);
@@ -621,7 +620,7 @@ RNG2Blockly.prototype.setVisitedAndSlotNumber = function(node, slot) {
 
 
 RNG2Blockly.prototype.getNodeDisplayName = function(node, tryEBN){
-    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN && this._nextQueueIndex) );
+    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN ? this._nextQueueIndex : ("(unnamed " + node.nodeName + ")")) );
 }
 
 
