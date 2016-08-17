@@ -12,8 +12,6 @@
  * limitations under the License.
  */
 
-var successfulOptiField;   //true or false depending on whether optiField can be created or not
-var currentlyCreatingOptiField;
 var notchProperties = {};
 var unicode_pattern_for_prev_level = "";
 
@@ -124,6 +122,9 @@ function RNG2Blockly(rngDoc) {
 
         var blockCode = "";   // Contains data sent by all the children merged together one after the other.
 
+        this.successfulOptiField            = false;    //true or false depending on whether optiField can be created or not
+        this.currentlyCreatingOptiField     = false;
+
         for(var i=0;i<children.length;i++){
             blockCode += this.goDeeper(children[i], "{}", i , '', undefined);
         }
@@ -226,7 +227,7 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
 
 
 RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common_prefix, last_sibling) {
-    if(currentlyCreatingOptiField == true && successfulOptiField == false){
+    if(this.currentlyCreatingOptiField == true && this.successfulOptiField == false){
         return null;
     }
 
@@ -372,8 +373,8 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
     }
 
 	else if(nodeType == "optional"){
-        if(currentlyCreatingOptiField){
-            successfulOptiField = false;
+        if(this.currentlyCreatingOptiField){
+            this.successfulOptiField = false;
             return null;
         }
 
@@ -381,13 +382,13 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
         //var context_child_idx = node.getAttribute("context_child_idx");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
     	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");
-        currentlyCreatingOptiField = true;
-        successfulOptiField = true;
+        this.currentlyCreatingOptiField = true;
+        this.successfulOptiField = true;
 
 
         for(var i=0;i<children.length;i++){
             if(magicType.hasOwnProperty(children[i].nodeName)){
-                successfulOptiField = false;
+                this.successfulOptiField = false;
                 break;
             } else{
                 var this_is_last_sibling = (i == children.length-1);
@@ -396,7 +397,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
         }
 
         //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
-        if(successfulOptiField){
+        if(this.successfulOptiField){
             // FIXME: we shouldn't have to split the Blockly code
             var count = blocklyCode.split("this.appendDummyInput");
 
@@ -410,18 +411,17 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, common
                 blocklyCode = this.makeBlocklyCode_OptiField(unicode_pattern, displayName, name, blocklyCode, true);
             }
 
-            currentlyCreatingOptiField = false;
-
         } else{
-            currentlyCreatingOptiField = false;
             blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
         }
+
+        this.currentlyCreatingOptiField = false;
 
 	}
 
     else if (magicType.hasOwnProperty(nodeType)) {      // interleave, zeroOrMore, oneOrMore, and some choice
-        if(currentlyCreatingOptiField){
-            successfulOptiField = false;
+        if(this.currentlyCreatingOptiField){
+            this.successfulOptiField = false;
             return null;
         }
         blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, common_prefix, last_sibling, {});
