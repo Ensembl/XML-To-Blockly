@@ -316,7 +316,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
 
         //var context_child_idx = node.getAttribute("context_child_idx");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-    	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");
+        var name = path + "OPT_";
         this.currentlyCreatingOptiField = true;
         this.successfulOptiField = true;
 
@@ -324,23 +324,26 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
         for(var i=0;i<children.length;i++){
             if(magicType.hasOwnProperty(children[i].nodeName)){
                 this.successfulOptiField = false;
-                break;
-            } else{
+            } else if (children.length > 1) {
                 this.uni.indent( i == children.length-1 );
                 blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i);
                 this.uni.unindent();
+            } else {
+                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i);
+            }
+            if (!this.successfulOptiField) {
+                break;
             }
         }
 
         //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
         if(this.successfulOptiField){
-            // FIXME: we shouldn't have to split the Blockly code
-            var count = blocklyCode.split("this.appendDummyInput");
 
             var displayName = this.getNodeDisplayName(node);
-            if(count.length == 2){
-                var xxx = count[1].indexOf('.appendField(', 4); // to skip the first one
-                var childPartToBeAdded = count[1].substring(xxx);
+            if (children.length == 1){
+                // FIXME: we shouldn't have to split the Blockly code
+                var xxx = blocklyCode.indexOf('.appendField(', 28); // to skip the first one
+                var childPartToBeAdded = blocklyCode.substring(xxx);
                 blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, childPartToBeAdded, false);
             } else{
                 blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, blocklyCode, true);
