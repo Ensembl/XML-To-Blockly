@@ -171,35 +171,27 @@ Validator.prototype._validate_oneOrMore = function(patterns, i, mustUseAll) {
 };
 
 Validator.prototype._validate_zeroOrMore = function(patterns, i, mustUseAll) {
-    // Don't bother with the empty match in mustUseAll mode
-    if (mustUseAll) {
-        if (i == this._list.length) {
-            // quick bail-out
-            return this.bestResult();
-        }
-        return this._named_dispatcher("oneOrMore", patterns, i, true);
+    if (i == this._list.length) {
+        // quick bail-out
+        return new IndexSet(i);
     }
     // zeroOrMore always matches, but we need to call validate_oneOrMore
     // too to check for potential repetitions
     var result = new IndexSet(i);
-    var x = this._named_dispatcher("oneOrMore", patterns, i, false);
+    var x = this._named_dispatcher("oneOrMore", patterns, i, mustUseAll);
     result.extendWithOtherSet(x);
     return result;
 };
 
 Validator.prototype._validate_optional = function(patterns, i, mustUseAll) {
-    // Don't bother with the empty match in mustUseAll mode
-    if (mustUseAll) {
-        if (i == this._list.length) {
-            // quick bail-out
-            return this.bestResult();
-        }
-        return this._pair_dispatcher(patterns[0], i, true);
+    if (i == this._list.length) {
+        // quick bail-out
+        return new IndexSet(i);
     }
     // optional always matches, but we need to check the actual pattern too
     // We can assume that patterns is a list with a single element
     var result = new IndexSet(i);
-    var x = this._pair_dispatcher(patterns[0], i, false);
+    var x = this._pair_dispatcher(patterns[0], i, mustUseAll);
     result.extendWithOtherSet(x);
     return result;
 };
