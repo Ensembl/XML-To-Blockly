@@ -16,21 +16,28 @@
  * This file consists of mehods that help us in generating XML from the blocks in the editor workspace
  */
 
-var xmlDoc;
-var keys;
-var values;
+var XMLDoc;
+var nodes;
+var nodeValues;
 
 //initializes some globals.
 function generateXML(){
-	xmlDoc = document.implementation.createDocument('http://relaxng.org/ns/structure/1.0', 'xml' , null );
-	keys = [];
-	values = [];
-	console.log(xmlDoc);
+	console.log(cleanRNG);
+	XMLDoc = document.implementation.createDocument('http://relaxng.org/ns/structure/1.0', 'xml' , null );
+	nodes = [];
+	nodeValues = [];
+	console.log(XMLDoc);
 	var startBlock = Blockly.getMainWorkspace().getTopBlocks()[0];
 	console.log(startBlock);
 	handleBlock(startBlock);
-	console.log(keys);
-	console.log(values);
+	console.log(nodes);
+	console.log(nodeValues);
+	var RNGStartNode = cleanRNG.getElementsByTagName("start")[0];
+	var XMLStartNode = XMLDoc.documentElement;
+	createXML(RNGStartNode , XMLStartNode);
+	console.log(XMLDoc);
+	var XMLToString = new XMLSerializer().serializeToString(XMLDoc);
+	document.getElementById("XMLOutput").value = XMLToString;
 }
 
 /* This function decides the order in which blocks should be traversed.
@@ -52,7 +59,9 @@ function handleInputs(inputList , block){
 		if(inputList[i].type ==  Blockly.NEXT_STATEMENT){
 			console.log(inputList[i]);
 			var attachedBlock = block.getInputTargetBlock(inputList[i].name);
-			handleBlock(attachedBlock);
+			if(attachedBlock){
+				handleBlock(attachedBlock);
+			}
 		} else{
 			handleRow(inputList[i].fieldRow);
 		}
@@ -60,19 +69,65 @@ function handleInputs(inputList , block){
 }
 
 /* This function goes through each row in the block and collects data from them.
- * It stores the data in arrays called keys and values
+ * It stores the data in arrays called nodes and nodeValues
  */
 function handleRow(row){
 	var foundTextArea = false;
 	var nodeValue, nodeName;
 	if(row[ row.length-1 ] instanceof Blockly.FieldTextInput){
 		nodeValue = row[ row.length-1 ].text_;
-		values.push(nodeValue);
+		nodeValues.push(nodeValue);
 		nodeName = row[ row.length-2 ].text_;
-		keys.push(nodeName);
+		nodes.push(nodeName);
 	} else{
 		var elementName = row[ row.length-1 ].text_;
-		keys.push(elementName);
-		values.push("");
+		nodes.push(elementName);
+		nodeValues.push("");
+	}
+}
+
+/* This function parses RNG nodes and creates the corresponding XML for them.
+ * The RNGNode and XMLParent parameters are at the same level in the RNG file and output XML respectively
+ */
+function createXML(RNGNode , XMLParent){
+	var name = RNGNode.getAttribute("name");
+	if(name != null){
+		if(RNGNode.nodeName == "attribute"){
+			var currentName = nodes.shift();
+			var currentValue = nodeValues.shift();
+			XMLParent.setAttribute(currentName , currentValue);
+			return;	//as attribute won't have any children
+		} else if(RNGNode.nodeName == "element"){
+			var currentName = nodes.shift();
+			var currentValue = nodeValues.shift();
+			var ele = XMLDoc.createElement(currentName);
+			if(currentValue != ""){
+				var textNode = XMLDoc.createTextNode(currentValue);
+				ele.appendChild(textNode);
+				XMLParent.appendChild(ele);
+				return;
+			}
+			XMLParent.appendChild(ele);
+			var newParent = XMLDoc.getElementsByTagName(name);
+			newParent = newParent[ newParent.length-1 ];
+			var children = RNGNode.childNodes;
+			for(var i=0;i<children.length;i++){
+				createXML(children[i] , newParent);
+			}
+		} else{
+			alert("Cannot handle "+RNGNode.nodeName+" yet");
+		}
+	} else{
+		if(RNGNode.nodeName == "text"){
+			var currentName = nodes.shift();
+			var currentValue = nodeValues.shift();
+			var textNode = XMLDoc.createTextNode(currentValue);
+			XMLParent.appendChild(textNode);
+			return;
+		}
+		var children = RNGNode.childNodes;
+		for(var i=0;i<children.length;i++){
+			createXML(children[i] , XMLParent);
+		}
 	}
 }
