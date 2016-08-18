@@ -429,10 +429,13 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var properties = getNotchProperties(node, inheritedProperties);
     var blocklyCode = "";
 
-    //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
-    var topListStr      = "["+this.slotNumber+"]";
-    var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
     if(! node.hasAttribute("visited") ) {
+
+            //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
+        var topListStr      = "["+this.slotNumber+"]";
+        var wantBottomNotch = bottomNotchOverride || magicType[nodeType].hasBottomNotch;
+        var bottomListStr   = wantBottomNotch ? topListStr : "[]";
+
         //Rule 1
         //if any magic node has another magic node as its only child, inline the child
         if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
@@ -443,7 +446,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
             this.uni.indent(true);
                 //if current tag has bottom notch, propagate its bottom notch to children
-            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, (bottomListStr != "[]"), properties);
+            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, wantBottomNotch, properties);
             this.uni.unindent();
         }else{
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
@@ -451,11 +454,9 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                 var childrenInfo = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
-                    //var testBlockName  =  path + "_" + node.nodeName.substring(0,3) + "_cse" + i + context_child_idx ;
 
                     if(magicType.hasOwnProperty(currentChild.nodeName)){    // interleave or choice has magic child
-                        var bottomForThisChild = (bottomListStr == "[]") ? false : true;
-                        var bottom = ( bottomForThisChild || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
+                        var childBottomListStr = ( wantBottomNotch || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
                         var currentContext = currentChild.getAttribute("context");
                         var childrenOfCurrentChild = this.substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
 
@@ -464,7 +465,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var childBlockName = this.getNodeDisplayName(childrenOfCurrentChild[j], true);
                                 childrenDisplayNames.push(childBlockName);
-                                this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, bottom);
+                                this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, childBottomListStr);
                                 arrayOfChildren.push(childBlockName);
                             }
                             if(currentChild.nodeName == "interleave"){ //if child does not have a bottom notch, it is interleave
@@ -486,7 +487,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                         }else{        //choice/interleave has a oneOrMore/zeroOrMore/optional child
                             var childBlockName = this.getNodeDisplayName(currentChild, true);
                             childrenDisplayNames.push(childBlockName);
-                            this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, bottom);
+                            this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, childBottomListStr);
                             childrenInfo.push( "startRepetition_" + currentChild.nodeName );
                             childrenInfo.push(childBlockName);
                             childrenInfo.push( "_endRepetition");
@@ -524,7 +525,6 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             }
 
             this.setVisitedAndSlotNumber(node, this.slotNumber);
-
         }
     } else if(magicType[nodeType].hasLoopRisk) {
 			alert("circular ref loop detected because of "+node.nodeName);
@@ -542,6 +542,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 	}
 	return blocklyCode;
 }
+
 
 RNG2Blockly.prototype.pushToQueue = function(blockDisplayName, children, topListStr, bottomListStr) {
     this.blockRequestQueue.push({
