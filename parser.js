@@ -134,25 +134,32 @@ function RNG2Blockly(rngDoc) {
     this.allCode         = [];
     this.hue             = new HueGenerator();
 
-    this.queueIndex_2_blockType         = {};
-    this.blockTypeToDisplayNameMapper   = {};
+    var queueIndex_2_blockType          = {};   // Caution: this.queueIndex_2_blockType did not work in the replacer() callback
+    var blockTypeToDisplayNameMapper    = {};
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
     var blockOrder = Object.keys(codeDict).map( function(a) { return codeDict[a]; } ).sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
-        var dictEntry   = blockOrder[blockOrderIndex];
-
-        var blockDisplayName = dictEntry.blockDisplayName;
-        var blockType       = "block_" + blockOrderIndex;
-        var topText         = dictEntry.topList.length      ? "true, ["+dictEntry.topList.map(      function(x) {return "'"+x+"'";}, this).join()+"]" : "false";
-        var bottomText      = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.map(   function(x) {return "'"+x+"'";}, this).join()+"]" : "false";
+        var dictEntry       = blockOrder[blockOrderIndex];
         var queueIndices    = dictEntry.queueIndices;
+        var blockDisplayName = dictEntry.blockDisplayName;
+        var blockType       = dictEntry.blockType = "block_" + blockOrderIndex;
 
         for (var i=0; i<queueIndices.length; i++){
-            this.queueIndex_2_blockType[ queueIndices[i] ] = blockType;
+            queueIndex_2_blockType[ queueIndices[i] ] = blockType;
         }
-        this.blockTypeToDisplayNameMapper[blockType] = blockDisplayName;
+        blockTypeToDisplayNameMapper[blockType] = dictEntry.blockDisplayName;
+    }
+    console.log(JSON.stringify(blockTypeToDisplayNameMapper));
+
+    for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
+        var dictEntry       = blockOrder[blockOrderIndex];
+
+        var blockDisplayName = dictEntry.blockDisplayName;
+        var blockType       = dictEntry.blockType;
+        var topText         = dictEntry.topList.length      ? "true, ["+dictEntry.topList.map(      function(x) {return "'"+x+"'";}, this).join()+"]" : "false";
+        var bottomText      = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.map(   function(x) {return "'"+x+"'";}, this).join()+"]" : "false";
 
         this.toolboxXML += "<block type='" + blockType + "'></block>";
 
@@ -164,6 +171,10 @@ function RNG2Blockly(rngDoc) {
                     + "this.setColour(" + this.hue.generate() + ");"
                     + "}};";
 
+        blockCode = blockCode.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)/g, function replacer(match, $1) {
+            var tmpName = queueIndex_2_blockType[$1];
+            return blockTypeToDisplayNameMapper[tmpName] || tmpName;
+        } );
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
         this.allCode.push(blockCode);
     }
@@ -186,19 +197,21 @@ RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidate
 
         console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
 
-        for(generatedBlockCode in codeDict) {   // go through already generated blocks
+            var blockReverseOrder = Object.keys(codeDict).map( function(k) { return codeDict[k]; } ).sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
+            for(generatedBlockCode in blockReverseOrder) {   // go through already generated blocks
 
-            if(generatedBlockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?
-                    // detach the matched entry
-                var stashedDictEntry = codeDict[generatedBlockCode];
-                delete codeDict[generatedBlockCode];
+                if(generatedBlockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?
+                        // detach the matched entry
+                    var stashedDictEntry = codeDict[generatedBlockCode];
+                    delete codeDict[generatedBlockCode];
 
-                    // update the code of the matched entry
-                stashedDictEntry.blockCode  = generatedBlockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
+                        // update the code of the matched entry
+                    stashedDictEntry.blockCode  = generatedBlockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
 
-                this.mergeIfPossibleOtherwiseAdd(codeDict, stashedDictEntry);
+                    codeDict[blockCode] = candidateDictEntry;
+                }
             }
-        }
+                //this.mergeIfPossibleOtherwiseAdd(codeDict, stashedDictEntry);
 
         return true;
     } else {
@@ -557,7 +570,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
                     var childBlockName = (children.length == 1)
                                             ? this.getNodeDisplayName(children[0], true)
-                                            : this._nextQueueIndex;
+                                            : "SUBSTITUTE_"+this.queueIndexMacro(this._nextQueueIndex);
 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
@@ -607,7 +620,7 @@ RNG2Blockly.prototype.pushToQueue = function(blockDisplayName, children, topList
 
 
 RNG2Blockly.prototype.getNodeDisplayName = function(node, tryEBN){
-    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN ? this._nextQueueIndex : ("(unnamed " + node.nodeName + ")")) );
+    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN ? "SUBSTITUTE_"+this.queueIndexMacro(this._nextQueueIndex) : ("(unnamed " + node.nodeName + ")")) );
 }
 
 
