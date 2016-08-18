@@ -144,13 +144,16 @@ function RNG2Blockly(rngDoc) {
         var dictEntry       = blockOrder[blockOrderIndex];
         var queueIndices    = dictEntry.queueIndices;
         var blockDisplayName = dictEntry.blockDisplayName;
-        var blockType       = dictEntry.blockType = "block_" + blockOrderIndex;
+        var blockType       = "block_" + blockOrderIndex;
+
+        dictEntry.blockType = blockType;
 
         for (var i=0; i<queueIndices.length; i++){
             queueIndex_2_blockType[ queueIndices[i] ] = blockType;
         }
         blockTypeToDisplayNameMapper[blockType] = dictEntry.blockDisplayName;
     }
+    console.log(JSON.stringify(queueIndex_2_blockType));
     console.log(JSON.stringify(blockTypeToDisplayNameMapper));
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
@@ -172,8 +175,9 @@ function RNG2Blockly(rngDoc) {
                     + "}};";
 
         blockCode = blockCode.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)/g, function replacer(match, $1) {
-            var tmpName = queueIndex_2_blockType[$1];
-            return blockTypeToDisplayNameMapper[tmpName] || tmpName;
+            var blockType   = queueIndex_2_blockType[$1];
+            var displayName = blockTypeToDisplayNameMapper[blockType];
+            return (displayName && !displayName.match(/SUBSTITUTE_QUEUE_INDEX_/)) ? displayName : blockType;
         } );
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
         this.allCode.push(blockCode);
