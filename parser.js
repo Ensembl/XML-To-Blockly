@@ -230,6 +230,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
 
     var nodeType = (node == null) ? "null" : node.nodeName;
     var context = (node == null) ? undefined : node.getAttribute("context");
+    var name = getInternalName(node, path);
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
 
@@ -241,7 +242,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
 
 	else if(nodeType == "text") {
 
-        var name = path + "TXT";
         var displayName = this.getNodeDisplayName(node);
 
         blocklyCode += this.makeBlocklyCode_TextField(displayName, name);
@@ -253,7 +253,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
         var nodeName = node.getAttribute("name");
         var displayName = this.getNodeDisplayName(node);
 
-        var name = path + (nodeType == "element" ? "ELM" : "ATT") + "_" + nodeName;
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
@@ -297,7 +296,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
 	else if(nodeType == "group"){
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-		var name = path + "GRO_";
 
         var displayName = this.getNodeDisplayName(node);
 
@@ -316,7 +314,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
 
         //var context_child_idx = node.getAttribute("context_child_idx");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-        var name = path + "OPT_";
         this.currentlyCreatingOptiField = true;
         this.successfulOptiField = true;
 
@@ -434,7 +431,7 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
     var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-	var name = path + nodeType.substring(0,3).toUpperCase() + ("_");	//the second part gives strings like CHO_, INT_ and so on.
+	var name = getInternalName(node, path);	//the second part gives strings like CHO_, INT_ and so on.
 
     var properties = getNotchProperties(node, inheritedProperties);
     var blocklyCode = "";
@@ -603,6 +600,15 @@ function allChildrenValueTags(node){
 	return allValues;
 }
 
+
+function getInternalName(node, path){
+    var nameAttribute = node.getAttribute("name");
+    var name = path + node.nodeName.substring(0,3).toUpperCase();
+    if(nameAttribute){
+        name = name + "_" + nameAttribute;
+    }
+    return name;
+}
 
 
 function getNotchProperties(node, inheritedProperties){
