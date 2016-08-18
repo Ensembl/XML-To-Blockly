@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+    <start>
+
+         <element name="A">
+               <element name="B">
+                        <text/>
+               </element>
+               <oneOrMore>
+                     <element name="C">
+                          <attribute name="attr_D">
+                                 <data type="integer"/>
+                          </attribute>
+                          <text/>
+                     </element>
+                     <attribute name="attr_E"/>
+                     <zeroOrMore>
+                            <attribute name="attr_F"/>
+                            <element name="person">
+                                  <element name="name">
+                                        <text/>
+                                  </element>
+                                  <element name="age">
+                                          <data type="integer"/>
+                                  </element>
+                            </element>
+                     </zeroOrMore>
+               </oneOrMore>
+         </element>
+
+    </start>
+</grammar>
