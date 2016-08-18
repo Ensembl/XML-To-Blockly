@@ -510,7 +510,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                     }
                 }
                 var slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
-                node.setAttribute("name", slotSignature);
+                node.setAttribute("slotSignature", slotSignature);
                 blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, this.slotNumber, this.slotNumber);
 
                 notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
@@ -527,7 +527,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
-                    node.setAttribute("name", slotSignature);
+                    node.setAttribute("slotSignature", slotSignature);
                     blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, this.slotNumber, this.slotNumber);
                     notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                     console.log(notchProperties[this.slotNumber]);
@@ -543,7 +543,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 
             var assignedSlotNumber = node.getAttribute("slotNumber");
-            var slotSignature = node.getAttribute("name");
+            var slotSignature = node.getAttribute("slotSignature");
             blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, this.slotNumber, assignedSlotNumber);
             //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
             notchProperties[this.slotNumber] = notchProperties[assignedSlotNumber];
