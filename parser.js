@@ -439,15 +439,25 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
         //Rule 1
         //if any magic node has another magic node as its only child, inline the child
         if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
-            blocklyCode = this.makeBlocklyCode_Label(name);
+//
+// *
+// *    FIXME: Leo: I've commented out 3 lines in the following paragraph,
+// *           to avoid showing extra unnamed nodes and extra indentation.
+// *           However there seem to be some examples that do need this code.
+// *           Let's find them and have another look at kitchen_nested_magic.rng example.
+// *
+//
+
+//            blocklyCode = this.makeBlocklyCode_Label(name);
             var childPath = name + '0';
             this.setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
             var child = children[0];
 
-            this.uni.indent(true);
+//            this.uni.indent(true);
                 //if current tag has bottom notch, propagate its bottom notch to children
             blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, wantBottomNotch, properties);
-            this.uni.unindent();
+//            this.uni.unindent();
+
         }else{
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 var childrenDisplayNames = [];

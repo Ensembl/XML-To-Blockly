@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<start>
+    <element name="kitchen">
+        <choice>
+            <element name="spoon">
+                <text/>
+            </element>
+            <element name="fork">
+                <text/>
+            </element>
+        </choice>
+        <optional>
+            <choice>
+                <element name="fork">
+                    <text/>
+                </element>
+                <element name="knife">
+                    <text/>
+                </element>
+                <text/>
+            </choice>
+        </optional>
+    </element>
+</start>
+</grammar>
+
