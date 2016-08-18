@@ -74,16 +74,6 @@ var defaultProperties = {
 
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
-    // a helper to find an element in a list
-Object.prototype.isOneOf = function(list) {
-    for(i=0;i<list.length;i++) {
-        if(this == list[i]) {
-            return true;
-        }
-    }
-    return false;
-};
-
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
