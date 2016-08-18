@@ -121,9 +121,9 @@ function RNG2Blockly(rngDoc) {
         }
 
         if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created this block already, just merge the compatibility lists
-                Array.prototype.push.apply( codeDict[blockCode].topList, topList);
-                Array.prototype.push.apply( codeDict[blockCode].bottomList, bottomList);
-                codeDict[blockCode].queueIndices.push( queueIndex );
+            codeDict[blockCode].topList.union(      topList, true );
+            codeDict[blockCode].bottomList.union(   bottomList, true );
+            codeDict[blockCode].queueIndices.union( [queueIndex], true );
         } else {    // otherwise create a new block
 
             codeDict[blockCode] = {

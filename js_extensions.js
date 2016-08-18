@@ -34,3 +34,22 @@ Object.prototype.isOneOf = function(list) {
     return false;
 };
 
+
+/**
+ * Add missing elements of the second list into the first list.
+ *
+ * You have control of whether the merger happens in place, or you get a new list returned (via the second boolean parameter).
+ */
+Array.prototype.union = function(newComers, inPlace) {
+
+    var list = inPlace ? this : [].concat(this);
+
+    for(var i=0;i<newComers.length;i++) {
+        if(list.indexOf(newComers[i])<0) {
+            list.push(newComers[i]);
+        }
+    }
+
+    return list;
+}
+
