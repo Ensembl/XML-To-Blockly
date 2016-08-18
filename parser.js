@@ -161,8 +161,8 @@ function RNG2Blockly(rngDoc) {
 
         var blockDisplayName = dictEntry.blockDisplayName;
         var blockType       = "block_" + blockOrderIndex;
-        var topText         = dictEntry.topList.length      ? "true, ["+dictEntry.topList.join()+"]"    : "false";
-        var bottomText      = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.join()+"]" : "false";
+        var topText         = dictEntry.topList.length      ? "true, ["+dictEntry.topList.map(      function(x) {return "'"+x+"'";}, this).join()+"]" : "false";
+        var bottomText      = dictEntry.bottomList.length   ? "true, ["+dictEntry.bottomList.map(   function(x) {return "'"+x+"'";}, this).join()+"]" : "false";
         var queueIndices    = dictEntry.queueIndices;
 
         for (var i=0; i<queueIndices.length; i++){
