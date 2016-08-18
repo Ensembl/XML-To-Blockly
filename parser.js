@@ -350,7 +350,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
             }
 
         } else{
-            blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, {});
+            blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {});
         }
 
         this.currentlyCreatingOptiField = false;
@@ -362,7 +362,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
             this.successfulOptiField = false;
             return null;
         }
-        blocklyCode = this.handleMagicBlock(node, haveAlreadySeenStr, path, false, {});
+        blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {});
 	}
 
     else {
@@ -428,8 +428,8 @@ RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(label, internalN
 
 
 
-//creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path, bottomNotchOverride, inheritedProperties){
+    //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
+RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, bottomNotchOverride, inheritedProperties){
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
@@ -439,7 +439,7 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
     var properties = getNotchProperties(node, inheritedProperties);
     var blocklyCode = "";
 
-    //each block created here will have a topnotch. It may or may not have a bottom notch depending on nodeType
+    //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
     var topListStr      = "["+this.slotNumber+"]";
     var bottomListStr   = (bottomNotchOverride || magicType[nodeType].hasBottomNotch) ? topListStr : "[]";
     if(! node.hasAttribute("visited") ) {
@@ -451,15 +451,9 @@ RNG2Blockly.prototype.handleMagicBlock = function(node, haveAlreadySeenStr, path
             this.setVisitedAndSlotNumber(node);  //set only visited. Not slotNumber (done to prevent infinite loop)
             var child = children[0];
 
-            if(bottomListStr != "[]"){
-                //if current tag has bottom notch, propagate its bottom notch to children
-                bottomNotchOverride = true;
-            }else{
-                bottomNotchOverride = false;
-            }
-
             this.uni.indent(true);
-            blocklyCode += this.handleMagicBlock(child, haveAlreadySeenStr, childPath, bottomNotchOverride, properties);
+                //if current tag has bottom notch, propagate its bottom notch to children
+            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, (bottomListStr != "[]"), properties);
             this.uni.unindent();
         }else{
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
