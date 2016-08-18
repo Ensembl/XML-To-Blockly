@@ -53,3 +53,16 @@ Array.prototype.union = function(newComers, inPlace) {
     return list;
 }
 
+
+/**
+ * String comparison function useful in sort()
+ *
+ */
+function string_cmp(a, b) {
+    return (a < b)
+            ? -1
+            : (a > b)
+                ? 1
+                : 0;
+}
+

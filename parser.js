@@ -138,7 +138,7 @@ function RNG2Blockly(rngDoc) {
     this.blockTypeToDisplayNameMapper   = {};
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
-    var blockOrder = Object.keys(codeDict).map( function(a) { return codeDict[a]; } ).sort( function(a,b) { return a.queueIndices[0]-b.queueIndices[0]; } );
+    var blockOrder = Object.keys(codeDict).map( function(a) { return codeDict[a]; } ).sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry   = blockOrder[blockOrderIndex];
