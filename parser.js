@@ -99,7 +99,6 @@ function RNG2Blockly(rngDoc) {
 
     var codeDict            = {};   // maps block names to the code (to be reviewed)
     this.blockRequestQueue  = [];   // a queue that holds requests to create new blocks
-    var blockOrder          = [];   // the block descriptions, ordered by their position in the queue
 
     this._nextQueueIndex = 0;
     this.pushToQueue("start", this.substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
@@ -144,7 +143,6 @@ function RNG2Blockly(rngDoc) {
                 "bottomList"        : bottomList,
                 "queueIndices"      : [ queueIndex ]        // at least one value, but more may be added in case of synonyms
             };
-            blockOrder.push( codeDict[blockCode] );   // this is a reference to the same object, so that further modifications of topList and bottomList are seen
         }
     }
 
@@ -154,6 +152,9 @@ function RNG2Blockly(rngDoc) {
 
     this.queueIndex_2_blockType         = {};
     this.blockTypeToDisplayNameMapper   = {};
+
+        // blockOrder contains entries of codeDict sorted by the youngest queueIndex
+    var blockOrder = Object.keys(codeDict).map( function(a) { return codeDict[a]; } ).sort( function(a,b) { return a.queueIndices[0]-b.queueIndices[1]; } );
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry   = blockOrder[blockOrderIndex];
