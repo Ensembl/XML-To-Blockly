@@ -100,8 +100,6 @@ function RNG2Blockly(rngDoc) {
 
         var children            = blockRequest.children;
         var blockDisplayName    = blockRequest.blockDisplayName;
-        var topList             = blockRequest.topList;
-        var bottomList          = blockRequest.bottomList;
         this.currentQueueIndex  = blockRequest.queueIndex;
         var blockCode           = "";   // Contains data sent by all the children merged together one after the other.
 
@@ -121,20 +119,15 @@ function RNG2Blockly(rngDoc) {
             blockCode += " ";
         }
 
-        if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created this block already, just merge the compatibility lists
-            codeDict[blockCode].topList.union(      topList, true );
-            codeDict[blockCode].bottomList.union(   bottomList, true );
-            codeDict[blockCode].queueIndices.union( [this.currentqueueIndex], true );
-        } else {    // otherwise create a new block
+        var candidateDictEntry = {
+            "blockDisplayName"  : blockDisplayName,             // it is only a "suggested display name", we use numbers internally
+            "blockCode"         : blockCode,
+            "topList"           : blockRequest.topList,
+            "bottomList"        : blockRequest.bottomList,
+            "queueIndices"      : [ this.currentQueueIndex ]    // at least one value, but more may be added in case of synonyms
+        };
 
-            codeDict[blockCode] = {
-                "blockDisplayName"  : blockDisplayName,     // it is only a "suggested display name", we use numbers internally
-                "blockCode"         : blockCode,
-                "topList"           : topList,
-                "bottomList"        : bottomList,
-                "queueIndices"      : [ this.currentQueueIndex ]        // at least one value, but more may be added in case of synonyms
-            };
-        }
+        this.mergeIfPossibleOtherwiseAdd(codeDict, candidateDictEntry);
     }
 
     this.toolboxXML      = "";
@@ -145,7 +138,7 @@ function RNG2Blockly(rngDoc) {
     this.blockTypeToDisplayNameMapper   = {};
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
-    var blockOrder = Object.keys(codeDict).map( function(a) { return codeDict[a]; } ).sort( function(a,b) { return a.queueIndices[1]-b.queueIndices[0]; } );
+    var blockOrder = Object.keys(codeDict).map( function(a) { return codeDict[a]; } ).sort( function(a,b) { return a.queueIndices[0]-b.queueIndices[0]; } );
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry   = blockOrder[blockOrderIndex];
@@ -175,6 +168,46 @@ function RNG2Blockly(rngDoc) {
         this.allCode.push(blockCode);
     }
 }
+
+
+    // attempt to merge the candidate
+RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidateDictEntry) {
+    var candidateQueueIndex         = candidateDictEntry.queueIndices[0];   // only the youngest (CHECKME: is this right?)
+    var candidateQueueIndexMacro    = this.queueIndexMacro( candidateQueueIndex );
+    var blockCode                   = candidateDictEntry.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), 'SELF_REFERENCE');
+
+    if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created such a block already, just merge the compatibility lists
+        codeDict[blockCode].topList.union(      candidateDictEntry.topList, true );
+        codeDict[blockCode].bottomList.union(   candidateDictEntry.bottomList, true );
+        codeDict[blockCode].queueIndices.union( [candidateQueueIndex], true );
+
+        var foundQueueIndex         = codeDict[blockCode].queueIndices[0];
+        var foundQueueIndexMacro    = this.queueIndexMacro( foundQueueIndex );
+
+        console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
+
+        for(generatedBlockCode in codeDict) {   // go through already generated blocks
+
+            if(generatedBlockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?
+                    // detach the matched entry
+                var stashedDictEntry = codeDict[generatedBlockCode];
+                delete codeDict[generatedBlockCode];
+
+                    // update the code of the matched entry
+                stashedDictEntry.blockCode  = generatedBlockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
+
+                this.mergeIfPossibleOtherwiseAdd(codeDict, stashedDictEntry);
+            }
+        }
+
+        return true;
+    } else {
+        codeDict[blockCode] = candidateDictEntry;
+
+        return false;
+    }
+}
+
 
 
 RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenStr, substContext) {
