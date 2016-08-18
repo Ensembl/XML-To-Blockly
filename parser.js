@@ -422,8 +422,8 @@ RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, 
     return code + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);";  //hidden field to detect end of optiField
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(label, internalName, slotName) {
-    return "this.appendStatementInput('" + internalName + "').setCheck([" + slotName + "]).appendField('" + this.uni.getIndentation() + "').appendField('" + label + "');";
+RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(slotSignature, internalSlotName, slotRuleToMatchWithIncomingNotch) {
+    return "this.appendStatementInput('" + internalSlotName + "').setCheck(['" + slotRuleToMatchWithIncomingNotch + "']).appendField('" + this.uni.getIndentation() + "').appendField('" + slotSignature + "');";
 };
 
 
@@ -509,9 +509,9 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                         childrenInfo.push(childBlockName);
                     }
                 }
-                childrenDisplayNames = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
-                node.setAttribute("name", childrenDisplayNames);
-                blocklyCode = this.makeBlocklyCode_StatementInput(childrenDisplayNames, this.slotNumber, this.slotNumber);
+                var slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
+                node.setAttribute("name", slotSignature);
+                blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, this.slotNumber, this.slotNumber);
 
                 notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                 if(childrenInfo.length > 0) {   // add childrenInfo if it is available
@@ -519,15 +519,16 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                 }
 
                 console.log(notchProperties[this.slotNumber]);
-			} else{      //current node is oneOrMore, zeroOrMore, optional
+			} else {      //current node is oneOrMore, zeroOrMore, optional
 
                     var childBlockName = (children.length == 1)
                                             ? this.getNodeDisplayName(children[0], true)
                                             : this._nextQueueIndex;
 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
-                    node.setAttribute("name", childBlockName);
-                    blocklyCode = this.makeBlocklyCode_StatementInput(childBlockName + magicType[node.nodeName].prettyIndicator, this.slotNumber, this.slotNumber);
+                    var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
+                    node.setAttribute("name", slotSignature);
+                    blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, this.slotNumber, this.slotNumber);
                     notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                     console.log(notchProperties[this.slotNumber]);
             }
@@ -542,8 +543,8 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 
             var assignedSlotNumber = node.getAttribute("slotNumber");
-            var prettyName = node.getAttribute("name");
-            blocklyCode = this.makeBlocklyCode_StatementInput(prettyName + magicType[node.nodeName].prettyIndicator, this.slotNumber, assignedSlotNumber);
+            var slotSignature = node.getAttribute("name");
+            blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, this.slotNumber, assignedSlotNumber);
             //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
             notchProperties[this.slotNumber] = notchProperties[assignedSlotNumber];
             console.log(notchProperties[this.slotNumber]);
