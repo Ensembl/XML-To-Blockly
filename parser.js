@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 
-var notchProperties = {};
 var cleanRNG;
 
 var magicType = {
@@ -48,33 +47,12 @@ var magicType = {
                     }
 };
 
-var defaultProperties = {
-    'optional'  :   {
-                        'canBeEmpty'        :   true,
-                        'shouldHaveOneBlock':   true
-                    },
-    'choice'    :   {
-                        'canBeEmpty'        :   false,
-                        'shouldHaveOneBlock':   true
-                    },
-    'interleave':   {
-                        'canBeEmpty'        :   false,
-                        'isGrouped'         :   true
-                    },
-    'zeroOrMore':   {
-                        'canBeEmpty'        :   true,
-                        'isRepeatable'      :   true
-                    },
-    'oneOrMore' :   {
-                        'canBeEmpty'        :   false,
-                        'isRepeatable'      :   true
-                    }
-};
-
 
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
 var blockStructureDict;
+var validationDict;
+var blockTypeToDisplayNameMapper;
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
@@ -104,6 +82,7 @@ function RNG2Blockly(rngDoc) {
         var blockCode           = "";   // Contains data sent by all the children merged together one after the other.
 
         this.localSlotNumber    = 1;    // base_1 is more convenient for eyeballing
+        this.blockValidationDict = {}
 
         this.uni.reset();
 
@@ -127,7 +106,8 @@ function RNG2Blockly(rngDoc) {
             "topList"           : blockRequest.topList,
             "bottomList"        : blockRequest.bottomList,
             "queueIndices"      : [ this.currentQueueIndex ],    // at least one value, but more may be added in case of synonyms
-            "blockStructure"    : xmlStructureForBlock
+            "blockStructure"    : xmlStructureForBlock,
+            "blockValidationDict"   : this.blockValidationDict
         };
 
         codeDict.mergeIfPossibleOtherwiseAdd(candidateDictEntry);
@@ -138,12 +118,13 @@ function RNG2Blockly(rngDoc) {
     this.hue             = new HueGenerator();
 
     var queueIndex_2_blockType          = {};   // Caution: this.queueIndex_2_blockType did not work in the replacer() callback
-    var blockTypeToDisplayNameMapper    = {};
+    blockTypeToDisplayNameMapper    = {};
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
     var blockOrder = codeDict.getAllEntries().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
 
     blockStructureDict = {};
+    validationDict = {};
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -159,10 +140,12 @@ function RNG2Blockly(rngDoc) {
         }
         blockTypeToDisplayNameMapper[blockType] = dictEntry.blockDisplayName;
         blockStructureDict[blockType]           = blockStructure;
+        validationDict[blockType]               = dictEntry.blockValidationDict;
     }
     console.log(JSON.stringify(queueIndex_2_blockType));
     console.log(JSON.stringify(blockTypeToDisplayNameMapper));
     console.log(blockStructureDict);
+    console.log(validationDict);
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -476,7 +459,9 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
         } else{
             nodeDetails.tagName = "slot";
-            blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {}, nodeDetails);
+            var validationDetails = [];
+            blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, validationDetails, nodeDetails);
+            this.blockValidationDict[nodeDetails.internalName] = validationDetails[0];
         }
 
         this.currentlyCreatingOptiField = false;
@@ -489,7 +474,9 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             return null;
         }
         nodeDetails.tagName = "slot";
-        blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {}, nodeDetails);
+        var validationDetails = [];
+        blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, validationDetails, nodeDetails);
+        this.blockValidationDict[nodeDetails.internalName] = validationDetails[0];
 	}
 
     else {
@@ -561,15 +548,16 @@ RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(slotSignature, s
 
 
     //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, bottomNotchOverride, inheritedProperties, nodeDetails){
+RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, bottomNotchOverride, validationDetails, nodeDetails){
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
     var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 	var name = getInternalName(node, path);	//the second part gives strings like CHO_, INT_ and so on.
 
-    var properties = getNotchProperties(node, inheritedProperties);
     var blocklyCode = "";
+
+    var validationConstraint = [];
 
     if(! node.hasAttribute("visited") ) {
 
@@ -598,13 +586,12 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
 //            this.uni.indent(true);
                 //if current tag has bottom notch, propagate its bottom notch to children
-            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, wantBottomNotch, properties, nodeDetails);
+            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, wantBottomNotch, validationConstraint, nodeDetails);
 //            this.uni.unindent();
 
         }else{
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 var childrenDisplayNames = [];
-                var childrenInfo = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
 
@@ -619,49 +606,27 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                                 var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
                                 this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, childBottomListStr);
+                                validationConstraint.push( [ "block", childBlockName ] );
                                 arrayOfChildren.push(childBlockName);
-                            }
-                            if(currentChild.nodeName == "interleave"){ //if child does not have a bottom notch, it is interleave
-                                childrenInfo.push(arrayOfChildren);
-                            } else {             //if child is choice
-                                if(node.nodeName == "choice"){
-                                    for(var x=0;x<arrayOfChildren.length;x++){
-                                        childrenInfo.push(arrayOfChildren[x]);
-                                    }
-                                } else {
-                                    childrenInfo.push("startChoice_");
-                                    for(var x=0;x<arrayOfChildren.length;x++){
-                                        childrenInfo.push(arrayOfChildren[x]);
-                                    }
-                                    childrenInfo.push("_endChoice");
-                                }
                             }
 
                         } else {        //choice/interleave has a oneOrMore/zeroOrMore/optional child
                             var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
                             childrenDisplayNames.push(childBlockName);
                             this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, childBottomListStr);
-                            childrenInfo.push( "startRepetition_" + currentChild.nodeName );
-                            childrenInfo.push(childBlockName);
-                            childrenInfo.push( "_endRepetition");
+                            validationConstraint.push( [ "block", childBlockName ] );
                         }
                     } else {           //child of choice/interleave is a normal one
                         var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
                         childrenDisplayNames.push(childBlockName);
                         this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
-                        childrenInfo.push(childBlockName);
+                        validationConstraint.push( [ "block", childBlockName ] );
                     }
                 }
                 var slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 node.setAttribute("slotSignature", slotSignature);
                 blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
 
-                notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
-                if(childrenInfo.length > 0) {   // add childrenInfo if it is available
-                    notchProperties[this.slotNumber].childrenInfo = JSON.parse(JSON.stringify(childrenInfo));
-                }
-
-                console.log(notchProperties[this.slotNumber]);
 			} else {      //current node is oneOrMore, zeroOrMore, optional
 
                     var childBlockName = (children.length == 1)
@@ -671,9 +636,8 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
                     node.setAttribute("slotSignature", slotSignature);
+                    validationConstraint.push( [ "block", childBlockName ] );
                     blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
-                    notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
-                    console.log(notchProperties[this.slotNumber]);
             }
 
             node.setAttribute("visited", "true");
@@ -688,10 +652,9 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
             blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
-            //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
-            notchProperties[this.slotNumber] = notchProperties[stagedSlotNumber];
-            console.log(notchProperties[this.slotNumber]);
 	}
+
+    validationDetails.push( [ nodeType, validationConstraint ] );
 	return blocklyCode;
 }
 
@@ -761,30 +724,6 @@ function getInternalName(node, path){
         name = name + "_" + nameAttribute;
     }
     return name;
-}
-
-
-function getNotchProperties(node, inheritedProperties){
-    var properties = JSON.parse(JSON.stringify(defaultProperties[node.nodeName]));;
-    var inheritedPropertiesLength = Object.keys(inheritedProperties).length;
-    var keys = ['isRepeatable' , 'shouldHaveOneBlock' , 'isGrouped'];
-    if(inheritedPropertiesLength > 0){
-        for(var i=0;i<1;i++){
-            if(inheritedProperties[keys[i]] != undefined){
-                properties[keys[i]] = inheritedProperties[keys[i]];
-            }
-        }
-        properties['canBeEmpty'] = properties['canBeEmpty'] || inheritedProperties['canBeEmpty'];
-
-        //if choice has ONLY interleave, it becomes an interleave. if interleave has ONLY choice, it becomes choice (works for optional as well. this property was added later for optional)
-        if(inheritedProperties['shouldHaveOneBlock'] && properties['isGrouped']){
-            properties['isGrouped'] = true;
-        } else if(properties['shouldHaveOneBlock'] && inheritedProperties['isGrouped']){
-            properties['shouldHaveOneBlock'] = true;
-        }
-    }
-
-    return properties;
 }
 
 
