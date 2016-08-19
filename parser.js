@@ -190,7 +190,7 @@ function RNG2Blockly(rngDoc) {
     // attempt to merge the candidate
 RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidateDictEntry) {
     var candidateQueueIndex         = candidateDictEntry.queueIndices[0];   // only the youngest (CHECKME: is this right?)
-    var candidateQueueIndexMacro    = this.queueIndexMacro( candidateQueueIndex );
+    var candidateQueueIndexMacro    = makeQueueIndexMacro( candidateQueueIndex );
     var blockCode                   = candidateDictEntry.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), 'SELF_REFERENCE');
 
     if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created such a block already, just merge the compatibility lists
@@ -199,7 +199,7 @@ RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidate
         codeDict[blockCode].queueIndices.union( [candidateQueueIndex], true );
 
         var foundQueueIndex         = codeDict[blockCode].queueIndices[0];
-        var foundQueueIndexMacro    = this.queueIndexMacro( foundQueueIndex );
+        var foundQueueIndexMacro    = makeQueueIndexMacro( foundQueueIndex );
 
         console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
 
@@ -497,7 +497,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     if(! node.hasAttribute("visited") ) {
 
             //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
-        var stagedSlotNumber= this.queueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
+        var stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
         var topListStr      = '["'+stagedSlotNumber+'"]';
         var wantBottomNotch = bottomNotchOverride || magicType[nodeType].hasBottomNotch;
         var bottomListStr   = wantBottomNotch ? topListStr : "[]";
@@ -589,7 +589,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
                     var childBlockName = (children.length == 1)
                                             ? this.getNodeDisplayNameOrQueueIndexMacro(children[0])
-                                            : "SUBSTITUTE_"+this.queueIndexMacro(this._nextQueueIndex);
+                                            : makeSubstituteMacro(this._nextQueueIndex);
 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
@@ -621,8 +621,12 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 }
 
 
-RNG2Blockly.prototype.queueIndexMacro = function(qi) {
+function makeQueueIndexMacro(qi) {
     return "QUEUE_INDEX_"+qi+"_";
+}
+
+function makeSubstituteMacro(qi) {
+    return "SUBSTITUTE_" + makeQueueIndexMacro(qi);
 }
 
 
@@ -643,7 +647,7 @@ RNG2Blockly.prototype.getNodeDisplayName = function(node) {
 };
 
 RNG2Blockly.prototype.getNodeDisplayNameOrQueueIndexMacro = function(node) {
-    return ( this.getNodeDisplayName(node) || "SUBSTITUTE_"+this.queueIndexMacro(this._nextQueueIndex) );
+    return ( this.getNodeDisplayName(node) || makeSubstituteMacro(this._nextQueueIndex) );
 };
 
 RNG2Blockly.prototype.getNodeDisplayNameOrDefaultLabel = function(node) {
