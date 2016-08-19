@@ -110,9 +110,11 @@ function RNG2Blockly(rngDoc) {
         this.successfulOptiField            = false;    //true or false depending on whether optiField can be created or not
         this.currentlyCreatingOptiField     = false;
 
+        var xmlStructureForBlock = [];
         for(var i=0;i<children.length;i++){
-            blockCode += this.goDeeper(children[i], "{}", i);
+            blockCode += this.goDeeper(children[i], "{}", i, xmlStructureForBlock);
         }
+        console.log(xmlStructureForBlock);
 
             // We want to always have a start block and here we force its blockCode to be unique
         if( blockDisplayName == "start" ) {
@@ -265,7 +267,7 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
 }
 
 
-RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
+RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, currentPathStructure) {
     if(this.currentlyCreatingOptiField == true && this.successfulOptiField == false){
         return null;
     }
@@ -273,6 +275,11 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
     var nodeType = (node == null) ? "null" : node.nodeName;
     var context = (node == null) ? undefined : node.getAttribute("context");
     var name = getInternalName(node, path);
+
+    var nodeDetails = { 'tagName' : nodeType , 'internalName' : name , 'displayName' : this.getNodeDisplayName(node) };
+    if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
+        currentPathStructure.push(nodeDetails);
+    }
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
 
@@ -328,9 +335,12 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
             var values = allChildrenValueTags(children[0]);     //returns array of all values if all children are value tags, otherwise returns false
             blocklyCode = this.makeBlocklyCode_DropDown(displayName, name, values);
 
-        } else {
-
-            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name);
+        } else {    //we expect to reach here only if the node is an 'element' node
+            var childrenStructureInfo = [];
+            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name, childrenStructureInfo);
+            if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
+                currentPathStructure.push(childrenStructureInfo);
+            }
         }
     }
 
@@ -411,11 +421,11 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
     return blocklyCode + "\n";
 }
 
-RNG2Blockly.prototype.goDeeper_makeTreeWithKids = function(headerName, children, haveAlreadySeenStr, path) {
+RNG2Blockly.prototype.goDeeper_makeTreeWithKids = function(headerName, children, haveAlreadySeenStr, path, currentPathStructure) {
     var blocklyCode = this.makeBlocklyCode_Label(headerName);
     for(var i=0;i<children.length;i++){
         this.uni.indent( i == children.length-1 );
-        blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, path + "_" + i);
+        blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, path + "_" + i, currentPathStructure);
         this.uni.unindent();
     }
     return blocklyCode;
