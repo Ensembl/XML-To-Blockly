@@ -275,11 +275,11 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     var nodeType = (node == null) ? "null" : node.nodeName;
     var context = (node == null) ? undefined : node.getAttribute("context");
     var name = getInternalName(node, path);
-
-    var nodeDetails = { 'tagName' : nodeType , 'internalName' : name , 'displayName' : this.getNodeDisplayName(node) };
-    if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
+    //internalName and displayName are added later
+    var nodeDetails = new NodeDetails(nodeType);
+    /*if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
         currentPathStructure.push(nodeDetails);
-    }
+    }*/
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
 
@@ -290,6 +290,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     }
 
 	else if(nodeType == "text") {
+        nodeDetails.internalName = name;
 
         var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
 
@@ -300,6 +301,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     else if ((nodeType == "element") || (nodeType == "attribute")) {
 
         var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
+        nodeDetails.displayName = displayName;
 
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
@@ -315,6 +317,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         } else if ((children.length == 1) && (children[0].nodeName == "text")) {
 
             blocklyCode = this.makeBlocklyCode_TextField(displayName, name);
+            nodeDetails.appendContentAtChildLevel("text" , name);
 
         } else if ((children.length == 1) && (children[0].nodeName == "data")) {
 
@@ -327,18 +330,20 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             }
 
             blocklyCode = this.makeBlocklyCode_TextField(displayName, name, typeChecker);
+            nodeDetails.appendContentAtChildLevel( "text" , name );
 
         // FIXME: We shouldn't be calling allChildrenValueTags() twice
         } else if ((children.length == 1) && (children[0].nodeName == "choice") && allChildrenValueTags(children[0])) {
 
             var values = allChildrenValueTags(children[0]);     //returns array of all values if all children are value tags, otherwise returns false
             blocklyCode = this.makeBlocklyCode_DropDown(displayName, name, values);
+            nodeDetails.appendContentAtChildLevel( "dropdown" , name );
 
         } else {    //we expect to reach here only if the node is an 'element' node
             var childrenStructureInfo = [];
             blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name, childrenStructureInfo);
             if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
-                currentPathStructure.push(childrenStructureInfo);
+                nodeDetails.content = childrenStructureInfo;
             }
         }
     }
@@ -417,6 +422,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         blocklyCode = this.makeBlocklyCode_Label("unhandled '" + nodeType + "' tag");
     }
 
+    currentPathStructure.push(nodeDetails);
     return blocklyCode + "\n";
 }
 
@@ -751,3 +757,15 @@ function findOneNodeByTagAndName(doc, tag, name) {
         alert("There are no '" + tag + "' nodes with the name '" + name + "'");
     }
 }
+
+
+function NodeDetails(tagName){
+    this.tagName = tagName;
+}
+
+
+NodeDetails.prototype.appendContentAtChildLevel = function(tagName, internalName) {
+    var nodeContent = { 'tagName' : tagName , 'internalName' : internalName };
+    this.content = nodeContent;
+    return;
+};
