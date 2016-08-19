@@ -140,7 +140,7 @@ function RNG2Blockly(rngDoc) {
     var blockTypeToDisplayNameMapper    = {};
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
-    var blockOrder = Object.keys(codeDict).map( function(a) { return codeDict[a]; } ).sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
+    var blockOrder = codeDict.getAllValues().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -204,7 +204,7 @@ RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidate
 
         console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
 
-            var blockReverseOrder = Object.keys(codeDict).map( function(k) { return codeDict[k]; } ).sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
+            var blockReverseOrder = codeDict.getAllValues().sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
             for(generatedBlockCode in blockReverseOrder) {   // go through already generated blocks
 
                 if(generatedBlockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?

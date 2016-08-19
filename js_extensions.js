@@ -36,6 +36,17 @@ Object.prototype.isOneOf = function(list) {
 
 
 /**
+ * A helper method to get all the values of a hash
+ *
+ * Note 1: it may pollute the namespace of Object class (not for-in safe!)
+ */
+    // a helper to find an element in a list
+Object.prototype.getAllValues = function() {
+    return Object.keys(this).map( function(a) { return this[a]; }, this );
+};
+
+
+/**
  * Add missing elements of the second list into the first list.
  *
  * You have control of whether the merger happens in place, or you get a new list returned (via the second boolean parameter).
