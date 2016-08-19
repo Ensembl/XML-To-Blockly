@@ -176,7 +176,7 @@ function RNG2Blockly(rngDoc) {
                     + "this.setColour(" + this.hue.generate() + ");"
                     + "}};";
 
-        blockCode = blockCode.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)/g, function replacer(match, $1) {
+        blockCode = blockCode.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
             var blockType   = queueIndex_2_blockType[$1];
             var displayName = blockTypeToDisplayNameMapper[blockType];
             return (displayName && !displayName.match(/SUBSTITUTE_QUEUE_INDEX_/)) ? displayName : blockType;
@@ -622,7 +622,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
 
 RNG2Blockly.prototype.queueIndexMacro = function(qi) {
-    return "QUEUE_INDEX_"+qi;
+    return "QUEUE_INDEX_"+qi+"_";
 }
 
 
