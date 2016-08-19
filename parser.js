@@ -87,7 +87,7 @@ function RNG2Blockly(rngDoc) {
     removeXMLComments(rootElement);
     cleanRNG = rootElement;
 
-    var codeDict            = {};   // maps block names to the code (to be reviewed)
+    var codeDict            = new CodeDict(this);   // Structure to store non-redundant pieces of Bockly code
     this.blockRequestQueue  = [];   // a queue that holds requests to create new blocks
 
     this._nextQueueIndex = 0;
@@ -129,7 +129,7 @@ function RNG2Blockly(rngDoc) {
             "queueIndices"      : [ this.currentQueueIndex ]    // at least one value, but more may be added in case of synonyms
         };
 
-        this.mergeIfPossibleOtherwiseAdd(codeDict, candidateDictEntry);
+        codeDict.mergeIfPossibleOtherwiseAdd(candidateDictEntry);
     }
 
     this.toolboxXML      = "";
@@ -140,7 +140,7 @@ function RNG2Blockly(rngDoc) {
     var blockTypeToDisplayNameMapper    = {};
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
-    var blockOrder = codeDict.getAllValues().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
+    var blockOrder = codeDict.getAllEntries().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -187,14 +187,68 @@ function RNG2Blockly(rngDoc) {
 }
 
 
+/*
+ * CodeDict is a dictionary that indexes code entries directly but also
+ * after replacing their own queue-index macro with "SELF_REFERENCE".
+ *
+ * All the usual methods of a dictionary have been reimplemented to take
+ * both keys into account
+ */
+
+
+function CodeDict() {
+    this._codeDict = {};
+    this._codeWithSelfReferencesDict = {};
+}
+
+// Helper method that does the SELF_REFERENCE substitution
+CodeDict.prototype._codeWithSelfReferences = function(dictEntry) {
+    var queueIndex         = dictEntry.queueIndices[0];   // only the youngest (CHECKME: is this right?)
+    var queueIndexMacro    = makeQueueIndexMacro( queueIndex );
+    var blockCode          = dictEntry.blockCode.replace(new RegExp(queueIndexMacro, "g"), 'SELF_REFERENCE');
+
+    return blockCode;
+}
+
+CodeDict.prototype.addEntry = function(dictEntry) {
+    var blockCodeWithSelfReferences = this._codeWithSelfReferences(dictEntry);
+
+    this._codeWithSelfReferencesDict[blockCodeWithSelfReferences] = dictEntry;
+    this._codeDict[dictEntry.blockCode] = dictEntry;
+}
+
+CodeDict.prototype.deleteEntry = function(dictEntry) {
+    var blockCodeWithSelfReferences = this._codeWithSelfReferences(dictEntry);
+
+    delete this._codeDict[dictEntry.blockCode];
+    delete this._codeWithSelfReferencesDict[blockCodeWithSelfReferences];
+}
+
+CodeDict.prototype.containsEntry = function(dictEntry) {
+    var blockCodeWithSelfReferences = this._codeWithSelfReferences(dictEntry);
+
+    return this._codeDict.hasOwnProperty(dictEntry.blockCode) || this._codeWithSelfReferencesDict.hasOwnProperty(blockCodeWithSelfReferences);
+}
+
+CodeDict.prototype.getEntry = function(dictEntry) {
+    var blockCodeWithSelfReferences = this._codeWithSelfReferences(dictEntry);
+
+    return this._codeDict[dictEntry.blockCode] || this._codeWithSelfReferencesDict[blockCodeWithSelfReferences];
+}
+
+CodeDict.prototype.getAllEntries = function() {
+    return this._codeDict.getAllValues();
+}
+
     // attempt to merge the candidate
-RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidateDictEntry) {
+CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
+
     var candidateQueueIndex         = candidateDictEntry.queueIndices[0];   // only the youngest (CHECKME: is this right?)
     var candidateQueueIndexMacro    = makeQueueIndexMacro( candidateQueueIndex );
     var blockCode                   = candidateDictEntry.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), 'SELF_REFERENCE');
 
-    if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created such a block already, just merge the compatibility lists
-        var foundEntry              = codeDict[blockCode];
+    if (this.containsEntry(candidateDictEntry)) {   // if we have created such a block already, just merge the compatibility lists
+        var foundEntry              = this.getEntry(candidateDictEntry);
         var foundQueueIndex         = foundEntry.queueIndices[0];
         var foundQueueIndexMacro    = makeQueueIndexMacro( foundQueueIndex );
 
@@ -204,25 +258,25 @@ RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidate
 
         console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
 
-            var blockReverseOrder = codeDict.getAllValues().sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
+            var blockReverseOrder = this.getAllEntries().sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
             for(generatedBlockCode in blockReverseOrder) {   // go through already generated blocks
 
                 if(generatedBlockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?
                         // detach the matched entry
-                    var stashedDictEntry = codeDict[generatedBlockCode];
-                    delete codeDict[generatedBlockCode];
+                    var stashedDictEntry = this.getEntry(generatedBlockCode);
+                    this.deleteEntry(generatedBlockCode);
 
                         // update the code of the matched entry
                     stashedDictEntry.blockCode  = generatedBlockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
 
-                    codeDict[blockCode] = candidateDictEntry;
+                    this.addEntry(stashedDictEntry);
+                    //this.mergeIfPossibleOtherwiseAdd(stashedDictEntry);
                 }
             }
-                //this.mergeIfPossibleOtherwiseAdd(codeDict, stashedDictEntry);
 
         return true;
     } else {
-        codeDict[blockCode] = candidateDictEntry;
+        this.addEntry(candidateDictEntry);
 
         return false;
     }
