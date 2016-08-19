@@ -292,7 +292,6 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path) {
 
     else if ((nodeType == "element") || (nodeType == "attribute")) {
 
-        var nodeName = node.getAttribute("name");
         var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
 
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
