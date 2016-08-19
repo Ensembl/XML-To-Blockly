@@ -17,7 +17,7 @@ The project submitted to Google is not specific to eHive and the proposed editor
 
 # How to use
 
-1. Open https://anujk14.github.io/XML-To-Blockly/ in your web browser.
+1. Open https://ensembl.github.io/XML-To-Blockly/ in your web browser.
 2. Click on the 'Choose file' and open a Relax NG file. This will create a list of blocks in the toolbox.
 3. Play with the blocks to create a diagram that follows the specification.
 
