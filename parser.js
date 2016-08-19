@@ -194,12 +194,13 @@ RNG2Blockly.prototype.mergeIfPossibleOtherwiseAdd = function(codeDict, candidate
     var blockCode                   = candidateDictEntry.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), 'SELF_REFERENCE');
 
     if( codeDict.hasOwnProperty(blockCode) ) {  // if we have created such a block already, just merge the compatibility lists
-        codeDict[blockCode].topList.union(      candidateDictEntry.topList, true );
-        codeDict[blockCode].bottomList.union(   candidateDictEntry.bottomList, true );
-        codeDict[blockCode].queueIndices.union( [candidateQueueIndex], true );
-
-        var foundQueueIndex         = codeDict[blockCode].queueIndices[0];
+        var foundEntry              = codeDict[blockCode];
+        var foundQueueIndex         = foundEntry.queueIndices[0];
         var foundQueueIndexMacro    = makeQueueIndexMacro( foundQueueIndex );
+
+        foundEntry.topList.union(      candidateDictEntry.topList, true );
+        foundEntry.bottomList.union(   candidateDictEntry.bottomList, true );
+        foundEntry.queueIndices.union( [candidateQueueIndex], true );
 
         console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
 
