@@ -591,7 +591,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 			alert("circular ref loop detected because of "+node.nodeName);
             blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
     } else {
-			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+            console.log(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
