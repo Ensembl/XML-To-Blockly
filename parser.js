@@ -291,7 +291,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
 	else if(nodeType == "text") {
 
-        var displayName = this.getNodeDisplayName(node);
+        var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
 
         blocklyCode += this.makeBlocklyCode_TextField(displayName, name);
 
@@ -299,8 +299,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
     else if ((nodeType == "element") || (nodeType == "attribute")) {
 
-        var nodeName = node.getAttribute("name");
-        var displayName = this.getNodeDisplayName(node);
+        var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
 
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
@@ -388,7 +387,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
         if(this.successfulOptiField){
 
-            var displayName = this.getNodeDisplayName(node);
+            var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
             if (children.length == 1){
                 // FIXME: we shouldn't have to split the Blockly code
                 var xxx = blocklyCode.indexOf('.appendField(', 28); // to skip the first one
@@ -534,7 +533,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                         if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
                             var arrayOfChildren = [];
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
-                                var childBlockName = this.getNodeDisplayName(childrenOfCurrentChild[j], true);
+                                var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
                                 this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, childBottomListStr);
                                 arrayOfChildren.push(childBlockName);
@@ -556,7 +555,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                             }
 
                         } else {        //choice/interleave has a oneOrMore/zeroOrMore/optional child
-                            var childBlockName = this.getNodeDisplayName(currentChild, true);
+                            var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
                             childrenDisplayNames.push(childBlockName);
                             this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, childBottomListStr);
                             childrenInfo.push( "startRepetition_" + currentChild.nodeName );
@@ -564,7 +563,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                             childrenInfo.push( "_endRepetition");
                         }
                     } else {           //child of choice/interleave is a normal one
-                        var childBlockName = this.getNodeDisplayName(currentChild, true);
+                        var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
                         childrenDisplayNames.push(childBlockName);
                         this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
                         childrenInfo.push(childBlockName);
@@ -583,7 +582,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 			} else {      //current node is oneOrMore, zeroOrMore, optional
 
                     var childBlockName = (children.length == 1)
-                                            ? this.getNodeDisplayName(children[0], true)
+                                            ? this.getNodeDisplayNameOrQueueIndexMacro(children[0])
                                             : "SUBSTITUTE_"+this.queueIndexMacro(this._nextQueueIndex);
 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
@@ -602,7 +601,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 			alert("circular ref loop detected because of "+node.nodeName);
             blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
     } else {
-			alert(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
+            console.log(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
@@ -633,9 +632,17 @@ RNG2Blockly.prototype.pushToQueue = function(blockDisplayName, children, topList
 }
 
 
-RNG2Blockly.prototype.getNodeDisplayName = function(node, tryEBN){
-    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") || (tryEBN ? "SUBSTITUTE_"+this.queueIndexMacro(this._nextQueueIndex) : ("(unnamed " + node.nodeName + ")")) );
-}
+RNG2Blockly.prototype.getNodeDisplayName = function(node) {
+    return ( node.getAttribute("blockly:blockName") || node.getAttribute("name") );
+};
+
+RNG2Blockly.prototype.getNodeDisplayNameOrQueueIndexMacro = function(node) {
+    return ( this.getNodeDisplayName(node) || "SUBSTITUTE_"+this.queueIndexMacro(this._nextQueueIndex) );
+};
+
+RNG2Blockly.prototype.getNodeDisplayNameOrDefaultLabel = function(node) {
+    return ( this.getNodeDisplayName(node) || ("(unnamed " + node.nodeName + ")") );
+};
 
 
 function allChildrenValueTags(node){
