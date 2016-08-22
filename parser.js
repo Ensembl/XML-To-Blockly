@@ -830,7 +830,7 @@ function NodeDetails(tagName){
 
 
 NodeDetails.prototype.appendContentAtChildLevel = function(tagName, internalName) {
-    var nodeContent = [ tagName , internalName ];
+    var nodeContent = [ { 'tagName' : tagName , 'internalName' : internalName } ];
     this.content = nodeContent;
     return;
 };
