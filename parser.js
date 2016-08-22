@@ -360,6 +360,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+        var allValueTags = "";
 
         if( children.length == 0 ){
 
@@ -388,10 +389,9 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             blocklyCode = this.makeBlocklyCode_TextField(displayName, name, typeChecker);
             nodeDetails.appendContentAtChildLevel( "text" , name );
 
-        // FIXME: We shouldn't be calling allChildrenValueTags() twice
-        } else if ((children.length == 1) && (children[0].nodeName == "choice") && allChildrenValueTags(children[0])) {
+    } else if ((children.length == 1) && (children[0].nodeName == "choice") && (allValueTags = allChildrenValueTags(children[0]))!=false ) {
 
-            var values = allChildrenValueTags(children[0]);     //returns array of all values if all children are value tags, otherwise returns false
+            var values = allValueTags;     //contains array of all values if all children are value tags
             blocklyCode = this.makeBlocklyCode_DropDown(displayName, name, values);
             nodeDetails.appendContentAtChildLevel( "dropdown" , name );
 
