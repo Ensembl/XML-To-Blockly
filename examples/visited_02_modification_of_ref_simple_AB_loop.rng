@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+	<start>
+		<ref name="A"/>
+	</start>
+
+	<define name="A">
+<element name="a_child">
+<text/>
+</element>
+		<ref name="B"/>
+	</define>
+
+	<define name="B">
+<element name="child">
+<text/>
+</element>
+		<oneOrMore>
+<ref name="A"/>
+</oneOrMore>
+	</define>
+</grammar>
