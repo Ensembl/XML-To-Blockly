@@ -429,16 +429,15 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         this.currentlyCreatingOptiField = true;
         this.successfulOptiField = true;
 
-
         for(var i=0;i<children.length;i++){
             if(magicType.hasOwnProperty(children[i].nodeName)){
                 this.successfulOptiField = false;
             } else if (children.length > 1) {
                 this.uni.indent( i == children.length-1 );
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i);
+                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, currentPathStructure);
                 this.uni.unindent();
             } else {
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i);
+                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, currentPathStructure);
             }
             if (!this.successfulOptiField) {
                 break;
@@ -447,7 +446,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
         //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
         if(this.successfulOptiField){
-
+            currentPathStructure = null;
             var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
             if (children.length == 1){
                 // FIXME: we shouldn't have to split the Blockly code
