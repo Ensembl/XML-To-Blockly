@@ -735,6 +735,9 @@ function allChildrenValueTags(node){
 
 
 function getInternalName(node, path){
+    if(node == null){
+        return null;
+    }
     var nameAttribute = node.getAttribute("name");
     var name = path + node.nodeName.substring(0,3).toUpperCase();
     if(nameAttribute){
