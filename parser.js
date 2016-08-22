@@ -330,6 +330,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     var nodeType = (node == null) ? "null" : node.nodeName;
     var context = (node == null) ? undefined : node.getAttribute("context");
     var name = getInternalName(node, path);
+    var addNodeDetailsToStructure = true;
     //internalName and displayName are added later
     var nodeDetails = new NodeDetails(nodeType);
     /*if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
@@ -406,15 +407,16 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
 
 	else if(nodeType == "group"){
+        addNodeDetailsToStructure = false;
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
         var displayName = this.getNodeDisplayName(node);
 
         if (displayName) {
-            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name);
+            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name, currentPathStructure);
         } else {
-            blocklyCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name);
+            blocklyCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name, currentPathStructure);
         }
     }
 
@@ -446,7 +448,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
         //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
         if(this.successfulOptiField){
-            currentPathStructure = null;
+            addNodeDetailsToStructure = false;
             var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
             if (children.length == 1){
                 // FIXME: we shouldn't have to split the Blockly code
@@ -477,7 +479,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         blocklyCode = this.makeBlocklyCode_Label("unhandled '" + nodeType + "' tag");
     }
 
-    if(currentPathStructure){
+    if(addNodeDetailsToStructure){
         currentPathStructure.push(nodeDetails);
     }
     return blocklyCode + "\n";
@@ -493,10 +495,10 @@ RNG2Blockly.prototype.goDeeper_makeTreeWithKids = function(headerName, children,
     return blocklyCode;
 }
 
-RNG2Blockly.prototype.goDeeper_iterateOverKids = function(children, haveAlreadySeenStr, path) {
+RNG2Blockly.prototype.goDeeper_iterateOverKids = function(children, haveAlreadySeenStr, path, currentPathStructure) {
     var blocklyCode = "";
     for(var i=0;i<children.length;i++){
-        blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, path + "_" + i);
+        blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, path + "_" + i, currentPathStructure);
     }
     return blocklyCode;
 }
