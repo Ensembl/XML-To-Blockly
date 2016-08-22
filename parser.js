@@ -367,6 +367,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
                 blocklyCode = this.makeBlocklyCode_Label(displayName);
             } else {
                 blocklyCode = this.makeBlocklyCode_TextField(displayName, name);
+                nodeDetails.appendContentAtChildLevel("text" , name);
             }
 
         } else if ((children.length == 1) && (children[0].nodeName == "text")) {
