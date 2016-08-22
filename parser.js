@@ -94,6 +94,8 @@ function RNG2Blockly(rngDoc) {
     this.pushToQueue("start", this.substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
     this.slotNumber = 0;            //re-initialize each time the user chooses a new file
     this.uni = new UnicodeIndenter();
+    this.visitedList = [];
+    this.firstMagicOccurrence = true;
 
     while(this.blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest        = this.blockRequestQueue.shift();
@@ -470,7 +472,16 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             this.successfulOptiField = false;
             return null;
         }
+        var removeFromVisitedList = this.firstMagicOccurrence;  //to know whether to remove "visited" attribute or not
+        this.firstMagicOccurrence = false;                      //so that future magic nodes along this path do not remove "visited" attribute
         blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {});
+        if(magicType[nodeType].hasLoopRisk && removeFromVisitedList){
+            for(var i=0;i<this.visitedList.length;i++){
+                this.visitedList[i].removeAttribute("visited");
+            }
+            this.visitedList = [];
+            this.firstMagicOccurrence = true;
+        }
 	}
 
     else {
@@ -574,6 +585,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 //            blocklyCode = this.makeBlocklyCode_Label(name);
             var childPath = name + '0';
             node.setAttribute("visited", "true");
+            this.visitedList.push(node);
             var child = children[0];
 
 //            this.uni.indent(true);
@@ -657,6 +669,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             }
 
             node.setAttribute("visited", "true");
+            this.visitedList.push(node);
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
             this.slotNumber++;
         }
@@ -734,6 +747,9 @@ function allChildrenValueTags(node){
 
 
 function getInternalName(node, path){
+    if(node == null){
+        return null;
+    }
     var nameAttribute = node.getAttribute("name");
     var name = path + node.nodeName.substring(0,3).toUpperCase();
     if(nameAttribute){
