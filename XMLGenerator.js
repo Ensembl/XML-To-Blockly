@@ -49,9 +49,9 @@ function generateXMLFromStructure( obj , block ){
 			var data = generateXMLFromStructure( content[i] , block );
 			console.log(data.nodeType);
 			var type = data.nodeType;
-			if(type == 2){
+			if(type == 2){	//child is attribute
 				ele.setAttributeNode(data);
-			} else if(type == 3 || type == 1){
+			} else if(type == 3 || type == 1){	//3: text node , 1: element
 				ele.appendChild(data);
 			} else{
 				alert("Don't know node type " + type + " yet");
@@ -60,7 +60,7 @@ function generateXMLFromStructure( obj , block ){
 		return ele;
 	} else if(obj.tagName == "attribute"){
 		var attr = XMLDoc.createAttribute(obj.displayName);
-		var data = generateXMLFromStructure( obj.content[0] , block ).nodeValue;
+		var data = generateXMLFromStructure( obj.content[0] , block ).nodeValue;	//Should we be sending content[0] directly?
 		attr.value = data;
 		return attr;
 	}
