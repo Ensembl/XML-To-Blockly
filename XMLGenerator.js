@@ -40,16 +40,29 @@ function generateXML(){
 // Recursive function to generate XML
 function generateXMLFromStructure( obj , block ){
 	if(obj.tagName == "text"){
-		return ( block.getFieldValue(obj.internalName) )
+		var textNode = XMLDoc.createTextNode( block.getFieldValue(obj.internalName) );
+		return textNode;
 	} else if(obj.tagName == "element"){
 		var ele = XMLDoc.createElement(obj.displayName);
 		var content = obj.content;
 		for(var i=0;i<content.length;i++){
 			var data = generateXMLFromStructure( content[i] , block );
-			var textNode = XMLDoc.createTextNode(data);
-			ele.appendChild(textNode);
+			console.log(data.nodeType);
+			var type = data.nodeType;
+			if(type == 2){
+				ele.setAttributeNode(data);
+			} else if(type == 3 || type == 1){
+				ele.appendChild(data);
+			} else{
+				alert("Don't know node type " + type + " yet");
+			}
 		}
 		return ele;
+	} else if(obj.tagName == "attribute"){
+		var attr = XMLDoc.createAttribute(obj.displayName);
+		var data = generateXMLFromStructure( obj.content[0] , block ).nodeValue;
+		attr.value = data;
+		return attr;
 	}
 }
 
