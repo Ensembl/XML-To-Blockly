@@ -74,7 +74,7 @@ var defaultProperties = {
 
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
-var blockStructureDict = {};
+var blockStructureDict;
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
@@ -142,6 +142,8 @@ function RNG2Blockly(rngDoc) {
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
     var blockOrder = codeDict.getAllEntries().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
+
+    blockStructureDict = {};
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
