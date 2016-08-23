@@ -466,6 +466,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             }
 
         } else{
+            nodeDetails.tagName = "slot";
             blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {}, nodeDetails);
         }
 
@@ -478,6 +479,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             this.successfulOptiField = false;
             return null;
         }
+        nodeDetails.tagName = "slot";
         blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {}, nodeDetails);
 	}
 
