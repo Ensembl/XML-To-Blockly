@@ -16,6 +16,14 @@
  * This file consists of mehods that help us in generating XML from the blocks in the editor workspace
  */
 
+
+
+
+
+
+
+
+/*
 var XMLDoc;
 var nodes;
 var nodeValues;
@@ -38,23 +46,23 @@ function generateXML(){
 	console.log(XMLDoc);
 	var XMLToString = new XMLSerializer().serializeToString(XMLDoc);
 	document.getElementById("XMLOutput").value = XMLToString;
-}
+}*/
 
 /* This function decides the order in which blocks should be traversed.
  * (We visit the block, and then call the block connected to its bottom notch, if any)
  */
-function handleBlock(block){
+/*function handleBlock(block){
 	handleInputs(block.inputList, block);
 	var next = block.getNextBlock();
 	if(next){
 		handleBlock(next);
 	}
-}
+}*/
 
 /* This function receives the inputList of a block.
  * It iterates through the list and takes actions depending on whether theere is a statementInput or not
 */
-function handleInputs(inputList , block){
+/*function handleInputs(inputList , block){
 	for(var i=1;i<inputList.length;i++){
 		if(inputList[i].type ==  Blockly.NEXT_STATEMENT){
 			console.log(inputList[i]);
@@ -66,12 +74,12 @@ function handleInputs(inputList , block){
 			handleRow(inputList[i].fieldRow);
 		}
 	}
-}
+}*/
 
 /* This function goes through each row in the block and collects data from them.
  * It stores the data in arrays called nodes and nodeValues
  */
-function handleRow(row){
+/*function handleRow(row){
 	var foundTextArea = false;
 	var nodeValue, nodeName;
 	if(row[ row.length-1 ] instanceof Blockly.FieldTextInput){
@@ -84,12 +92,12 @@ function handleRow(row){
 		nodes.push(elementName);
 		nodeValues.push("");
 	}
-}
+}*/
 
 /* This function parses RNG nodes and creates the corresponding XML for them.
  * The RNGNode and XMLParent parameters are at the same level in the RNG file and output XML respectively
  */
-function createXML(RNGNode , XMLParent){
+/*function createXML(RNGNode , XMLParent){
 	var name = RNGNode.getAttribute("name");
 	if(name != null){
 		if(RNGNode.nodeName == "attribute"){
@@ -131,3 +139,4 @@ function createXML(RNGNode , XMLParent){
 		}
 	}
 }
+*/
