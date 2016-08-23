@@ -74,6 +74,7 @@ var defaultProperties = {
 
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
+var blockStructureDict = {};
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
@@ -114,7 +115,7 @@ function RNG2Blockly(rngDoc) {
         for(var i=0;i<children.length;i++){
             blockCode += this.goDeeper(children[i], "{}", i, xmlStructureForBlock);
         }
-        console.log(xmlStructureForBlock);
+        //console.log(xmlStructureForBlock);
 
             // We want to always have a start block and here we force its blockCode to be unique
         if( blockDisplayName == "start" ) {
@@ -126,7 +127,8 @@ function RNG2Blockly(rngDoc) {
             "blockCode"         : blockCode,
             "topList"           : blockRequest.topList,
             "bottomList"        : blockRequest.bottomList,
-            "queueIndices"      : [ this.currentQueueIndex ]    // at least one value, but more may be added in case of synonyms
+            "queueIndices"      : [ this.currentQueueIndex ],    // at least one value, but more may be added in case of synonyms
+            "blockStructure"    : xmlStructureForBlock
         };
 
         codeDict.mergeIfPossibleOtherwiseAdd(candidateDictEntry);
@@ -147,6 +149,7 @@ function RNG2Blockly(rngDoc) {
         var queueIndices    = dictEntry.queueIndices;
         var blockDisplayName = dictEntry.blockDisplayName;
         var blockType       = "block_" + blockOrderIndex;
+        var blockStructure  = dictEntry.blockStructure;
 
         dictEntry.blockType = blockType;
 
@@ -154,9 +157,11 @@ function RNG2Blockly(rngDoc) {
             queueIndex_2_blockType[ queueIndices[i] ] = blockType;
         }
         blockTypeToDisplayNameMapper[blockType] = dictEntry.blockDisplayName;
+        blockStructureDict[blockType]           = blockStructure;
     }
     console.log(JSON.stringify(queueIndex_2_blockType));
     console.log(JSON.stringify(blockTypeToDisplayNameMapper));
+    console.log(blockStructureDict);
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
