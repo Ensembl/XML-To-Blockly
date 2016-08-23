@@ -93,7 +93,6 @@ function RNG2Blockly(rngDoc) {
 
     this._nextQueueIndex = 0;
     this.pushToQueue("start", this.substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
-    this.slotNumber = 0;            //re-initialize each time the user chooses a new file
     this.uni = new UnicodeIndenter();
 
     while(this.blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
@@ -677,7 +676,6 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
             node.setAttribute("visited", "true");
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
-            this.slotNumber++;
         }
     } else if(magicType[nodeType].hasLoopRisk) {
 			alert("circular ref loop detected because of "+node.nodeName);
@@ -691,7 +689,6 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
             notchProperties[this.slotNumber] = notchProperties[stagedSlotNumber];
             console.log(notchProperties[this.slotNumber]);
-            this.slotNumber++;
 	}
 	return blocklyCode;
 }
