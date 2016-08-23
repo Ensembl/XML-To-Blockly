@@ -454,7 +454,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
         if(this.successfulOptiField){
             addNodeDetailsToStructure = false;
-            currentPathStructure.push( childrenStructureInfo );
+            currentPathStructure.push.apply( currentPathStructure , childrenStructureInfo );
             var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
             if (children.length == 1){
                 // FIXME: we shouldn't have to split the Blockly code
