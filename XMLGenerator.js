@@ -12,16 +12,46 @@
  * limitations under the License.
  */
 
+
 /*
  * This file consists of mehods that help us in generating XML from the blocks in the editor workspace
  */
 
 
+var XMLDoc = "";
 
 
+/* Entry point for generating XML.
+ * Initializes final XML document and initiates call for XML generation
+ */
+function generateXML(){
+	XMLDoc = document.implementation.createDocument( 'http://relaxng.org/ns/structure/1.0', 'xml' , null );
+	var XMLStartNode = XMLDoc.documentElement;
+	var startBlock= blocklyWorkspace.getTopBlocks()[0];
+	var structure = blockStructureDict[startBlock.type];
+	for(var i=0;i<structure.length;i++){
+		var data = generateXMLFromStructure( structure[i] , startBlock );
+		XMLStartNode.appendChild(data);
+	}
+	console.log(XMLDoc);
+}
 
 
-
+// Recursive function to generate XML
+function generateXMLFromStructure( obj , block ){
+	if(obj.tagName == "text"){
+		return ( block.getFieldValue(obj.internalName) )
+	} else if(obj.tagName == "element"){
+		var ele = XMLDoc.createElement(obj.displayName);
+		var content = obj.content;
+		for(var i=0;i<content.length;i++){
+			var data = generateXMLFromStructure( content[i] , block );
+			var textNode = XMLDoc.createTextNode(data);
+			ele.appendChild(textNode);
+		}
+		return ele;
+	}
+}
 
 /*
 var XMLDoc;
