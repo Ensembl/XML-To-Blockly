@@ -460,7 +460,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             }
 
         } else{
-            blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {});
+            blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {}, nodeDetails);
         }
 
         this.currentlyCreatingOptiField = false;
@@ -472,7 +472,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             this.successfulOptiField = false;
             return null;
         }
-        blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {});
+        blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, {}, nodeDetails);
 	}
 
     else {
@@ -535,15 +535,16 @@ RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, 
     return code + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);";  //hidden field to detect end of optiField
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(slotSignature, slotRuleToMatchWithIncomingNotch) {
+RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(slotSignature, slotRuleToMatchWithIncomingNotch, nodeDetails) {
     var internalSlotName = 'slot_' + this.localSlotNumber++;
+    nodeDetails.internalName = internalSlotName;
     return "this.appendStatementInput('" + internalSlotName + "').setCheck(['" + slotRuleToMatchWithIncomingNotch + "']).appendField('" + this.uni.getIndentation() + "').appendField('" + slotSignature + "');";
 };
 
 
 
     //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
-RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, bottomNotchOverride, inheritedProperties){
+RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, bottomNotchOverride, inheritedProperties, nodeDetails){
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
@@ -580,7 +581,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
 //            this.uni.indent(true);
                 //if current tag has bottom notch, propagate its bottom notch to children
-            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, wantBottomNotch, properties);
+            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, wantBottomNotch, properties, nodeDetails);
 //            this.uni.unindent();
 
         }else{
@@ -636,7 +637,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                 }
                 var slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
                 node.setAttribute("slotSignature", slotSignature);
-                blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber);
+                blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
 
                 notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                 if(childrenInfo.length > 0) {   // add childrenInfo if it is available
@@ -653,7 +654,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
                     node.setAttribute("slotSignature", slotSignature);
-                    blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber);
+                    blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
                     notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
                     console.log(notchProperties[this.slotNumber]);
             }
@@ -670,7 +671,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
-            blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber);
+            blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
             notchProperties[this.slotNumber] = notchProperties[stagedSlotNumber];
             console.log(notchProperties[this.slotNumber]);
