@@ -31,7 +31,9 @@ function generateXML(){
 	var structure = blockStructureDict[startBlock.type];
 	for(var i=0;i<structure.length;i++){
 		var data = generateXMLFromStructure( structure[i] , startBlock );
-		XMLStartNode.appendChild(data);
+		for(var j=0;j<data.length;j++){
+			XMLStartNode.appendChild( data[j] );
+		}
 	}
 	console.log(XMLDoc);
 }
@@ -41,28 +43,43 @@ function generateXML(){
 function generateXMLFromStructure( obj , block ){
 	if(obj.tagName == "text"){
 		var textNode = XMLDoc.createTextNode( block.getFieldValue(obj.internalName) );
-		return textNode;
+		return [textNode];
 	} else if(obj.tagName == "element"){
 		var ele = XMLDoc.createElement(obj.displayName);
 		var content = obj.content;
 		for(var i=0;i<content.length;i++){
 			var data = generateXMLFromStructure( content[i] , block );
-			console.log(data.nodeType);
-			var type = data.nodeType;
-			if(type == 2){	//child is attribute
-				ele.setAttributeNode(data);
-			} else if(type == 3 || type == 1){	//3: text node , 1: element
-				ele.appendChild(data);
-			} else{
-				alert("Don't know node type " + type + " yet");
+			for(var j=0;j<data.length;j++){
+				//console.log(data[j].nodeType);
+				var type = data[j].nodeType;
+				if(type == 2){	//child is attribute
+					ele.setAttributeNode(data[j]);
+				} else if(type == 3 || type == 1){	//3: text node , 1: element
+					ele.appendChild(data[j]);
+				} else{
+					alert("Don't know node type " + type + " yet");
+				}
 			}
 		}
-		return ele;
+		return [ele];
 	} else if(obj.tagName == "attribute"){
 		var attr = XMLDoc.createAttribute(obj.displayName);
-		var data = generateXMLFromStructure( obj.content[0] , block ).nodeValue;	//Should we be sending content[0] directly?
+		var data = generateXMLFromStructure( obj.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
 		attr.value = data;
-		return attr;
+		return [attr];
+	} else if(obj.tagName == "slot"){
+		var blocksInSlot = block.getSlotContentsList(obj.internalName);
+		var dataToReturn = [];
+		for(var i=0;i<blocksInSlot.length;i++){
+			var blockStructure = blockStructureDict[ blocksInSlot[i].type ];
+			for(var j=0;j<blockStructure.length;j++){
+				var data = generateXMLFromStructure( blockStructure[j] , blocksInSlot[i] );
+				//console.log(data);
+				dataToReturn.push.apply( dataToReturn , data );
+			}
+		}
+		//console.log(dataToReturn);
+		return dataToReturn;
 	}
 }
 
