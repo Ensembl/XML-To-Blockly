@@ -49,10 +49,9 @@ function validateBlock(block){
         var slotContents        = block.getSlotContentsList(notchNumber);
         var errorContext        = block.type+", slot #"+(i+1);  // not a unique context, but will do for now; the slot# makes sense as a local base-1 number
 
-        var v = new Validator(validationDict[block.type][notchNumber]);
         var actualChildren = getBlockTypesOfSlotContents(slotContents);
-        var thisNotchIsValid = v.validate(actualChildren)
-        console.log("notch", block.type, notchNumber, actualChildren, validationDict[block.type][notchNumber], thisNotchIsValid );
+        var thisNotchIsValid = validatorDict[block.type][notchNumber].validate(actualChildren)
+        console.log("notch", block.type, notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
 
         blockValidationResult = thisNotchIsValid && blockValidationResult;
         for(var j=0;j<slotContents.length;j++){

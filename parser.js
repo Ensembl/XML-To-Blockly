@@ -51,7 +51,7 @@ var magicType = {
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
 var blockStructureDict;
-var validationDict;
+var validatorDict;
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
@@ -123,7 +123,7 @@ function RNG2Blockly(rngDoc) {
     var blockOrder = codeDict.getAllEntries().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
 
     blockStructureDict = {};
-    validationDict = {};
+    validatorDict = {};
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -167,13 +167,21 @@ function RNG2Blockly(rngDoc) {
             var displayName = blockTypeToDisplayNameMapper[blockType];
             return (displayName && !displayName.match(/SUBSTITUTE_QUEUE_INDEX_/)) ? displayName : blockType;
         } );
-        validationDict[blockType] = JSON.parse(dictEntry.blockValidationDict.replace(/QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
+
+        var blockValidationDict = JSON.parse(dictEntry.blockValidationDict.replace(/QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
             return queueIndex_2_blockType[$1];
         } ));
+        validatorDict[blockType] = {};
+        var keys = Object.keys(blockValidationDict);
+        for(var i=0; i<keys.length; i++) {
+            var k = keys[i];
+            validatorDict[blockType][k] = new Validator(blockValidationDict[k]);
+        }
+
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
         this.allCode.push(blockCode);
     }
-    console.log(validationDict);
+    console.log(validatorDict);
 }
 
 
