@@ -611,10 +611,12 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
                         if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
                             var arrayOfChildren = [];
+                            var validationSubConstraint = [];
+                            validationConstraint.push( [ currentChild.nodeName, validationSubConstraint ] );
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
-                                validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex)] );
+                                validationSubConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex)] );
                                 this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, childBottomListStr);
                                 arrayOfChildren.push(childBlockName);
                             }
