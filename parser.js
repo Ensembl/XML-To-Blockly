@@ -255,6 +255,9 @@ CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
 
         console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
 
+            var blocksToAdd = [];
+
+            // Find and remove the blocks that have to be substituted
             var blockReverseOrder = this.getAllEntries().sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
             for(var i=0; i<blockReverseOrder.length; i++) {     // go through already generated blocks
                 generatedBlockCode = blockReverseOrder[i];
@@ -267,9 +270,14 @@ CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
                         // update the code of the matched entry
                     stashedDictEntry.blockCode  = generatedBlockCode.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
 
-                    this.addEntry(stashedDictEntry);
-                    //this.mergeIfPossibleOtherwiseAdd(stashedDictEntry);
+                    // We don't add the entry immediately because that may updated some entries that we have in blockReverseOrder
+                    blocksToAdd.push(stashedDictEntry);
                 }
+            }
+
+            // Add their new versions 1 by 1
+            for(var i=0; i<blocksToAdd.length; i++) {
+                this.mergeIfPossibleOtherwiseAdd(blocksToAdd[i]);
             }
 
         return true;
