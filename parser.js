@@ -74,7 +74,7 @@ var defaultProperties = {
 
 var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
-var blockStructureDict = {};
+var blockStructureDict;
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
@@ -93,7 +93,6 @@ function RNG2Blockly(rngDoc) {
 
     this._nextQueueIndex = 0;
     this.pushToQueue("start", this.substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
-    this.slotNumber = 0;            //re-initialize each time the user chooses a new file
     this.uni = new UnicodeIndenter();
 
     while(this.blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
@@ -143,6 +142,8 @@ function RNG2Blockly(rngDoc) {
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
     var blockOrder = codeDict.getAllEntries().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
+
+    blockStructureDict = {};
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -677,7 +678,6 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
             node.setAttribute("visited", "true");
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
-            this.slotNumber++;
         }
     } else if(magicType[nodeType].hasLoopRisk) {
 			alert("circular ref loop detected because of "+node.nodeName);
@@ -691,7 +691,6 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             //notchProperties[this.slotNumber] = getNotchProperties(node, inheritedProperties);
             notchProperties[this.slotNumber] = notchProperties[stagedSlotNumber];
             console.log(notchProperties[this.slotNumber]);
-            this.slotNumber++;
 	}
 	return blocklyCode;
 }
