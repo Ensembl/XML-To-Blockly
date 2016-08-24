@@ -396,7 +396,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             blocklyCode = this.makeBlocklyCode_TextField(displayName, name, typeChecker);
             nodeDetails.appendContentAtChildLevel( "text" , name );
 
-    } else if ((children.length == 1) && (children[0].nodeName == "choice") && (allValueTags = allChildrenValueTags(children[0]))!=false ) {
+        } else if ((children.length == 1) && (children[0].nodeName == "choice") && (allValueTags = allChildrenValueTags(children[0]))!=false ) {
 
             var values = allValueTags;     //contains array of all values if all children are value tags
             blocklyCode = this.makeBlocklyCode_DropDown(displayName, name, values);
