@@ -35,6 +35,9 @@ function generateXML(){
 			XMLStartNode.appendChild( data[j] );
 		}
 	}
+	var XMLToString = new XMLSerializer().serializeToString(XMLDoc);
+	var output = vkbeautify.xml(XMLToString);
+	document.getElementById("XMLOutput").value = output;
 	console.log(XMLDoc);
 }
 
