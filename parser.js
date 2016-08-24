@@ -585,53 +585,16 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
         var wantBottomNotch = bottomNotchOverride || magicType[nodeType].hasBottomNotch;
         var bottomListStr   = wantBottomNotch ? topListStr : "[]";
 
-        //Rule 1
-        //if any magic node has another magic node as its only child, inline the child
-        if(children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)){
-//
-// *
-// *    FIXME: Leo: I've commented out 3 lines in the following paragraph,
-// *           to avoid showing extra unnamed nodes and extra indentation.
-// *           However there seem to be some examples that do need this code.
-// *           Let's find them and have another look at kitchen_nested_magic.rng example.
-// *
-//
-
-//            blocklyCode = this.makeBlocklyCode_Label(name);
-            var childPath = name + '0';
             node.setAttribute("visited", "true");
-            var child = children[0];
 
-//            this.uni.indent(true);
-                //if current tag has bottom notch, propagate its bottom notch to children
-            blocklyCode += this.handleMagicTag(child, haveAlreadySeenStr, childPath, wantBottomNotch, validationConstraint, nodeDetails);
-//            this.uni.unindent();
-
-        }else{
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
 
-                    if(magicType.hasOwnProperty(currentChild.nodeName)){    // interleave or choice has magic child
-                        var childBottomListStr = ( wantBottomNotch || magicType[currentChild.nodeName].hasBottomNotch ) ? topListStr : "[]" ;
-                        var currentContext = currentChild.getAttribute("context");
-                        var childrenOfCurrentChild = this.substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
+                    if(magicType.hasOwnProperty(currentChild.nodeName)){
+                        this.handleMagicTag(currentChild, haveAlreadySeenStr, name + i, wantBottomNotch, validationConstraint, nodeDetails);
 
-                        if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
-                            var validationSubConstraint = [];
-                            validationConstraint.push( [ currentChild.nodeName, validationSubConstraint ] );
-                            for(var j=0; j<childrenOfCurrentChild.length; j++){
-                                var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(childrenOfCurrentChild[j]);
-                                validationSubConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex)] );
-                                this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, childBottomListStr);
-                            }
-
-                        } else {        //choice/interleave has a oneOrMore/zeroOrMore/optional child
-                            var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
-                            validationConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
-                            this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, childBottomListStr);
-                        }
-                    } else {           //child of choice/interleave is a normal one
+                    } else {
                         var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
                         validationConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
                         this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
@@ -648,11 +611,10 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
             }
             var slotSignature = slotLabelFromValidationRules( validationDetails[0] );
-            node.setAttribute("visited", "true");
             node.setAttribute("slotSignature", slotSignature);
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
             blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
-        }
+
     } else if(magicType[nodeType].hasLoopRisk) {
 			alert("circular ref loop detected because of "+node.nodeName);
             blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
