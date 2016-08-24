@@ -168,7 +168,7 @@ function RNG2Blockly(rngDoc) {
             return (displayName && !displayName.match(/SUBSTITUTE_QUEUE_INDEX_/)) ? displayName : blockType;
         } );
 
-        var blockValidationDict = JSON.parse(dictEntry.blockValidationDict.replace(/QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
+        var blockValidationDict = JSON.parse(dictEntry.blockValidationDict.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
             return queueIndex_2_blockType[$1];
         } ));
         validatorDict[blockType] = {};
@@ -600,9 +600,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 //            this.uni.unindent();
 
         }else{
-            var slotSignature;
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
-                var childrenDisplayNames = [];
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
 
@@ -612,31 +610,25 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                         var childrenOfCurrentChild = this.substitutedNodeList(currentChild.childNodes, haveAlreadySeenStr, currentContext);
 
                         if(magicType[currentChild.nodeName].hasSeparateKids){   //choice/interleave has choice/interleave as a child
-                            var arrayOfChildren = [];
                             var validationSubConstraint = [];
                             validationConstraint.push( [ currentChild.nodeName, validationSubConstraint ] );
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(childrenOfCurrentChild[j]);
-                                childrenDisplayNames.push(childBlockName);
-                                validationSubConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex)] );
+                                validationSubConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex)] );
                                 this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, childBottomListStr);
-                                arrayOfChildren.push(childBlockName);
                             }
 
                         } else {        //choice/interleave has a oneOrMore/zeroOrMore/optional child
                             var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
-                            childrenDisplayNames.push(childBlockName);
-                            validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex) ] );
+                            validationConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
                             this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, childBottomListStr);
                         }
                     } else {           //child of choice/interleave is a normal one
                         var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
-                        childrenDisplayNames.push(childBlockName);
-                        validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex) ] );
+                        validationConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
                         this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
                     }
                 }
-                slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
 
 			} else {      //current node is oneOrMore, zeroOrMore, optional
 
@@ -644,11 +636,10 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                                             ? this.getNodeDisplayNameOrQueueIndexMacro(children[0])
                                             : makeSubstituteMacro(this._nextQueueIndex);
 
-                    validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex) ] );
+                    validationConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
-                    slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
             }
-
+            var slotSignature = slotLabelFromValidationRules( validationDetails[0] );
             node.setAttribute("visited", "true");
             node.setAttribute("slotSignature", slotSignature);
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
@@ -663,7 +654,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
             blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
-            validationConstraint.push( [ "block", makeQueueIndexMacro(this.currentQueueIndex) ] );
+            validationConstraint.push( [ "block", makeSubstituteMacro(this.currentQueueIndex) ] );
 	}
 
 	return blocklyCode;
@@ -678,6 +669,21 @@ function makeSubstituteMacro(qi) {
     return "SUBSTITUTE_" + makeQueueIndexMacro(qi);
 }
 
+
+// Recursive method that returns a pretty name for the given Validation
+// rule, since it happens to be exactly the structure we need
+function slotLabelFromValidationRules(g) {
+    console.log(g[0], g);
+    if (g[0] == "block") {
+        return g[1];
+    } else if (magicType[g[0]].hasSeparateKids ) {
+        var kidLabels = g[1].map( function(x) {return x[0]=="block" ? x[1] : ("(" + slotLabelFromValidationRules(x) + ")");} );
+        return kidLabels.join(" " + magicType[g[0]].prettyIndicator + " ");
+    } else {
+        var gg = g[1][0];
+        return (gg[0] == "block" ? gg[1] : ("(" + slotLabelFromValidationRules(gg) + ")")) + magicType[g[0]].prettyIndicator;
+    }
+}
 
 RNG2Blockly.prototype.pushToQueue = function(blockDisplayName, children, topListStr, bottomListStr) {
     this.blockRequestQueue.push({
