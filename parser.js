@@ -52,7 +52,6 @@ var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' 
 
 var blockStructureDict;
 var validationDict;
-var blockTypeToDisplayNameMapper;
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
@@ -107,7 +106,7 @@ function RNG2Blockly(rngDoc) {
             "bottomList"        : blockRequest.bottomList,
             "queueIndices"      : [ this.currentQueueIndex ],    // at least one value, but more may be added in case of synonyms
             "blockStructure"    : xmlStructureForBlock,
-            "blockValidationDict"   : this.blockValidationDict
+            "blockValidationDict"   : JSON.stringify(this.blockValidationDict)  // We can substitute queue-index macros
         };
 
         codeDict.mergeIfPossibleOtherwiseAdd(candidateDictEntry);
@@ -118,7 +117,7 @@ function RNG2Blockly(rngDoc) {
     this.hue             = new HueGenerator();
 
     var queueIndex_2_blockType          = {};   // Caution: this.queueIndex_2_blockType did not work in the replacer() callback
-    blockTypeToDisplayNameMapper    = {};
+    var blockTypeToDisplayNameMapper    = {};
 
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
     var blockOrder = codeDict.getAllEntries().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
@@ -140,12 +139,10 @@ function RNG2Blockly(rngDoc) {
         }
         blockTypeToDisplayNameMapper[blockType] = dictEntry.blockDisplayName;
         blockStructureDict[blockType]           = blockStructure;
-        validationDict[blockType]               = dictEntry.blockValidationDict;
     }
     console.log(JSON.stringify(queueIndex_2_blockType));
     console.log(JSON.stringify(blockTypeToDisplayNameMapper));
     console.log(blockStructureDict);
-    console.log(validationDict);
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -170,9 +167,13 @@ function RNG2Blockly(rngDoc) {
             var displayName = blockTypeToDisplayNameMapper[blockType];
             return (displayName && !displayName.match(/SUBSTITUTE_QUEUE_INDEX_/)) ? displayName : blockType;
         } );
+        validationDict[blockType] = JSON.parse(dictEntry.blockValidationDict.replace(/QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
+            return queueIndex_2_blockType[$1];
+        } ));
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
         this.allCode.push(blockCode);
     }
+    console.log(validationDict);
 }
 
 
@@ -605,22 +606,22 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                             for(var j=0; j<childrenOfCurrentChild.length; j++){
                                 var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(childrenOfCurrentChild[j]);
                                 childrenDisplayNames.push(childBlockName);
+                                validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex)] );
                                 this.pushToQueue(childBlockName, [ childrenOfCurrentChild[j] ], topListStr, childBottomListStr);
-                                validationConstraint.push( [ "block", childBlockName ] );
                                 arrayOfChildren.push(childBlockName);
                             }
 
                         } else {        //choice/interleave has a oneOrMore/zeroOrMore/optional child
                             var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
                             childrenDisplayNames.push(childBlockName);
+                            validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex) ] );
                             this.pushToQueue(childBlockName, childrenOfCurrentChild, topListStr, childBottomListStr);
-                            validationConstraint.push( [ "block", childBlockName ] );
                         }
                     } else {           //child of choice/interleave is a normal one
                         var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
                         childrenDisplayNames.push(childBlockName);
+                        validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex) ] );
                         this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
-                        validationConstraint.push( [ "block", childBlockName ] );
                     }
                 }
                 var slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
@@ -633,10 +634,10 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                                             ? this.getNodeDisplayNameOrQueueIndexMacro(children[0])
                                             : makeSubstituteMacro(this._nextQueueIndex);
 
+                    validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex) ] );
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                     var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
                     node.setAttribute("slotSignature", slotSignature);
-                    validationConstraint.push( [ "block", childBlockName ] );
                     blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             }
 
@@ -652,6 +653,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
             blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
+            validationConstraint.push( [ "block", makeQueueIndexMacro(this.currentQueueIndex) ] );
 	}
 
     validationDetails.push( [ nodeType, validationConstraint ] );
