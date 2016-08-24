@@ -25,14 +25,14 @@ var XMLDoc = "";
  * Initializes final XML document and initiates call for XML generation
  */
 function generateXML(){
-	XMLDoc = document.implementation.createDocument( '', 'xml' , null );
-	var XMLStartNode = XMLDoc.documentElement;
+	XMLDoc = document.implementation.createDocument( '', '' , null );
+	//var XMLStartNode = XMLDoc.documentElement;
 	var startBlock= blocklyWorkspace.getTopBlocks()[0];
 	var structure = blockStructureDict[startBlock.type];
 	for(var i=0;i<structure.length;i++){
 		var data = generateXMLFromStructure( structure[i] , startBlock );
 		for(var j=0;j<data.length;j++){
-			XMLStartNode.appendChild( data[j] );
+			XMLDoc.appendChild( data[j] );
 		}
 	}
 	var XMLToString = new XMLSerializer().serializeToString(XMLDoc);
