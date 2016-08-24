@@ -567,6 +567,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var blocklyCode = "";
 
     var validationConstraint = [];
+    validationDetails.push( [ nodeType, validationConstraint ] );
 
     if(! node.hasAttribute("visited") ) {
 
@@ -666,7 +667,6 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             validationConstraint.push( [ "block", makeQueueIndexMacro(this.currentQueueIndex) ] );
 	}
 
-    validationDetails.push( [ nodeType, validationConstraint ] );
 	return blocklyCode;
 }
 
