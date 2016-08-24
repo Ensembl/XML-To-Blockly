@@ -25,7 +25,7 @@ var XMLDoc = "";
  * Initializes final XML document and initiates call for XML generation
  */
 function generateXML(){
-	XMLDoc = document.implementation.createDocument( 'http://relaxng.org/ns/structure/1.0', 'xml' , null );
+	XMLDoc = document.implementation.createDocument( '', 'xml' , null );
 	var XMLStartNode = XMLDoc.documentElement;
 	var startBlock= blocklyWorkspace.getTopBlocks()[0];
 	var structure = blockStructureDict[startBlock.type];
