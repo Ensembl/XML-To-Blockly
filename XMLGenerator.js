@@ -80,6 +80,19 @@ function generateXMLFromStructure( obj , block ){
 		}
 		//console.log(dataToReturn);
 		return dataToReturn;
+	} else if(obj.tagName == "optiField"){
+		var checkboxValue = block.getFieldValue(obj.internalName);
+		if(checkboxValue == "TRUE"){
+			var content = obj.content;
+			var dataToReturn = [];
+			for(var i=0;i<content.length;i++){
+				var data = generateXMLFromStructure( content[i] , block );
+				dataToReturn.push.apply(dataToReturn , data);
+			}
+			return dataToReturn;
+		} else{
+			return [];
+		}
 	}
 }
 
