@@ -260,7 +260,7 @@ CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
             // Find and remove the blocks that have to be substituted
             var blockReverseOrder = this.getAllEntries().sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
             for(var i=0; i<blockReverseOrder.length; i++) {     // go through already generated blocks
-                generatedBlockCode = blockReverseOrder[i];
+                var generatedBlockCode = blockReverseOrder[i];
 
                 if(generatedBlockCode.blockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?
                         // detach the matched entry
