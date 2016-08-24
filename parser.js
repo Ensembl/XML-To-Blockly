@@ -600,6 +600,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 //            this.uni.unindent();
 
         }else{
+            var slotSignature;
             if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 var childrenDisplayNames = [];
                 for(var i=0;i<children.length;i++){
@@ -635,9 +636,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                         this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
                     }
                 }
-                var slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
-                node.setAttribute("slotSignature", slotSignature);
-                blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
+                slotSignature = childrenDisplayNames.join(" " + magicType[node.nodeName].prettyIndicator + " ");
 
 			} else {      //current node is oneOrMore, zeroOrMore, optional
 
@@ -647,13 +646,13 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
                     validationConstraint.push( [ "block", makeQueueIndexMacro(this._nextQueueIndex) ] );
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
-                    var slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
-                    node.setAttribute("slotSignature", slotSignature);
-                    blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
+                    slotSignature = childBlockName + magicType[node.nodeName].prettyIndicator;
             }
 
             node.setAttribute("visited", "true");
+            node.setAttribute("slotSignature", slotSignature);
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
+            blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
         }
     } else if(magicType[nodeType].hasLoopRisk) {
 			alert("circular ref loop detected because of "+node.nodeName);
