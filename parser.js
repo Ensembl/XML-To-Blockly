@@ -399,7 +399,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
             var values = allValueTags;     //contains array of all values if all children are value tags
             blocklyCode = this.makeBlocklyCode_DropDown(displayName, name, values);
-            nodeDetails.appendContentAtChildLevel( "dropdown" , name );
+            nodeDetails.appendContentAtChildLevel( "text" , name );
 
         } else {    //we expect to reach here only if the node is an 'element' node
             var childrenStructureInfo = [];
