@@ -264,15 +264,16 @@ CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
         console.log("Recognition: when attempting to create block "+candidateQueueIndexMacro+" recognized it as "+foundQueueIndexMacro);
 
             var blockReverseOrder = this.getAllEntries().sort( function(a,b) { return string_cmp(b.queueIndices[0],a.queueIndices[0]); } );
-            for(generatedBlockCode in blockReverseOrder) {   // go through already generated blocks
+            for(var i=0; i<blockReverseOrder.length; i++) {     // go through already generated blocks
+                generatedBlockCode = blockReverseOrder[i];
 
-                if(generatedBlockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?
+                if(generatedBlockCode.blockCode.indexOf(candidateQueueIndexMacro) > -1) {     // does it mention our newly recognized friend?
                         // detach the matched entry
-                    var stashedDictEntry = this.getEntry(generatedBlockCode);
+                    var stashedDictEntry = generatedBlockCode;
                     this.deleteEntry(generatedBlockCode);
 
                         // update the code of the matched entry
-                    stashedDictEntry.blockCode  = generatedBlockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
+                    stashedDictEntry.blockCode  = generatedBlockCode.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
 
                     this.addEntry(stashedDictEntry);
                     //this.mergeIfPossibleOtherwiseAdd(stashedDictEntry);
