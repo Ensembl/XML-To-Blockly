@@ -251,7 +251,6 @@ CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
 
     var candidateQueueIndex         = candidateDictEntry.queueIndices[0];   // only the youngest (CHECKME: is this right?)
     var candidateQueueIndexMacro    = makeQueueIndexMacro( candidateQueueIndex );
-    var blockCode                   = candidateDictEntry.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), 'SELF_REFERENCE');
 
     if (this.containsEntry(candidateDictEntry)) {   // if we have created such a block already, just merge the compatibility lists
         var foundEntry              = this.getEntry(candidateDictEntry);
