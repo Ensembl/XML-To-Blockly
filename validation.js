@@ -27,7 +27,10 @@ function validateBlocklyGraph(){
     } else if(blocks.length > 1){
 		alert("Only the start block is allowed to be placed directly in the workspace");
         return false;
-	} else {
+	} else if(blocks[0].type != "block_0"){
+        alert("It is compulsory to use the start block (block_0:start)");
+        return false;
+    } else {
         var blocklyValidationResult = validateBlock(blocks[0]);
 
         if(blocklyValidationResult) {
