@@ -4,10 +4,14 @@
 		<element name="ele">
 			<interleave>
 
-				<attribute name="a"/>
+				<element name="a">
+					<text/>
+				</element>
 
 				<zeroOrMore>
-					<attribute name="b"/>
+					<element name="b">
+						<text/>
+					</element>	
 				</zeroOrMore>
 
 			</interleave>

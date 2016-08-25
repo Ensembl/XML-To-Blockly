@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
 	<start>
 		<element name="addressBook">
 			<interleave>
 
-				<attribute name="first"/>
-				<attribute name="second"/>
-				<attribute name="third"/>
+				<element name="first">
+					<text/>
+				</element>
+				<element name="second">
+					<text/>
+				</element>
+				<element name="third">
+					<text/>
+				</element>
 				<oneOrMore>
-					<attribute name="fourth"/>
-					<attribute name="fifth"/>
-					<attribute name="sixth"/>
+					<element name="repeatable">
+						<text/>
+					</element>
 				</oneOrMore>
-
+				
 			</interleave>
 		</element>
 	</start>
