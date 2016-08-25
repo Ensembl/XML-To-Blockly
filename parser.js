@@ -95,7 +95,7 @@ function RNG2Blockly(rngDoc) {
         //console.log(xmlStructureForBlock);
 
             // We want to always have a start block and here we force its blockCode to be unique
-        if( blockDisplayName == "start" ) {
+        if( this.currentQueueIndex == 0 ) {
             blockCode += " ";
         }
 
