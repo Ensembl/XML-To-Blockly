@@ -603,12 +603,17 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
 			} else {      //current node is oneOrMore, zeroOrMore, optional
 
+                if (children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)) {
+                    this.handleMagicTag(children[0], haveAlreadySeenStr, name + "0", wantBottomNotch, validationConstraint, nodeDetails);
+
+                } else {
                     var childBlockName = (children.length == 1)
                                             ? this.getNodeDisplayNameOrQueueIndexMacro(children[0])
                                             : makeSubstituteMacro(this._nextQueueIndex);
 
                     validationConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
+                }
             }
             var slotSignature = slotLabelFromValidationRules( validationDetails[0] );
             node.setAttribute("slotSignature", slotSignature);
@@ -624,6 +629,8 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
             blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
+            // TODO: check whether it is correct to call the child a "block" without checking its type
+            //       we should probably call handleMagicTag sometimes
             validationConstraint.push( [ "block", makeSubstituteMacro(this.currentQueueIndex) ] );
 	}
 
