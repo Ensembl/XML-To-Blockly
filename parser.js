@@ -497,7 +497,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 	}
 
     else {
-        blocklyCode = this.makeBlocklyCode_Label("unhandled '" + nodeType + "' tag");
+        blocklyCode = this.makeBlocklyCode_Label("unhandled \"" + nodeType + "\" tag");
     }
 
     if(addNodeDetailsToStructure){
