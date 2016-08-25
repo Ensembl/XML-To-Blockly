@@ -618,6 +618,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             var slotSignature = slotLabelFromValidationRules( validationDetails[0] );
             node.setAttribute("slotSignature", slotSignature);
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
+            node.setAttribute("slotValidationRules", JSON.stringify(validationDetails[0]));
             if (canCreateInputStatements) {
                 blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             }
@@ -630,10 +631,9 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
             var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
             var slotSignature = node.getAttribute("slotSignature");
+            var slotValidationRules = node.getAttribute("slotValidationRules");
             blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
-            // TODO: check whether it is correct to call the child a "block" without checking its type
-            //       we should probably call handleMagicTag sometimes
-            validationConstraint.push( [ "block", makeSubstituteMacro(this.currentQueueIndex) ] );
+            validationConstraint.push( JSON.parse(slotValidationRules) );
 	}
 
 	return blocklyCode;
