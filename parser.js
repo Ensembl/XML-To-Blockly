@@ -109,6 +109,22 @@ function RNG2Blockly(rngDoc) {
             "blockValidationDict"   : JSON.stringify(this.blockValidationDict)  // We can substitute queue-index macros
         };
 
+        // blockCode may contain SUBSTITUTE_QUEUE_INDEX_ references to blocks that
+        // have already been merged (because slotSignature is cached in the node)
+        var mergedBlocks = codeDict.getAllEntries().filter( function(a) { return a.queueIndices.length > 1; } );
+        if (mergedBlocks.length > 0) {
+            var subst = {};
+            for (var i=0; i<mergedBlocks.length; i++) {
+                var b = mergedBlocks[i].queueIndices;
+                for (var j=1; j<b.length; j++) {
+                    subst[b[j]] = b[0];
+                }
+            }
+            candidateDictEntry.blockCode = candidateDictEntry.blockCode.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
+                return subst.hasOwnProperty($1) ? makeSubstituteMacro(subst[$1]) : match;
+            } );
+        }
+
         codeDict.mergeIfPossibleOtherwiseAdd(candidateDictEntry);
     }
 
