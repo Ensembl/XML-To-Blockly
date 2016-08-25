@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<start>
+ <element name="X">
+   <choice>
+     <element name="Y"><text/></element>
+     <choice>
+       <element name="Z"><text/></element>
+       <choice>
+         <element name="T1"><text/></element>
+         <element name="T2"><text/></element>
+       </choice>
+     </choice>
+   </choice>
+ </element>
+</start>
+</grammar>

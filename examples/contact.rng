@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+  <start>
+      <element name="contact">
+        <element name="name">
+          <text/>
+        </element>
+          <element name="phone_number">
+            <text/>
+          </element>
+          <element name="email">
+            <element name="username">
+              <text/>
+            </element>
+            <element name="hostname">
+              <text/>
+            </element>
+          </element>
+        </element>
+  </start>
+</grammar>
