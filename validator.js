@@ -127,7 +127,7 @@ Validator.prototype.validate = function(list) {
 Validator.prototype.debug = function() {
     var args = Array.prototype.slice.call(arguments);
     args.unshift(this._indent);
-    Function.apply.call(console.log, console, args);
+    //Function.apply.call(console.log, console, args);
 };
 
 Validator.prototype._validate_block = function(expectedBlockName, i, mustUseAll) {

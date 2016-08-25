@@ -652,7 +652,6 @@ function makeSubstituteMacro(qi) {
 // Recursive method that returns a pretty name for the given Validation
 // rule, since it happens to be exactly the structure we need
 function slotLabelFromValidationRules(g) {
-    console.log(g[0], g);
     if (g[0] == "block") {
         return g[1];
     } else if (magicType[g[0]].hasSeparateKids ) {
