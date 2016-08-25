@@ -607,10 +607,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                     this.handleMagicTag(children[0], haveAlreadySeenStr, name + "0", wantBottomNotch, validationConstraint, nodeDetails, false);
 
                 } else {
-                    var childBlockName = (children.length == 1)
-                                            ? this.getNodeDisplayNameOrQueueIndexMacro(children[0])
-                                            : makeSubstituteMacro(this._nextQueueIndex);
-
+                    var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(children.length == 1 ? children[0] : node);
                     validationConstraint.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                 }
