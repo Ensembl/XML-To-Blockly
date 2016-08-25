@@ -637,7 +637,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                 blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             }
 
-    } else if(magicType[nodeType].hasLoopRisk) {
+    } else if (!node.hasAttribute("slotValidationRules")) {
 			alert("circular ref loop detected because of "+node.nodeName);
             blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
     } else {
