@@ -11,11 +11,13 @@
   </define>
 
   <start>
+    <element name="grouper">
       <element name="first">
           <ref name="two_children"/>
       </element>
       <element name="second">
           <ref name="two_children"/>
       </element>
+  </element>  
   </start>
 </grammar>
