@@ -302,7 +302,7 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
 
             if(currChildHasSeen.hasOwnProperty(nodeName)) {
                 alert("A definition loop detected in the RNG ("+nodeName+"), therefore the corresponding system of Blocks is not constructable");
-                return [null];     // need to find a way to return nicely
+                return [];
 
             } else {
                 currChildHasSeen[nodeName] = true;
