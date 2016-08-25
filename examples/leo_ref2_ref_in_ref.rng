@@ -15,6 +15,7 @@
   </define>
 
   <start>
+    <element name="grouper">
       <element name="first">
           <element name="before">
                 <ref name="simple_text"/>
@@ -27,5 +28,6 @@
                 <ref name="simple_text"/>
           </element>
       </element>
+  </element>  
   </start>
 </grammar>

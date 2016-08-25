@@ -2,19 +2,21 @@
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
 
   <start>
-      <choice>
-          <element name="left">
-                <text/>
-          </element>
-          <element name="right">
-                <text/>
-          </element>
-      </choice>
+    <element name="grouper">
+          <choice>
+              <element name="left">
+                    <text/>
+              </element>
+              <element name="right">
+                    <text/>
+              </element>
+          </choice>
 
-      <element name="first">
-          <element name="before">
-                <text/>
+          <element name="first">
+              <element name="before">
+                    <text/>
+              </element>
           </element>
-      </element>
+    </element>      
   </start>
 </grammar>

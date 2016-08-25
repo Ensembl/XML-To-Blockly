@@ -1,10 +1,15 @@
-<element name="addressBook" xmlns="http://relaxng.org/ns/structure/1.0">
-    <element name="card">
-      <element name="name">
-        <text/>
-      </element>
-      <element name="email">
-        <text/>
-      </element>
-    </element>
-</element>
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+    <start>
+        <element name="addressBook" xmlns="http://relaxng.org/ns/structure/1.0">
+            <element name="card">
+              <element name="name">
+                <text/>
+              </element>
+              <element name="email">
+                <text/>
+              </element>
+            </element>
+        </element>
+    </start>
+</grammar>

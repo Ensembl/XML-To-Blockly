@@ -1,16 +1,16 @@
 <grammar ns="test_data" xmlns="http://relaxng.org/ns/structure/1.0">
 	<start>
-	
+	  <element name="grouper">
 		<element name="first">
 			<element name="first_child">
 				<text/>
-			</element>	
+			</element>
 		</element>
 
 		<element name="second">
 			<text/>
-		</element>	
-		
+		</element>
+
 		<optional>
 			<element name="third">
 				<text/>
@@ -19,18 +19,19 @@
 				<element name="fourth">
 					<element name="fourth_child">
 						<text/>
-					</element>	
+					</element>
 					<text/>
-				</element>	
-			</oneOrMore>		
-		</optional>	
-		
+				</element>
+			</oneOrMore>
+		</optional>
+
 		<element name="fifth">
 			<oneOrMore>
 				<element name="fifth_child">
 					<text/>
 				</element>
 			</oneOrMore>
-		</element>	
+		</element>
+	  </element>
 	</start>
 </grammar>

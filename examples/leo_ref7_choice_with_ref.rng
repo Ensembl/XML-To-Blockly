@@ -10,13 +10,14 @@
   </define>
 
   <start>
+    <element name="grouper">
       <choice>
           <element name="left">
                 <ref name="top_bottom"/>
           </element>
-          
+
            <ref name="top_bottom"/>
-         
+
       </choice>
 
       <element name="first">
@@ -24,5 +25,6 @@
                 <text/>
           </element>
       </element>
+    </element>  
   </start>
 </grammar>
