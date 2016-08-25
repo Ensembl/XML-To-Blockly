@@ -34,6 +34,7 @@ function validateBlocklyGraph(){
         var blocklyValidationResult = validateBlock(blocks[0]);
 
         if(blocklyValidationResult) {
+            generateXML();
             alert("You may save this");
         } else {
             alert("error");
