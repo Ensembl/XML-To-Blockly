@@ -248,6 +248,7 @@ CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
         var foundEntry              = this.getEntry(candidateDictEntry);
         var foundQueueIndex         = foundEntry.queueIndices[0];
         var foundQueueIndexMacro    = makeQueueIndexMacro( foundQueueIndex );
+        var regexp                  = new RegExp(candidateQueueIndexMacro, "g");    // used RegExp to benefit from /g
 
         foundEntry.topList.union(      candidateDictEntry.topList, true );
         foundEntry.bottomList.union(   candidateDictEntry.bottomList, true );
@@ -268,7 +269,7 @@ CodeDict.prototype.mergeIfPossibleOtherwiseAdd = function(candidateDictEntry) {
                     this.deleteEntry(generatedBlockCode);
 
                         // update the code of the matched entry
-                    stashedDictEntry.blockCode  = generatedBlockCode.blockCode.replace(new RegExp(candidateQueueIndexMacro, "g"), foundQueueIndexMacro);  // used RegExp to benefit from /g
+                    stashedDictEntry.blockCode  = generatedBlockCode.blockCode.replace(regexp, foundQueueIndexMacro);
 
                     // We don't add the entry immediately because that may updated some entries that we have in blockReverseOrder
                     blocksToAdd.push(stashedDictEntry);
