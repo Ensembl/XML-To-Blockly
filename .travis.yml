@@ -1,7 +1,9 @@
 language: javascript
 javascript:
   - 1.8.5
-script: phantomjs testTool.js
+script:
+  - phantomjs t/testTool.js
+  - phantomjs t/test_validator.js
 
 #safelist( makes Travis run on gh-pages branch )
 branches:

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-phantom.injectJs("validator.js");
+phantom.injectJs("src/Validator.js");
 
 
 var all_pass = true;
