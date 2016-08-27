@@ -564,7 +564,7 @@ RNG2Blockly.prototype.makeBlocklyCode_DropDown = function(label, internalName, v
 };
 
 RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, content, needLabel) {
-    var code = "this.appendDummyInput('" + internalName + "').appendField('" + this.uni.getIndentation() + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", checker), '" + internalName + "_checkbox')";
+    var code = "this.appendDummyInput('" + internalName + "').appendField('" + this.uni.getIndentation() + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", optiField_checker), '" + internalName + "_checkbox')";
     if (needLabel) {
         code += ".appendField('" + label + "');" + content;
     } else {

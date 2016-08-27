@@ -54,7 +54,7 @@ Blockly.Block.prototype.getStatementInputNames = function() {
 
 
 //function to toggle hide/show optiFields
-function checker(){
+function optiField_checker(){
 	var source=this.sourceBlock_;
 	var checkBoxFieldName=this.name.split("_checkbox")[0]; //the name of the checkbox's dummyInput
 	var it = 0;
