@@ -38,17 +38,17 @@ function UnicodeIndenter() {
 
 UnicodeIndenter.prototype.reset = function() {
     this.indentation = [];
-}
+};
 
 UnicodeIndenter.prototype.indent = function(is_last) {
     this.indentation.push(is_last);
-}
+};
 
 UnicodeIndenter.prototype.unindent = function() {
     if (this.indentation.length > 0) {
         return this.indentation.pop();
     }
-}
+};
 
 UnicodeIndenter.prototype.getIndentation = function() {
     var ind = "";
@@ -59,7 +59,7 @@ UnicodeIndenter.prototype.getIndentation = function() {
         ind += (this.indentation[ this.indentation.length - 1 ] ? "\u2517\u2501\u2501 " : "\u2523\u2501\u2501 ");
     }
     return ind;
-}
+};
 
 function test_UnicodeIndenter() {
     var un = new UnicodeIndenter();

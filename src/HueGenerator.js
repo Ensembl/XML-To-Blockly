@@ -19,11 +19,11 @@ function HueGenerator() {
 
 HueGenerator.prototype.reset = function() {
     this.nextHue = 0;
-}
+};
 
 HueGenerator.prototype.generate = function() {
     var currHue = this.nextHue;
     this.nextHue = (currHue + this.hueStep) % 360;
     return currHue;
-}
+};
 
