@@ -12,8 +12,6 @@
  * limitations under the License.
  */
 
-var cleanRNG;
-
 var magicType = {
     'optional'  :   {
                         'hasBottomNotch'    :   false,
@@ -63,7 +61,6 @@ function RNG2Blockly(rngDoc) {
 
     removeRedundantText(rootElement);
     removeXMLComments(rootElement);
-    cleanRNG = rootElement;
 
     var codeDict            = new CodeDict(this);   // Structure to store non-redundant pieces of Bockly code
     this.blockRequestQueue  = [];   // a queue that holds requests to create new blocks
