@@ -53,3 +53,9 @@ function handleRNG(unparsedRNG) {
 }
 
 
+function generateXML(){
+    var xmlDoc = new XMLGenerator();
+    var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
+	var output = vkbeautify.xml(XMLToString);
+	document.getElementById("XMLOutput").value = output;
+}

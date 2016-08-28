@@ -17,41 +17,40 @@
  * This file consists of mehods that help us in generating XML from the blocks in the editor workspace
  */
 
-
-var XMLDoc = "";
+function XMLGenerator(){
+	this.XMLDoc = "";
+	this.generateXMLDoc();
+}
 
 
 /* Entry point for generating XML.
  * Initializes final XML document and initiates call for XML generation
  */
-function generateXML(){
-	XMLDoc = document.implementation.createDocument( '', '' , null );
-	//var XMLStartNode = XMLDoc.documentElement;
+XMLGenerator.prototype.generateXMLDoc = function(){
+	this.XMLDoc = document.implementation.createDocument( '', '' , null );
 	var startBlock= blocklyWorkspace.getTopBlocks()[0];
 	var structure = blockStructureDict[startBlock.type];
 	for(var i=0;i<structure.length;i++){
-		var data = generateXMLFromStructure( structure[i] , startBlock );
+		var data = this.generateXMLFromStructure( structure[i] , startBlock );
 		for(var j=0;j<data.length;j++){
-			XMLDoc.appendChild( data[j] );
+			this.XMLDoc.appendChild( data[j] );
 		}
 	}
-	var XMLToString = new XMLSerializer().serializeToString(XMLDoc);
-	var output = vkbeautify.xml(XMLToString);
-	document.getElementById("XMLOutput").value = output;
-	console.log(XMLDoc);
+	console.log(this.XMLDoc);
+	return;
 }
 
 
 // Recursive function to generate XML
-function generateXMLFromStructure( obj , block ){
+XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
 	if(obj.tagName == "text"){
-		var textNode = XMLDoc.createTextNode( block.getFieldValue(obj.internalName) );
+		var textNode = this.XMLDoc.createTextNode( block.getFieldValue(obj.internalName) );
 		return [textNode];
 	} else if(obj.tagName == "element"){
-		var ele = XMLDoc.createElement(obj.displayName);
+		var ele = this.XMLDoc.createElement(obj.displayName);
 		var content = obj.content;
 		for(var i=0;i<content.length;i++){
-			var data = generateXMLFromStructure( content[i] , block );
+			var data = this.generateXMLFromStructure( content[i] , block );
 			for(var j=0;j<data.length;j++){
 				//console.log(data[j].nodeType);
 				var type = data[j].nodeType;
@@ -66,8 +65,8 @@ function generateXMLFromStructure( obj , block ){
 		}
 		return [ele];
 	} else if(obj.tagName == "attribute"){
-		var attr = XMLDoc.createAttribute(obj.displayName);
-		var data = generateXMLFromStructure( obj.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
+		var attr = this.XMLDoc.createAttribute(obj.displayName);
+		var data = this.generateXMLFromStructure( obj.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
 		attr.value = data;
 		return [attr];
 	} else if(obj.tagName == "slot"){
@@ -76,7 +75,7 @@ function generateXMLFromStructure( obj , block ){
 		for(var i=0;i<blocksInSlot.length;i++){
 			var blockStructure = blockStructureDict[ blocksInSlot[i].type ];
 			for(var j=0;j<blockStructure.length;j++){
-				var data = generateXMLFromStructure( blockStructure[j] , blocksInSlot[i] );
+				var data = this.generateXMLFromStructure( blockStructure[j] , blocksInSlot[i] );
 				//console.log(data);
 				dataToReturn.push.apply( dataToReturn , data );
 			}
@@ -89,7 +88,7 @@ function generateXMLFromStructure( obj , block ){
 			var content = obj.content;
 			var dataToReturn = [];
 			for(var i=0;i<content.length;i++){
-				var data = generateXMLFromStructure( content[i] , block );
+				var data = this.generateXMLFromStructure( content[i] , block );
 				dataToReturn.push.apply(dataToReturn , data);
 			}
 			return dataToReturn;
