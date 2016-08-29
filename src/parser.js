@@ -248,7 +248,7 @@ CodeDict.prototype.getEntry = function(dictEntry) {
 }
 
 CodeDict.prototype.getAllEntries = function() {
-    return this._codeDict.getAllValues();
+    return getAllValues( this._codeDict );
 }
 
     // attempt to merge the candidate
@@ -401,7 +401,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
             // TODO currently data ignores any <param> tags that it may contain
             var type        = children[0].getAttribute("type");
-            var typeChecker = (type||'').isOneOf(numberTypes) ? "Blockly.FieldTextInput.numberValidator" : "null";
+            var typeChecker = isOneOf( numberTypes , (type||'') ) ? "Blockly.FieldTextInput.numberValidator" : "null";
 
             if (type) {
                 displayName += " (" + type + ")";

@@ -25,9 +25,9 @@
  * Note 2: it may pollute the namespace of Object class (not for-in safe!)
  */
     // a helper to find an element in a list
-Object.prototype.isOneOf = function(list) {
+function isOneOf(list , element) {
     for(i=0;i<list.length;i++) {
-        if(this == list[i]) {
+        if(element == list[i]) {
             return true;
         }
     }
@@ -40,10 +40,9 @@ Object.prototype.isOneOf = function(list) {
  *
  * Note 1: it may pollute the namespace of Object class (not for-in safe!)
  */
-    // a helper to find an element in a list
-Object.prototype.getAllValues = function() {
-    return Object.keys(this).map( function(a) { return this[a]; }, this );
-};
+function getAllValues(obj) {
+    return Object.keys(obj).map( function(a) { return obj[a]; }, obj );
+}
 
 
 /**
@@ -76,4 +75,3 @@ function string_cmp(a, b) {
                 ? 1
                 : 0;
 }
-
