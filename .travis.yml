@@ -8,4 +8,7 @@ script:
 #safelist( makes Travis run on gh-pages branch )
 branches:
   only:
-    - /.*/
+    - master
+    - gh-pages
+    - /^experimental.*$/
+
