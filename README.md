@@ -2,7 +2,7 @@
 
 # Introduction
 
-This [project](https://anujk14.github.io/XML-To-Blockly/) is funded by the 2016 edition of the [Google Summer of Code program](https://summerofcode.withgoogle.com/).
+This [project](https://ensembl.github.io/XML-To-Blockly/) is funded by the 2016 edition of the [Google Summer of Code program](https://summerofcode.withgoogle.com/).
 [Anuj Khandelwal](https://github.com/anujk14/) has been selected to work on a [Graphical workflow editor for eHive using Blockly](https://summerofcode.withgoogle.com/projects/#5041231054766080) in the [Ensembl Genomes Browser](https://summerofcode.withgoogle.com/organizations/6373155673210880/) organization under the supervision of [Matthieu Muffato](https://www.ebi.ac.uk/~muffato/) and [Leo Gordon](https://github.com/ens-lg4/).
 
 [eHive](https://github.com/Ensembl/ensembl-hive) is a system used to run computation pipelines in distributed environments.
@@ -61,4 +61,3 @@ We call _magic tag_ the `<oneOrMore>`, `<zeroOrMore>`, `<optional>`,
 cannot be fixed in a single block. They lead to the creation of additional
 blocks. The only two exceptions are special occurrences of `<optional>` and
 `<choice>` (see above).
-
