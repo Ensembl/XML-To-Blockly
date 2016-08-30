@@ -33,6 +33,27 @@
     		border-bottom: 1px solid #ddd;
     		padding: 10px;
 		}
+
+		.btn-file {
+		    position: relative;
+		    overflow: hidden;
+		}
+
+		.btn-file input[type=file] {
+		    position: absolute;
+		    top: 0;
+		    right: 0;
+		    min-width: 100%;
+		    min-height: 100%;
+		    font-size: 100px;
+		    text-align: right;
+		    filter: alpha(opacity=0);
+		    opacity: 0;
+		    outline: none;
+		    background: white;
+		    cursor: inherit;
+		    display: block;
+		}
 	</style>
 </head>
 
@@ -68,32 +89,52 @@
 
 			<div id="editor" class="tab-pane fade">
     			<p> The rng editor to the right of the workspace moves here, giving us a wider workspace </p>
+				<row>
+					<!-- Button for uploading file -->
+					<label class="btn btn-primary" for="file">
+    					<input id="file" type="file" style="display:none;" onchange="javascript:readFile(event)">
+    					Upload file
+					</label>
+
+					<!-- Interpret button -->
+					<button class="btn btn-primary" id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
+
+					<!-- Validate button -->
+					<button class="btn btn-primary" id="saveBtn" onclick="validateBlocklyGraph();">Validate and generate XML</button>
+				</row>
+
+				<!-- Bootstrap does not display uploaded filename by default.
+			 		 That has been done by using JavaScript to insert the filename in the label below -->
+				<p><label class='label label-info' id="file-name"></label></p>
+
+				<!-- Textarea for RNG file editing -->
+				<textarea id=rng_area onchange="javascript:document.getElementById('file').value=''" style="width: 100%" rows="25"></textarea>
     		</div>
 
 			<div id="xmlGeneration" class="tab-pane fade">
     			<p> XML generation content </p>
     		</div>
 		</div>
+
+
+		<div style="height: 600px">
+	        <div id="blocklyDiv" style="float: left; width: 100%; height: 100%; border:1px solid black"></div>
+
+	        <xml id="toolbox" style="display: none">
+	        </xml>
+
+	        <div style="margin-left: 74%; width: 24%; height: 100%">
+	        </div>
+	    </div>
+
+
 	</div>
 
-    <div style="height: 600px">
-        <div id="blocklyDiv" style="float: left; width: 72%; height: 100%; border:1px solid black"></div>
 
-        <xml id="toolbox" style="display: none">
-        </xml>
-
-        <div style="margin-left: 74%; width: 24%; height: 100%">
-        <input type="file" id="file" onchange="javascript:readFile(event)"/>
-        <button id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">interpret RNG from the textarea below</button>
-        <button id="saveBtn" onclick="validateBlocklyGraph();">Validate</button>
-        <textarea id=rng_area onchange="javascript:document.getElementById('file').value=''" style="height: 95%; width: 100%"></textarea>
-        </div>
-    </div>
 
 	<div id="results"></div>
 	<textarea id="XMLOutput" style="height:500px; width:80%" readonly></textarea>
     <script>
-		$.noConflict();
         initWorkspace();
     </script>
 
