@@ -107,8 +107,9 @@
 			 		 That has been done by using JavaScript to insert the filename in the label below -->
 				<p><label class='label label-info' id="file-name"></label></p>
 
-				<!-- Textarea for RNG file editing -->
-				<textarea id=rng_area onchange="javascript:document.getElementById('file').value=''" style="width: 100%" rows="25"></textarea>
+				<!-- Textareas for RNG file editing and XML generation -->
+				<textarea id=rng_area onchange="javascript:document.getElementById('file').value=''" style="width: 45%; margin-left:2.5%;margin-right:2.5%;" rows="25"></textarea>
+				<textarea id="XMLOutput" style="width:45%; margin-left:2.5%;" rows="25" readonly></textarea>
     		</div>
 
 			<div id="xmlGeneration" class="tab-pane fade">
@@ -133,7 +134,7 @@
 
 
 	<div id="results"></div>
-	<textarea id="XMLOutput" style="height:500px; width:80%" readonly></textarea>
+
     <script>
         initWorkspace();
     </script>
