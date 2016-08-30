@@ -3,6 +3,10 @@
 <html>
 <head>
 	<title>Parsing xml</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" type="text/javascript"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
 	<script src="lib/blockly_compressed.js"></script>
 	<script src="lib/blockly_msg_js_en.js"></script>
 	<script src="src/blockly_extensions.js"></script>
@@ -16,14 +20,62 @@
 	<script src="src/XMLGenerator.js"></script>
 	<script src="lib/vkbeautify.0.99.00.beta.js"></script>
 
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
 	<style>
-	#id{
-		left:50%;
-	}
+		body{
+			margin:25px;
+		}
+
+		.tab-content{
+			border-left: 1px solid #ddd;
+    		border-right: 1px solid #ddd;
+    		border-bottom: 1px solid #ddd;
+    		padding: 10px;
+		}
 	</style>
 </head>
 
 <body>
+	<div>
+		<h1>Graphical RNG Editor Using Blockly</h1>
+
+		<ul class="nav nav-tabs">
+			<li class="active"><a data-toggle="tab" href="#examples">Sample RNG files</a></li>
+			<li><a data-toggle="tab" href="#editor">RNG Editor</a></li>
+			<li><a data-toggle="tab" href="#xmlGeneration">XML Generation</a></li>
+		</ul>
+
+		<div class="tab-content">
+			<div id="examples" class="tab-pane fade in active">
+				<p>Don't have an RNG file ready? Use one of these:</p>
+
+				<p>
+					<button type="button" class="btn btn-primary">Example 1</button>
+					ehive_pipeline_schema2.rng
+				</p>
+
+				<p>
+					<button type="button" class="btn btn-primary">Example 2</button>
+					LRG.rng
+				</p>
+
+				<p>
+					<button type="button" class="btn btn-primary">Example 3</button>
+					contact.rng
+				</p>
+    		</div>
+
+			<div id="editor" class="tab-pane fade">
+    			<p> The rng editor to the right of the workspace moves here, giving us a wider workspace </p>
+    		</div>
+
+			<div id="xmlGeneration" class="tab-pane fade">
+    			<p> XML generation content </p>
+    		</div>
+		</div>
+	</div>
+
     <div style="height: 600px">
         <div id="blocklyDiv" style="float: left; width: 72%; height: 100%; border:1px solid black"></div>
 
@@ -41,6 +93,7 @@
 	<div id="results"></div>
 	<textarea id="XMLOutput" style="height:500px; width:80%" readonly></textarea>
     <script>
+		$.noConflict();
         initWorkspace();
     </script>
 
