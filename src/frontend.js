@@ -31,6 +31,7 @@ function readFile(event) {
     var reader = new FileReader();
     reader.readAsText(filename);
     reader.onload = function(e){
+        document.getElementById("file-name").innerHTML = filename.name;
         document.getElementById('rng_area').value = e.target.result;
     }
 }
