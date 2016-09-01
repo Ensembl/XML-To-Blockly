@@ -25,7 +25,7 @@
 
 	<style>
 		body{
-			margin:25px;
+			margin: 25px;
 		}
 
 		.tab-content{
@@ -35,8 +35,12 @@
     		padding: 10px;
 		}
 
+		.leftMargin{
+			margin-left: 2.5%;
+		}
+
 		#blocklyArea{
-			height:600px;
+			height: 600px;
 			padding: 10px 0px;
 		}
 
@@ -44,7 +48,16 @@
 			float: left;
 			width: 100%;
 			height: 100%;
-			border:1px solid #ddd;
+			border: 1px solid #ddd;
+		}
+
+		#rng_area{
+			width: 45%;
+			margin-right: 2.5%;
+		}
+
+		#XMLOutput{
+			width: 45%;
 		}
 	</style>
 </head>
@@ -80,10 +93,9 @@
     		</div>
 
 			<div id="editor" class="tab-pane fade">
-    			<p> The rng editor to the right of the workspace moves here, giving us a wider workspace </p>
 				<row>
 					<!-- Button for uploading file -->
-					<label class="btn btn-primary" for="file">
+					<label class="btn btn-primary leftMargin" for="file">
     					<input id="file" type="file" style="display:none;" onchange="javascript:readFile(event)">
     					Upload file
 					</label>
@@ -94,11 +106,11 @@
 
 				<!-- Bootstrap does not display uploaded filename by default.
 			 		 That has been done by using JavaScript to insert the filename in the label below -->
-				<p><label class='label label-info' id="file-name"></label></p>
+				<p class="leftMargin"><label class='label label-info' id="file-name"></label></p>
 
 				<!-- Textareas for RNG file editing and XML generation -->
-				<textarea id=rng_area onchange="javascript:document.getElementById('file').value=''" style="width: 45%; margin-left:2.5%;margin-right:2.5%;" rows="25"></textarea>
-				<textarea id="XMLOutput" style="width:45%; margin-left:2.5%;" rows="25" readonly></textarea>
+				<textarea id="rng_area" class="leftMargin" onchange="javascript:document.getElementById('file').value=''" rows="25"></textarea>
+				<textarea id="XMLOutput" class="leftMargin" rows="25" readonly></textarea>
     		</div>
 
 			<!--<div id="xmlGeneration" class="tab-pane fade">
