@@ -99,8 +99,6 @@
 
 					<!-- Interpret button -->
 					<button class="btn btn-primary" id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
-
-
 				</row>
 
 				<!-- Bootstrap does not display uploaded filename by default.
@@ -117,7 +115,7 @@
     		</div>
 		</div>
 
-
+		<!-- Div for blockly workspace and toolbox -->
 		<div style="height: 600px">
 	        <div id="blocklyDiv" style="float: left; width: 100%; height: 100%; border:1px solid black"></div>
 
@@ -125,7 +123,7 @@
 	        </xml>
 
 	    </div>
-		
+
 		<!-- Validate button -->
 		<button class="btn btn-primary" id="saveBtn" onclick="validateBlocklyGraph();">Validate and generate XML</button>
 

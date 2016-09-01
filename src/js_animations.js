@@ -22,8 +22,24 @@ function scrollToWorkspace(){
 		if(diff <= 0){
 			clearInterval(animation);
 		} else{
-			window.scrollTo( 0 , workspaceYPos-diff+inc );
+			window.scrollTo( 0 , workspaceYPos-diff+inc );	//we use workspaceYPos-diff instead of btnYPos because diff is updated in each iteration
 			diff-=inc;
 		}
 	} , 8);		//8ms is chosen on the basis of trial and error. No mathematical reasons involved.
+}
+
+
+function scrollToTop(){
+	var workspaceYPos = document.getElementById("blocklyDiv").offsetTop;
+	var btnYPos = document.getElementById("interpretBtn").offsetTop;
+	var diff = workspaceYPos - btnYPos;
+	var dec = diff/100;
+	var animation = setInterval(function(){
+		if(diff <= 0){
+			clearInterval(animation);
+		} else{
+			window.scrollTo( 0 , btnYPos+diff-dec );
+			diff-=dec;
+		}
+	} , 8);
 }
