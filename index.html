@@ -29,6 +29,10 @@
 			margin: 25px;
 		}
 
+		textarea{
+			width: 100%;
+		}
+
 		.tab-content{
 			border-left: 1px solid #ddd;
     		border-right: 1px solid #ddd;
@@ -38,6 +42,11 @@
 
 		.leftMargin{
 			margin-left: 2.5%;
+		}
+
+		.inline-div{
+			display: inline-block;
+			width:45%;
 		}
 
 		#blocklyArea{
@@ -50,15 +59,6 @@
 			width: 100%;
 			height: 100%;
 			border: 1px solid #ddd;
-		}
-
-		#rng_area{
-			width: 45%;
-			margin-right: 2.5%;
-		}
-
-		#XMLOutput{
-			width: 45%;
 		}
 	</style>
 </head>
@@ -105,13 +105,19 @@
 					<button class="btn btn-primary" id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
 				</row>
 
-				<!-- Bootstrap does not display uploaded filename by default.
+				<!-- Bootstrap does not display uploaded filename in a "pretty" format by default.
 			 		 That has been done by using JavaScript to insert the filename in the label below -->
 				<p class="leftMargin"><label class='label label-info' id="file-name"></label></p>
 
 				<!-- Textareas for RNG file editing and XML generation -->
-				<textarea id="rng_area" class="leftMargin" onchange="javascript:document.getElementById('file').value=''" rows="25"></textarea>
-				<textarea id="XMLOutput" class="leftMargin" rows="25" readonly></textarea>
+				<div id="textareaLeft" class="inline-div leftMargin" style="margin-right:2%;">
+					<p>RNG Input:</p>
+					<textarea id="rng_area" onchange="javascript:document.getElementById('file').value=''" rows="25"></textarea>
+				</div>
+				<div id="textareaRight" class="inline-div leftMargin">
+					<p>XML Output:</p>
+					<textarea id="XMLOutput"  rows="25" readonly></textarea>
+				</div>
     		</div>
 
 			<!--<div id="xmlGeneration" class="tab-pane fade">
