@@ -12,30 +12,11 @@
  * limitations under the License.
  */
 
-function exampleContact(){
-	var file='<?xml version="1.0" encoding="UTF-8"?>\n'
-            +'<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">\n'
-            +'\t<start>\n'
-            +'\t\t<element name="contact">\n'
-            +'\t\t\t<element name="name">\n'
-            +'\t\t\t\t<text/>\n'
-            +'\t\t\t</element>\n'
-            +'\t\t\t<element name="phone_number">\n'
-            +'\t\t\t\t<text/>\n'
-            +'\t\t\t</element>\n'
-            +'\t\t\t<element name="email">\n'
-            +'\t\t\t\t<element name="username">\n'
-            +'\t\t\t\t\t<text/>\n'
-            +'\t\t\t\t</element>\n'
-            +'\t\t\t\t<element name="hostname">\n'
-            +'\t\t\t\t\t<text/>\n'
-            +'\t\t\t\t</element>\n'
-            +'\t\t\t</element>\n'
-            +'\t\t</element>\n'
-            +'\t</start>\n'
-            +'</grammar>';
+function loadOurExample( example_name ){
 
-    uploadFileAndSwitchTab(file);
+    var fileContent = syncLoadFileFromURL("https://raw.githubusercontent.com/Ensembl/XML-To-Blockly/gh-pages/examples/" + example_name );
+
+    uploadFileAndSwitchTab(fileContent);
 }
 
 function uploadFileAndSwitchTab(file){

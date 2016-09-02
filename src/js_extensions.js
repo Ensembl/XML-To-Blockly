@@ -75,3 +75,22 @@ function string_cmp(a, b) {
                 ? 1
                 : 0;
 }
+
+
+/**
+ *
+ *
+ */
+function syncLoadFileFromURL(url) {
+
+    var request = new XMLHttpRequest();
+    request.open('GET', url, false);  // `false` makes the request synchronous
+    request.send(null);
+
+    if (request.status === 200) {
+        return request.responseText;
+    } else {
+        alert("Could not load from URL '"+url+"'");
+        return;
+    }
+}
