@@ -30,6 +30,7 @@
 
 		textarea{
 			width: 100%;
+                        resize: none;
 		}
 
 		.tab-content{
@@ -53,14 +54,16 @@
 	<div>
 		<h1>Graphical RNG Editor Using Blockly</h1>
 
+		<row>
+			<div class="col-lg-6">
+
 		<ul class="nav nav-tabs">
 			<li class="active"><a data-toggle="tab" href="#toy_examples">Test RNG files</a></li>
 			<li><a data-toggle="tab" href="#examples">Sample RNG files</a></li>
 			<li><a data-toggle="tab" href="#editor">RNG Editor</a></li>
 			<!-- <li><a data-toggle="tab" href="#xmlGeneration">XML Generation</a></li> -->
 		</ul>
-		<row>
-			<div class="tab-content col-lg-6">
+			<div class="tab-content">
 				<div id="toy_examples" class="tab-pane fade in active">
 	                <p>New to the RNG world ? Check these small examples that showcase the capabilities of RNG and our editor:</p>
 
@@ -118,7 +121,7 @@
 
 
 				<div id="editor" class="tab-pane fade">
-					<row>
+                                        <p>Load and edit an RNG file here:</p>
 						<!-- Button for uploading file -->
 						<label class="btn btn-primary leftMargin" for="file">
 	    					<input id="file" type="file" style="display:none;" onchange="javascript:readFile(event)">
@@ -127,7 +130,6 @@
 
 						<!-- Interpret button -->
 						<button class="btn btn-primary" id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
-					</row>
 
 					<!-- Bootstrap does not display uploaded filename in a "pretty" format by default.
 				 		 That has been done by using JavaScript to insert the filename in the label below -->
@@ -136,7 +138,7 @@
 					<!-- Textareas for RNG file editing and XML generation -->
 					<div id="textareaLeft">
 						<p>RNG Input:</p>
-						<textarea id="rng_area" onchange="javascript:document.getElementById('file').value=''" rows="25"></textarea>
+						<textarea id="rng_area" onchange="javascript:document.getElementById('file').value=''" rows="19"></textarea>
 					</div>
 	    		</div>
 
@@ -144,23 +146,23 @@
 	    			<p> XML generation content </p>
 	    		</div> -->
 			</div>
-			<div id="textareaRight" class="col-lg-6" style="padding-top:52px;"> <!-- FIXME: Can we calculate padding-top by some standard calculation instead of trial and error? -->
-				<p>XML Output:</p>
-				<textarea id="XMLOutput"  rows="25" readonly></textarea>
 			</div>
 		</row>
+			<div id="textareaRight" class="col-lg-6" >
+                    <!-- Validate button -->
+				<p>Export the diagram to XML by clicking on this button:</p>
+                    <button class="btn btn-primary" id="saveBtn" onclick="validateBlocklyGraph();">Validate and generate XML</button>
+				<textarea id="XMLOutput"  rows="25" readonly></textarea>
+			</div>
 
 		<!-- Div for blockly workspace and toolbox -->
-		<div id="blocklyArea">
+		<div>
 	        <div id="blocklyDiv"></div>
 
 	        <xml id="toolbox" style="display: none">
 	        </xml>
 
 	    </div>
-
-		<!-- Validate button -->
-		<button class="btn btn-primary" id="saveBtn" onclick="validateBlocklyGraph();">Validate and generate XML</button>
 
 	</div>
 
