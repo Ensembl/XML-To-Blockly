@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" xmlns:blockly="http://fake/url">
 
 <start>
 	<ref name="structure"/>
@@ -22,7 +22,7 @@
                 </element>
             </zeroOrMore>
         </element>
-        <text/>
+        <text blockly:blockName="scalar"/>
     </choice>
 </define>
 
