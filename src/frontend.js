@@ -15,7 +15,12 @@
 var blocklyWorkspace;
 
 function loadOurExample( example_name ){
-    var fileContent = syncLoadFileFromURL("examples/" + example_name );
+    var url = "examples/" + example_name;
+    if ((navigator.userAgent.indexOf("Firefox") < 0) && (window.location.protocol == "file:")) {
+        url = "https://raw.githubusercontent.com/Ensembl/XML-To-Blockly/gh-pages/" + url;
+    }
+    console.log(url);
+    var fileContent = syncLoadFileFromURL(url);
     document.getElementById('file-name').innerHTML = example_name;
     document.getElementById('rng_area').value = fileContent;
     handleRNG( fileContent )
