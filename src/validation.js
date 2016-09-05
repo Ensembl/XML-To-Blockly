@@ -22,22 +22,22 @@ function validateBlocklyGraph(){
     var blocks = Blockly.getMainWorkspace().getTopBlocks();
 
     if(blocks.length == 0){
-        alert("Workspace is empty");
+        document.getElementById('validation-error-p').innerHTML = "Workspace is empty";
         return false;
     } else if(blocks.length > 1){
-		alert("Only the start block is allowed to be placed directly in the workspace");
+        document.getElementById('validation-error-p').innerHTML = "Only the start block is allowed to be placed directly in the workspace";
         return false;
 	} else if(blocks[0].type != "block_0"){
-        alert("It is compulsory to use the start block (block_0:start)");
+        document.getElementById('validation-error-p').innerHTML = "It is compulsory to use the start block (block_0:start)";
         return false;
     } else {
         var blocklyValidationResult = validateBlock(blocks[0]);
 
         if(blocklyValidationResult) {
             generateXML();
-            alert("You may save this");
+            document.getElementById('validation-error-p').innerHTML = "";
         } else {
-            alert("error");
+            document.getElementById('validation-error-p').innerHTML = "not valid";
         }
         return blocklyValidationResult;
     }
