@@ -28,11 +28,11 @@ The project submitted to Google is not specific to eHive and the proposed editor
 2. [x] Javascript code to parse an RNG file and create Blockly blocks
 3. [x] Simplification of the RNG file to produce a minimum number of
    Blockly blocks
-4. [ ] Pretty naming of Blockly blocks. _Partial_
-5. [ ] Javascript code to define constraints from the RNG file. _In
-   progress_
-6. [x] Javascript code to validate a diagram against an RNG file
-7. [ ] Javascript code to export of the diagram to XML. _In progress_
+4. [x] Pretty naming of Blockly blocks.
+5. [x] Blockly rules to allow the right connections between blocks
+6. [x] Extra validator for the constraints that cannot be modeled in
+   Blockly
+7. [x] Javascript code to export of the diagram to XML.
 8. [ ] Javascript code to import of an XML to the Blockly workspace
 
 # RNG to Blockly mapping
