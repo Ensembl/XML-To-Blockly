@@ -33,9 +33,9 @@
 		}
 
 		.tab-content{
-			border-left: 1px solid #ddd;
+			/*border-left: 1px solid #ddd;
     		border-right: 1px solid #ddd;
-    		border-bottom: 1px solid #ddd;
+    		border-bottom: 1px solid #ddd;*/
     		padding: 10px;
 		}
 
@@ -72,95 +72,96 @@
 			<li><a data-toggle="tab" href="#editor">RNG Editor</a></li>
 			<!-- <li><a data-toggle="tab" href="#xmlGeneration">XML Generation</a></li> -->
 		</ul>
+		<row>
+			<div class="tab-content col-lg-6">
+				<div id="toy_examples" class="tab-pane fade in active">
+	                <p>New to the RNG world ? Check these small examples that showcase the capabilities of RNG and our editor:</p>
 
-		<div class="tab-content">
-			<div id="toy_examples" class="tab-pane fade in active">
-                <p>New to the RNG world ? Check these small examples that showcase the capabilities of RNG and our editor:</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("contact.rng");'>Example 1</button>
+						A contact (for an address-book)
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("contact.rng");'>Example 1</button>
-					A contact (for an address-book)
-				</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("addressBook.rng");'>Example 2</button>
+						An address-book
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("addressBook.rng");'>Example 2</button>
-					An address-book
-				</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("attrib.rng");'>Example 3</button>
+						Example with attributes
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("attrib.rng");'>Example 3</button>
-					Example with attributes
-				</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("basic_value.rng");'>Example 4</button>
+						An attribute with a choice and a dropdown menu
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("basic_value.rng");'>Example 4</button>
-					An attribute with a choice and a dropdown menu
-				</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("optiField_03_multiple_multi-level.rng");'>Example 5</button>
+						Optional element controlled by a checkbox
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("optiField_03_multiple_multi-level.rng");'>Example 5</button>
-					Optional element controlled by a checkbox
-				</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("ref_structure_ehive.rng");'>Example 6</button>
+						Nested structure of blocks (used to represent eHive parameters)
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("ref_structure_ehive.rng");'>Example 6</button>
-					Nested structure of blocks (used to represent eHive parameters)
-				</p>
+	    		</div>
 
-    		</div>
+				<div id="examples" class="tab-pane fade">
+					<p>Large RNG files used in the real life:</p>
 
-			<div id="examples" class="tab-pane fade">
-				<p>Large RNG files used in the real life:</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("ehive_pipeline_schema2.rng");'>Example 1</button>
+						eHive
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("ehive_pipeline_schema2.rng");'>Example 1</button>
-					eHive
-				</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("LRG.rng");'>Example 2</button>
+						Locus Reference Genomic (LRG)
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("LRG.rng");'>Example 2</button>
-					Locus Reference Genomic (LRG)
-				</p>
+					<p>
+						<button type="button" class="btn btn-primary" onclick='loadOurExample("relaxng.rng");'>Example 3</button>
+					    Relax NG itself
+					</p>
 
-				<p>
-					<button type="button" class="btn btn-primary" onclick='loadOurExample("relaxng.rng");'>Example 3</button>
-				    Relax NG itself
-				</p>
-
-    		</div>
+	    		</div>
 
 
-			<div id="editor" class="tab-pane fade">
-				<row>
-					<!-- Button for uploading file -->
-					<label class="btn btn-primary leftMargin" for="file">
-    					<input id="file" type="file" style="display:none;" onchange="javascript:readFile(event)">
-    					Upload file
-					</label>
+				<div id="editor" class="tab-pane fade">
+					<row>
+						<!-- Button for uploading file -->
+						<label class="btn btn-primary leftMargin" for="file">
+	    					<input id="file" type="file" style="display:none;" onchange="javascript:readFile(event)">
+	    					Upload file
+						</label>
 
-					<!-- Interpret button -->
-					<button class="btn btn-primary" id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
-				</row>
+						<!-- Interpret button -->
+						<button class="btn btn-primary" id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
+					</row>
 
-				<!-- Bootstrap does not display uploaded filename in a "pretty" format by default.
-			 		 That has been done by using JavaScript to insert the filename in the label below -->
-				<p class="leftMargin"><label class='label label-info' id="file-name"></label></p>
+					<!-- Bootstrap does not display uploaded filename in a "pretty" format by default.
+				 		 That has been done by using JavaScript to insert the filename in the label below -->
+					<p class="leftMargin"><label class='label label-info' id="file-name"></label></p>
 
-				<!-- Textareas for RNG file editing and XML generation -->
-				<div id="textareaLeft" class="inline-div leftMargin" style="margin-right:2%;">
-					<p>RNG Input:</p>
-					<textarea id="rng_area" onchange="javascript:document.getElementById('file').value=''" rows="25"></textarea>
-				</div>
-				<div id="textareaRight" class="inline-div leftMargin">
-					<p>XML Output:</p>
-					<textarea id="XMLOutput"  rows="25" readonly></textarea>
-				</div>
-    		</div>
+					<!-- Textareas for RNG file editing and XML generation -->
+					<div id="textareaLeft">
+						<p>RNG Input:</p>
+						<textarea id="rng_area" onchange="javascript:document.getElementById('file').value=''" rows="25"></textarea>
+					</div>
+	    		</div>
 
-			<!--<div id="xmlGeneration" class="tab-pane fade">
-    			<p> XML generation content </p>
-    		</div> -->
-		</div>
+				<!--<div id="xmlGeneration" class="tab-pane fade">
+	    			<p> XML generation content </p>
+	    		</div> -->
+			</div>
+			<div id="textareaRight" class="col-lg-6" style="padding-top:52px;"> <!-- FIXME: Can we calculate padding-top by some standard calculation instead of trial and error? -->
+				<p>XML Output:</p>
+				<textarea id="XMLOutput"  rows="25" readonly></textarea>
+			</div>
+		</row>
 
 		<!-- Div for blockly workspace and toolbox -->
 		<div id="blocklyArea">
