@@ -62,6 +62,7 @@ function handleRNG(unparsedRNG) {
 
     blocklyWorkspace.clear();
     blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
+    document.getElementById('saveBtn').disabled = false;
 }
 
 
