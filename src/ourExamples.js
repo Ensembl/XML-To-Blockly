@@ -22,5 +22,6 @@ function loadOurExample( example_name ){
 function uploadFileAndSwitchTab(file){
     document.getElementById('file-name').innerHTML = "";
     document.getElementById('rng_area').value = file;
-    document.querySelector('a[href^="#editor"]').click();
+    handleRNG( document.getElementById('rng_area').value )
+    //document.querySelector('a[href^="#editor"]').click();
 }

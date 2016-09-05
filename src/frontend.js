@@ -51,7 +51,6 @@ function handleRNG(unparsedRNG) {
 
     blocklyWorkspace.clear();
     blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
-    scrollToWorkspace();
 }
 
 
@@ -60,5 +59,4 @@ function generateXML(){
     var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
 	var output = vkbeautify.xml(XMLToString);
 	document.getElementById("XMLOutput").value = output;
-    scrollToTop();
 }
