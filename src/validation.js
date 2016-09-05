@@ -21,6 +21,7 @@
 function validateBlocklyGraph(){
     var blocks = Blockly.getMainWorkspace().getTopBlocks();
 
+	document.getElementById("XMLOutput").value = "";
     if(blocks.length == 0){
         document.getElementById('validation-error-p').innerHTML = "Workspace is empty";
         return false;
