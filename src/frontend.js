@@ -27,6 +27,8 @@ function initWorkspace() {
         toolbox: document.getElementById('toolbox'),
         comments: false,
         trashcan: true,
+         zoom: {controls: true, wheel: true},
+         grid: {spacing: 20},
         collapse: true
     });
 }
