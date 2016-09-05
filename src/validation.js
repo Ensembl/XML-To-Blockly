@@ -48,6 +48,7 @@ function validateBlocklyGraph(){
 function validateBlock(block){
 	var blockValidationResult   = true;
     var availableNotchNumbers   = block.getStatementInputNames();
+    var thisBlockErrors         = [];
 
     for(var i=0; i<availableNotchNumbers.length; i++) {
         var notchNumber         = availableNotchNumbers[i];
@@ -58,10 +59,18 @@ function validateBlock(block){
         var thisNotchIsValid = validatorDict[block.type][notchNumber].validate(actualChildren)
         console.log("notch", block.type, notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
 
+        if (!thisNotchIsValid) {
+            thisBlockErrors.push(block.getInput(notchNumber).fieldRow[1].getText());
+        }
         blockValidationResult = thisNotchIsValid && blockValidationResult;
         for(var j=0;j<slotContents.length;j++){
             blockValidationResult = validateBlock(slotContents[j]) && blockValidationResult; // check each of the child blocks in turn
         }
+    }
+    if (thisBlockErrors.length > 0) {
+        block.setWarningText("These connections are not valid: '" + thisBlockErrors.join("'\n'") + "'" );
+    } else {
+        block.setWarningText(null);
     }
 	return blockValidationResult;
 }
