@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
-		<element name="ele">
-			<interleave>
-
-				<element name="a">
-					<text/>
-				</element>
-
-				<zeroOrMore>
-					<element name="b">
-						<text/>
-					</element>	
-				</zeroOrMore>
-
-			</interleave>
-		</element>
-	</start>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <element name="ele">
+      <interleave>
+        <element name="a">
+          <text/>
+        </element>
+        <zeroOrMore>
+          <element name="b">
+            <text/>
+          </element>
+        </zeroOrMore>
+      </interleave>
+    </element>
+  </start>
 </grammar>

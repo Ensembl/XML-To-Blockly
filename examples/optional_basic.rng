@@ -1,24 +1,23 @@
-<grammar ns="test_data" xmlns="http://relaxng.org/ns/structure/1.0">
-	<start>
-		<element name="grouper">
-			<element name="first">
-				<element name="first_child">
-					<text/>
-				</element>
-			</element>
-
-			<element name="second">
-				<text/>
-			</element>
-
-			<optional>
-				<element name="third">
-					<text/>
-				</element>
-				<element name="fourth">
-					<text/>
-				</element>
-			</optional>
-		</element>
-	</start>
+<?xml version="1.0"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <element name="grouper">
+      <element name="first">
+        <element name="first_child">
+          <text/>
+        </element>
+      </element>
+      <element name="second">
+        <text/>
+      </element>
+      <optional>
+        <element name="third">
+          <text/>
+        </element>
+        <element name="fourth">
+          <text/>
+        </element>
+      </optional>
+    </element>
+  </start>
 </grammar>

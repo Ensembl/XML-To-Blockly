@@ -1,14 +1,15 @@
-<grammar ns="test_data" xmlns="http://relaxng.org/ns/structure/1.0">
-	<start>	
-		<element name="card">
-			<interleave>
-				<element name="last_name">
-					<text/>
-				</element>
-				<element name="first_name">
-					<text/>
-				</element>	
-			</interleave>
-		</element>
-	</start>
+<?xml version="1.0"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <element name="card">
+      <interleave>
+        <element name="last_name">
+          <text/>
+        </element>
+        <element name="first_name">
+          <text/>
+        </element>
+      </interleave>
+    </element>
+  </start>
 </grammar>

@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
   <define name="two_children">
-        <element name="first_child">
-          <text/>
-        </element>
-        <text/>
-        <element name="second_child">
-          <text/>
-        </element>
+    <element name="first_child">
+      <text/>
+    </element>
+    <text/>
+    <element name="second_child">
+      <text/>
+    </element>
   </define>
-
   <start>
     <element name="grouper">
       <element name="first">
-          <ref name="two_children"/>
+        <ref name="two_children"/>
       </element>
       <element name="second">
-          <ref name="two_children"/>
+        <ref name="two_children"/>
       </element>
-  </element>  
+    </element>
   </start>
 </grammar>

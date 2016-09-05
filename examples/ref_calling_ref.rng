@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
-		<ref name="bookshelf"/>
-	</start>
-	
-	<define name="bookshelf">
-		<oneOrMore>
-			<ref name="book" />
-		</oneOrMore>
-	</define>
-
-	<define name="book">
-		<oneOrMore>
-			<element name="page">
-				<text/>
-			</element>	
-		</oneOrMore>
-	</define>	
-</grammar>	
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <ref name="bookshelf"/>
+  </start>
+  <define name="bookshelf">
+    <oneOrMore>
+      <ref name="book"/>
+    </oneOrMore>
+  </define>
+  <define name="book">
+    <oneOrMore>
+      <element name="page">
+        <text/>
+      </element>
+    </oneOrMore>
+  </define>
+</grammar>

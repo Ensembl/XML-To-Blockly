@@ -1,27 +1,28 @@
-<grammar ns="test_data" xmlns="http://relaxng.org/ns/structure/1.0" xmlns:blockly="whatever">
-	<start>	
-		<element name="book" blockly:name="My pretty name">
-			<attribute name="subject_name">
-				<text/>
-			</attribute>
-			<element name="owner">
-				<attribute name="name">
-					<text/>
-				</attribute>
-			</element>
-			<attribute name="series_name">
-				<text/>
-			</attribute>
-			<element name="book_series">
-				<attribute name="author">
-					<text/>
-				</attribute>
-			</element>
-			<attribute name="last">
-				<text/>
-			</attribute>
-			<text/>
-			<text/>
-		</element>
-	</start>
+<?xml version="1.0"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" xmlns:blockly="whatever">
+  <start>
+    <element name="book" blockly:name="My pretty name">
+      <attribute name="subject_name">
+        <text/>
+      </attribute>
+      <element name="owner">
+        <attribute name="name">
+          <text/>
+        </attribute>
+      </element>
+      <attribute name="series_name">
+        <text/>
+      </attribute>
+      <element name="book_series">
+        <attribute name="author">
+          <text/>
+        </attribute>
+      </element>
+      <attribute name="last">
+        <text/>
+      </attribute>
+      <text/>
+      <text/>
+    </element>
+  </start>
 </grammar>

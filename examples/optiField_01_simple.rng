@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
-		<element name="ele">
-
-			<optional>
-				<attribute name="attr1" />
-			</optional>
-
-			<text/>
-			
-		</element>
-	</start>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <element name="ele">
+      <optional>
+        <attribute name="attr1"/>
+      </optional>
+      <text/>
+    </element>
+  </start>
 </grammar>

@@ -1,42 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
-		<ref name="bookshelf"/>
-	</start>
-	
-	<define name="bookshelf">
-		<element name="bottom_shelf">
-			<oneOrMore>
-				<ref name="book" />
-			</oneOrMore>
-		</element>
-		<element name="middle_shelf">
-			<choice>
-			<ref name="book" />
-			<ref name="journal" />
-			</choice>
-		</element>
-	</define>
-
-	<define name="book">
-		<element name="book">
-			<attribute name="author" />
-			<oneOrMore>
-				<element name="page">
-					<text/>
-				</element>	
-			</oneOrMore>
-		</element>
-	</define>	
-
-	<define name="journal">
-		<element name="journal">
-			<oneOrMore>
-				<element name="page">
-					<text/>
-				</element>	
-			</oneOrMore>
-		</element>
-	</define>	
-
-</grammar>	
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <ref name="bookshelf"/>
+  </start>
+  <define name="bookshelf">
+    <element name="bottom_shelf">
+      <oneOrMore>
+        <ref name="book"/>
+      </oneOrMore>
+    </element>
+    <element name="middle_shelf">
+      <choice>
+        <ref name="book"/>
+        <ref name="journal"/>
+      </choice>
+    </element>
+  </define>
+  <define name="book">
+    <element name="book">
+      <attribute name="author"/>
+      <oneOrMore>
+        <element name="page">
+          <text/>
+        </element>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="journal">
+    <element name="journal">
+      <oneOrMore>
+        <element name="page">
+          <text/>
+        </element>
+      </oneOrMore>
+    </element>
+  </define>
+</grammar>

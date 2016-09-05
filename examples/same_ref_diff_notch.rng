@@ -1,38 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
-		<ref name="D"/>
-	</start>
-	
-	<define name="D">
-		<oneOrMore>
-			<ref name="A"/>
-		</oneOrMore>
-		
-		<choice>
-			<ref name="A"/>
-			<attribute name="dummy_attr"/>
-		</choice>
-	</define>
-	
-	<define name="A">
-		<ref name="B"/>
-		<ref name="C"/>
-	</define>
-	
-	<define name="B">
-		<element name="B_child">
-			<text/>
-		</element>
-		<ref name="C"/>
-	</define>
-	
-	<define name="C">
-		<element name="C_child">
-			<text/>
-		</element>
-		<optional>
-			<ref name="A"/>
-		</optional>	
-	</define>
-</grammar>	
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <ref name="D"/>
+  </start>
+  <define name="D">
+    <oneOrMore>
+      <ref name="A"/>
+    </oneOrMore>
+    <choice>
+      <ref name="A"/>
+      <attribute name="dummy_attr"/>
+    </choice>
+  </define>
+  <define name="A">
+    <ref name="B"/>
+    <ref name="C"/>
+  </define>
+  <define name="B">
+    <element name="B_child">
+      <text/>
+    </element>
+    <ref name="C"/>
+  </define>
+  <define name="C">
+    <element name="C_child">
+      <text/>
+    </element>
+    <optional>
+      <ref name="A"/>
+    </optional>
+  </define>
+</grammar>

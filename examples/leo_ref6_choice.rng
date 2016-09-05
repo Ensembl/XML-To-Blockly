@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
   <start>
     <element name="grouper">
-          <choice>
-              <element name="left">
-                    <text/>
-              </element>
-              <element name="right">
-                    <text/>
-              </element>
-          </choice>
-
-          <element name="first">
-              <element name="before">
-                    <text/>
-              </element>
-          </element>
-    </element>      
+      <choice>
+        <element name="left">
+          <text/>
+        </element>
+        <element name="right">
+          <text/>
+        </element>
+      </choice>
+      <element name="first">
+        <element name="before">
+          <text/>
+        </element>
+      </element>
+    </element>
   </start>
 </grammar>

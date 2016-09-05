@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
   <start>
-        <ref name="A"/>
-    </start>
-    
-    <define name="A">
-        <ref name="C"/>
-    </define>
-    
-    <define name="B">
-        <ref name="C"/>
-    </define>
-    
-    <define name="C">
-        <choice>
-            <ref name="A"/>
-            <ref name="B"/>
-        </choice>    
-    </define>
+    <ref name="A"/>
+  </start>
+  <define name="A">
+    <ref name="C"/>
+  </define>
+  <define name="B">
+    <ref name="C"/>
+  </define>
+  <define name="C">
+    <choice>
+      <ref name="A"/>
+      <ref name="B"/>
+    </choice>
+  </define>
 </grammar>

@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0">
-<start>
-	<element name="a">
-		<choice>
-			<element name="b">
-				<text/>
-			</element>
-
-			<optional>
-				<element name="c">
-					<text/>
-				</element>
-			</optional>
-		</choice>
-	</element>
-</start>
+  <start>
+    <element name="a">
+      <choice>
+        <element name="b">
+          <text/>
+        </element>
+        <optional>
+          <element name="c">
+            <text/>
+          </element>
+        </optional>
+      </choice>
+    </element>
+  </start>
 </grammar>

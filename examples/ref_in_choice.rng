@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
-		<choice>
-			<element name="diary">
-				<text/>
-			</element>
-			
-			<ref name="addressBook"/>	
-		</choice>	
-	</start>
-	<define name="addressBook">
-		<element name="name">
-			<text/>
-		</element>
-
-		<element name="phone">
-			<text/>
-		</element>	
-	</define>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <choice>
+      <element name="diary">
+        <text/>
+      </element>
+      <ref name="addressBook"/>
+    </choice>
+  </start>
+  <define name="addressBook">
+    <element name="name">
+      <text/>
+    </element>
+    <element name="phone">
+      <text/>
+    </element>
+  </define>
 </grammar>

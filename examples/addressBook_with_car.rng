@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns:blockly="http://relaxng.org/ns/annotation/1.0" xmlns="http://relaxng.org/ns/structure/1.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns:blockly="http://relaxng.org/ns/annotation/1.0" xmlns="http://relaxng.org/ns/structure/1.0">
   <start>
     <element name="addressBook">
       <oneOrMore blockly:name="contact">

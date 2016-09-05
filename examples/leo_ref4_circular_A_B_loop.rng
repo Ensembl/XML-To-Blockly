@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
   <define name="circular_A">
-        <ref name="circular_B"/>
+    <ref name="circular_B"/>
   </define>
-
   <define name="circular_B">
-        <ref name="circular_A"/>
+    <ref name="circular_A"/>
   </define>
-
-
   <start>
-      <element name="first">
-          <element name="before">
-                <text/>
-          </element>
-          <ref name="circular_A"/>
+    <element name="first">
+      <element name="before">
+        <text/>
       </element>
+      <ref name="circular_A"/>
+    </element>
   </start>
 </grammar>

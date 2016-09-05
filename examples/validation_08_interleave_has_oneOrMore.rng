@@ -1,25 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0">
-	<start>
-		<element name="addressBook">
-			<interleave>
-
-				<element name="first">
-					<text/>
-				</element>
-				<element name="second">
-					<text/>
-				</element>
-				<element name="third">
-					<text/>
-				</element>
-				<oneOrMore>
-					<element name="repeatable">
-						<text/>
-					</element>
-				</oneOrMore>
-				
-			</interleave>
-		</element>
-	</start>
+  <start>
+    <element name="addressBook">
+      <interleave>
+        <element name="first">
+          <text/>
+        </element>
+        <element name="second">
+          <text/>
+        </element>
+        <element name="third">
+          <text/>
+        </element>
+        <oneOrMore>
+          <element name="repeatable">
+            <text/>
+          </element>
+        </oneOrMore>
+      </interleave>
+    </element>
+  </start>
 </grammar>

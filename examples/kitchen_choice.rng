@@ -1,14 +1,15 @@
-<grammar ns="test_data" xmlns="http://relaxng.org/ns/structure/1.0">
-<start>
-<element name="kitchen">
-<choice>
-<element name="spoon">
-<text/>
-</element>
-<element name="fork">
-<text/>
-</element>
-</choice>
-</element>
-</start>
+<?xml version="1.0"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <element name="kitchen">
+      <choice>
+        <element name="spoon">
+          <text/>
+        </element>
+        <element name="fork">
+          <text/>
+        </element>
+      </choice>
+    </element>
+  </start>
 </grammar>

@@ -1,26 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
- 
-<choice>
-
-          <element name="C">
-                <oneOrMore>
-                      <element name="D">
-                           <text/>
-                      </element>
-                </oneOrMore>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <choice>
+      <element name="C">
+        <oneOrMore>
+          <element name="D">
+            <text/>
           </element>
-
-          <element name="C">
-                <oneOrMore>
-                      <element name="D">
-                           <text/>
-                      </element>
-                </oneOrMore>
+        </oneOrMore>
+      </element>
+      <element name="C">
+        <oneOrMore>
+          <element name="D">
+            <text/>
           </element>
-
-</choice>
-
- 	</start>
+        </oneOrMore>
+      </element>
+    </choice>
+  </start>
 </grammar>

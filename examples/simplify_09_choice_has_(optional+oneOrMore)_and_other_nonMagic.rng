@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="test_data">
-	<start>
-		<element name="ele">
-			<choice>
-
-				<optional>
-
-					<attribute name="a"/>
-
-					<attribute name="b"/>
-
-					<oneOrMore>
-						<element name="has_bottom">
-							<text/>
-						</element>
-					</oneOrMore>
-
-				</optional>
-
-				<attribute name="test"/>
-
-			</choice>
-		</element>
-	</start>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <element name="ele">
+      <choice>
+        <optional>
+          <attribute name="a"/>
+          <attribute name="b"/>
+          <oneOrMore>
+            <element name="has_bottom">
+              <text/>
+            </element>
+          </oneOrMore>
+        </optional>
+        <attribute name="test"/>
+      </choice>
+    </element>
+  </start>
 </grammar>

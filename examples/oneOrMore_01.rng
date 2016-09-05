@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0">
-	<start>
-		<element name="ele">
-			<oneOrMore>
-				<element name="a">
-					<text/>
-				</element>
-				<element name="b">
-					<text/>
-				</element>	
-			</oneOrMore>
-
-			<element name="non_repeatable">
-				<text/>
-			</element>
-		</element>
-	</start>
+  <start>
+    <element name="ele">
+      <oneOrMore>
+        <element name="a">
+          <text/>
+        </element>
+        <element name="b">
+          <text/>
+        </element>
+      </oneOrMore>
+      <element name="non_repeatable">
+        <text/>
+      </element>
+    </element>
+  </start>
 </grammar>
