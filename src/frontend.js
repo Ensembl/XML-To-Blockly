@@ -14,6 +14,17 @@
 
 var blocklyWorkspace;
 
+function loadOurExample( example_name ){
+    var fileContent = syncLoadFileFromURL("examples/" + example_name );
+    uploadFileAndSwitchTab(fileContent);
+}
+
+function uploadFileAndSwitchTab(file){
+    document.getElementById('file-name').innerHTML = "";
+    document.getElementById('rng_area').value = file;
+    handleRNG( document.getElementById('rng_area').value )
+    //document.querySelector('a[href^="#editor"]').click();
+}
 
 //init function for initializing the Blockly block area
 function initWorkspace() {
