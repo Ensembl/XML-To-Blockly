@@ -107,7 +107,11 @@ function validateBlock(block){
     }
 
     if (thisBlockErrors.length > 0) {
-        block.setWarningText("These connections are not valid: '" + thisBlockErrors.join("'\n'") + "'" );
+        if (thisBlockErrors.length == 1) {
+            block.setWarningText("The connection '" + thisBlockErrors[0] + "' is not valid");
+        } else {
+            block.setWarningText("These connections are not valid: '" + thisBlockErrors.join("', '") + "'" );
+        }
         return false;
     } else {
         block.setWarningText(null);
