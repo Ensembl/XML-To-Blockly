@@ -80,6 +80,9 @@ function validateBlockIfNecessary(block, event) {
         for(var i=0; i<event.ids.length; i++) {
             var block = blocklyWorkspace.getBlockById( event.ids[i] );
             validateBlock(block);
+            if (block.getParent()) {
+                parentConnection[block.id] = block.getParent();
+            }
         }
     }
 }
