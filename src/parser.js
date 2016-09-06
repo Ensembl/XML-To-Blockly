@@ -478,12 +478,9 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             nodeDetails.content = childrenStructureInfo;
             var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
             if (children.length == 1){
-                // FIXME: we shouldn't have to split the Blockly code
-                var xxx = blocklyCode.indexOf('.appendField(', 28); // to skip the first one
-                var childPartToBeAdded = blocklyCode.substring(xxx);
-                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, childPartToBeAdded, false);
+                blocklyCode = this.makeBlocklyCode_singleLineOptiField(name, blocklyCode);
             } else{
-                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, blocklyCode, true);
+                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, blocklyCode);
             }
 
         } else{
@@ -558,14 +555,14 @@ RNG2Blockly.prototype.makeBlocklyCode_DropDown = function(label, internalName, v
     return "this.appendDummyInput().appendField('" + this.uni.getIndentation() + "').appendField('" + label + "').appendField(new Blockly.FieldDropdown([" + values + "]),'" + internalName + "');";
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, content, needLabel) {
+RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, content) {
     var code = "this.appendDummyInput('" + internalName + "').appendField('" + this.uni.getIndentation() + "').appendField(new Blockly.FieldCheckbox(\"TRUE\", optiField_checker), '" + internalName + "_checkbox')";
-    if (needLabel) {
-        code += ".appendField('" + label + "');" + content;
-    } else {
-        code += content;
-    }
+    code += ".appendField('" + label + "');" + content;
     return code + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);";  //hidden field to detect end of optiField
+};
+
+RNG2Blockly.prototype.makeBlocklyCode_singleLineOptiField = function(internalName, lineCode) {
+    return lineCode.slice(0, -2) + ".appendField(new Blockly.FieldCheckbox(\"TRUE\"), '" + internalName + "_checkbox');";
 };
 
 RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(slotSignature, slotRuleToMatchWithIncomingNotch, nodeDetails) {
