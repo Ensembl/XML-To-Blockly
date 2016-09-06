@@ -101,17 +101,17 @@ function validateBlock(block){
         //console.log("notch", notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
 
         if (!thisNotchIsValid) {
-            var fields = block.getInput(notchNumber).fieldRow
-            thisBlockErrors.push(fields[fields.length-1].getText());
+            var fields = block.getInput(notchNumber).fieldRow;
+            if (actualChildren.length) {
+                thisBlockErrors.push("The list '" + actualChildren.join(",") + "' does not match the pattern '" + fields[fields.length-1].getText() + "'");
+            } else {
+                thisBlockErrors.push("The connection '" + fields[fields.length-1].getText() + "' cannot be left empty");
+            }
         }
     }
 
     if (thisBlockErrors.length > 0) {
-        if (thisBlockErrors.length == 1) {
-            block.setWarningText("The connection '" + thisBlockErrors[0] + "' is not valid");
-        } else {
-            block.setWarningText("These connections are not valid: '" + thisBlockErrors.join("', '") + "'" );
-        }
+        block.setWarningText( thisBlockErrors.join("\n") );
         return false;
     } else {
         block.setWarningText(null);
