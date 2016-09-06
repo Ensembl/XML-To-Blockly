@@ -34,7 +34,7 @@ function validateBlocklyGraph(){
     } else {
         var allBlocks = blocklyWorkspace.getAllBlocks();
         var blocklyValidationResult = true;
-        for(var i=0; j<allBlocks.length; i++) {
+        for(var i=0; i<allBlocks.length; i++) {
             blocklyValidationResult = validateBlock(allBlocks[i]) && blocklyValidationResult;
         }
 
