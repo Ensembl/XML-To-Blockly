@@ -50,33 +50,31 @@ function validateBlocklyGraph(){
 
 var parentConnection = {};
 
-function validateBlockIfNecessary(block, event) {
+function validateEvent(event) {
     var hasBlocks = blocklyWorkspace.getTopBlocks().length > 0;
-    console.log(event.toJson(), block.id, blocklyWorkspace.getTopBlocks().length, block.type, (block.getParent() ? block.getParent().type : null));
+    //console.log(event.toJson(), hasBlocks);
 
     if (!hasBlocks) {
-        // This happens when the toolbox is created
         return;
     }
 
     if (event.type == Blockly.Events.MOVE) {
+        //var block = blocklyWorkspace.getBlockById( event.blockId );
+        //console.log(block.type, (block.getParent() ? block.getParent().type : null));
         if (event.newParentId) {
             // A block is moved and attached to another one
-            if (event.newParentId == block.id) {
-                // Here we check the parent's slot
-                validateBlock(block);
-                parentConnection[event.blockId] = block;
-            }
-        } else {
-            // The block is supposed to have a parent, but the parent is gone
-            if (parentConnection.hasOwnProperty(block.id) && !block.getParent()) {
-                // The parent must be checked again
-                console.log("connection lost");
-                validateBlock(parentConnection[block.id]);
-                delete parentConnection[block.id];
-            }
+            var parentBlock = blocklyWorkspace.getBlockById( event.newParentId );
+            //console.log("new parent of ", block.type, " is ", parentBlock.type);
+            validateBlock(parentBlock);
+            parentConnection[event.blockId] = parentBlock;
+        } else if (parentConnection.hasOwnProperty(event.blockId)) {
+            // A block that is supposed to have a parent generates a MOVE
+            // event only if it is disconnected from it
+            //console.log("disconnect kid of ", parentConnection[event.blockId].type);
+            validateBlock(parentConnection[event.blockId]);
+            delete parentConnection[event.blockId];
         }
-    } else if (event.type == Blockly.Events.CREATE && block.id == event.blockId) {
+    } else if (event.type == Blockly.Events.CREATE) {
         for(var i=0; i<event.ids.length; i++) {
             var block = blocklyWorkspace.getBlockById( event.ids[i] );
             validateBlock(block);

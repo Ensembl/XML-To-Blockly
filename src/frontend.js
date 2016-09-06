@@ -37,6 +37,7 @@ function initWorkspace() {
         collapse: true
     });
     blocklyWorkspace.addChangeListener(Blockly.Events.disableOrphans);
+    blocklyWorkspace.addChangeListener(validateEvent);
 }
 
 // loads the file into RNG textarea and leaves it there for potential manual edit
