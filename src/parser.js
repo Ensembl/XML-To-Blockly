@@ -12,45 +12,44 @@
  * limitations under the License.
  */
 
-var magicType = {
-    'optional'  :   {
-                        'hasBottomNotch'    :   false,
-                        'hasSeparateKids'   :   false,
-                        'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '?'
-                    },
-    'choice'  :   {
-                        'hasBottomNotch'    :   false,
-                        'hasSeparateKids'   :   true,
-                        'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '|'
-                    },
-    'interleave'  :   {
-                        'hasBottomNotch'    :   true,
-                        'hasSeparateKids'   :   true,
-                        'hasLoopRisk'       :   true,
-                        'prettyIndicator'   :   '&'
-                    },
-    'zeroOrMore'  :   {
-                        'hasBottomNotch'    :   true,
-                        'hasSeparateKids'   :   false,
-                        'hasLoopRisk'       :   false,
-                        'prettyIndicator'   :   '*'
-                    },
-    'oneOrMore'  :   {
-                        'hasBottomNotch'    :   true,
-                        'hasSeparateKids'   :   false,
-                        'hasLoopRisk'       :   true,
-                        'prettyIndicator'   :   '+'
-                    }
-};
-
 var blockStructureDict;
 var validatorDict;
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
     this.numberTypes = [ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
+    this.magicType = {
+        'optional'  :   {
+                            'hasBottomNotch'    :   false,
+                            'hasSeparateKids'   :   false,
+                            'hasLoopRisk'       :   false,
+                            'prettyIndicator'   :   '?'
+                        },
+        'choice'  :   {
+                            'hasBottomNotch'    :   false,
+                            'hasSeparateKids'   :   true,
+                            'hasLoopRisk'       :   false,
+                            'prettyIndicator'   :   '|'
+                        },
+        'interleave'  :   {
+                            'hasBottomNotch'    :   true,
+                            'hasSeparateKids'   :   true,
+                            'hasLoopRisk'       :   true,
+                            'prettyIndicator'   :   '&'
+                        },
+        'zeroOrMore'  :   {
+                            'hasBottomNotch'    :   true,
+                            'hasSeparateKids'   :   false,
+                            'hasLoopRisk'       :   false,
+                            'prettyIndicator'   :   '*'
+                        },
+        'oneOrMore'  :   {
+                            'hasBottomNotch'    :   true,
+                            'hasSeparateKids'   :   false,
+                            'hasLoopRisk'       :   true,
+                            'prettyIndicator'   :   '+'
+                        }
+    };
 
     var rootElement = rngDoc.documentElement;
     var startContent = (rootElement.nodeName == "grammar")
@@ -327,7 +326,7 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
         } else {
             currChild.setAttribute("context", substContext);                                // magic tags will use this to propagate the context
 
-            if( magicType.hasOwnProperty(currChild.nodeName) ) {      // testing if currChild is magic in general
+            if( this.magicType.hasOwnProperty(currChild.nodeName) ) {      // testing if currChild is magic in general
                 currChild.setAttribute("context_child_idx", "("+currChild.getAttribute("context")+"_"+i.toString()+")");  // magic tags will need this to create a block
 			} else {
                 currChild.setAttribute("haveAlreadySeen", haveAlreadySeenStr);                  // non-magic tags will need this to support loop detection
@@ -456,7 +455,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         var childrenStructureInfo = [];
 
         for(var i=0;i<children.length;i++){
-            if(magicType.hasOwnProperty(children[i].nodeName)){
+            if(this.magicType.hasOwnProperty(children[i].nodeName)){
                 this.successfulOptiField = false;
             } else if (children.length > 1) {
                 this.uni.indent( i == children.length-1 );
@@ -498,7 +497,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
 	}
 
-    else if (magicType.hasOwnProperty(nodeType)) {      // interleave, zeroOrMore, oneOrMore, and some choice
+    else if (this.magicType.hasOwnProperty(nodeType)) {      // interleave, zeroOrMore, oneOrMore, and some choice
         if(this.currentlyCreatingOptiField){
             this.successfulOptiField = false;
             return null;
@@ -595,16 +594,16 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
             //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
         var stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
         var topListStr      = '["'+stagedSlotNumber+'"]';
-        var wantBottomNotch = bottomNotchOverride || magicType[nodeType].hasBottomNotch;
+        var wantBottomNotch = bottomNotchOverride || this.magicType[nodeType].hasBottomNotch;
         var bottomListStr   = wantBottomNotch ? topListStr : "[]";
 
             node.setAttribute("visited", "true");
 
-            if( magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
+            if( this.magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
 
-                    if(magicType.hasOwnProperty(currentChild.nodeName)){
+                    if(this.magicType.hasOwnProperty(currentChild.nodeName)){
                         this.handleMagicTag(currentChild, haveAlreadySeenStr, name + i, wantBottomNotch, validationConstraint, nodeDetails, false);
 
                     } else {
@@ -616,7 +615,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
 			} else {      //current node is oneOrMore, zeroOrMore, optional
 
-                if (children.length == 1 && magicType.hasOwnProperty(children[0].nodeName)) {
+                if (children.length == 1 && this.magicType.hasOwnProperty(children[0].nodeName)) {
                     this.handleMagicTag(children[0], haveAlreadySeenStr, name + "0", wantBottomNotch, validationConstraint, nodeDetails, false);
 
                 } else {
@@ -625,7 +624,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                 }
             }
-            var slotSignature = slotLabelFromValidationRules( validationDetails[0] );
+            var slotSignature = this.slotLabelFromValidationRules( validationDetails[0] );
             node.setAttribute("slotSignature", slotSignature);
             node.setAttribute("stagedSlotNumber", stagedSlotNumber);
             node.setAttribute("slotValidationRules", JSON.stringify(validationDetails[0]));
@@ -661,15 +660,15 @@ function makeSubstituteMacro(qi) {
 
 // Recursive method that returns a pretty name for the given Validation
 // rule, since it happens to be exactly the structure we need
-function slotLabelFromValidationRules(g) {
+RNG2Blockly.prototype.slotLabelFromValidationRules = function(g) {
     if (g[0] == "block") {
         return g[1];
-    } else if (magicType[g[0]].hasSeparateKids ) {
-        var kidLabels = g[1].map( function(x) {return x[0]=="block" ? x[1] : ("(" + slotLabelFromValidationRules(x) + ")");} );
-        return kidLabels.join(" " + magicType[g[0]].prettyIndicator + " ");
+    } else if (this.magicType[g[0]].hasSeparateKids ) {
+        var kidLabels = g[1].map( function(x) {return x[0]=="block" ? x[1] : ("(" + this.slotLabelFromValidationRules(x) + ")");} );
+        return kidLabels.join(" " + this.magicType[g[0]].prettyIndicator + " ");
     } else {
         var gg = g[1][0];
-        return (gg[0] == "block" ? gg[1] : ("(" + slotLabelFromValidationRules(gg) + ")")) + magicType[g[0]].prettyIndicator;
+        return (gg[0] == "block" ? gg[1] : ("(" + this.slotLabelFromValidationRules(gg) + ")")) + this.magicType[g[0]].prettyIndicator;
     }
 }
 
