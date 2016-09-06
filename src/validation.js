@@ -50,7 +50,6 @@ function validateBlocklyGraph(){
 
 //get all blocks. Send each block's slots for validation. Send each child block of each slot for validation
 function validateBlock(block){
-	var blockValidationResult   = true;
     var availableNotchNumbers   = block.getStatementInputNames();
     var thisBlockErrors         = [];
 
