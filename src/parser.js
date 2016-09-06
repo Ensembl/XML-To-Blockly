@@ -173,7 +173,9 @@ function RNG2Blockly(rngDoc) {
                     + "this.setPreviousStatement(" + topText + ");"
                     + "this.setNextStatement(" + bottomText + ");"
                     + "this.setColour(" + this.hue.generate() + ");"
-                    + "}};";
+                    + "},"
+                    + "onchange:function() { validateBlock(this) },"
+                    + "};";
 
         blockCode = blockCode.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
             var blockType   = queueIndex_2_blockType[$1];

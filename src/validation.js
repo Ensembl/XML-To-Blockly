@@ -19,7 +19,7 @@
 
 
 function validateBlocklyGraph(){
-    var blocks = Blockly.getMainWorkspace().getTopBlocks();
+    var blocks = blocklyWorkspace.getTopBlocks();
 
 	document.getElementById("XMLOutput").value = "";
     if(blocks.length == 0){
@@ -32,7 +32,11 @@ function validateBlocklyGraph(){
         document.getElementById('validation-error-p').innerHTML = "It is compulsory to use the start block (block_0:start)";
         return false;
     } else {
-        var blocklyValidationResult = validateBlock(blocks[0]);
+        var allBlocks = blocklyWorkspace.getAllBlocks();
+        var blocklyValidationResult = true;
+        for(var i=0; j<allBlocks.length; i++) {
+            blocklyValidationResult = validateBlock(allBlocks[i]) && blocklyValidationResult;
+        }
 
         if(blocklyValidationResult) {
             generateXML();
@@ -62,17 +66,15 @@ function validateBlock(block){
         if (!thisNotchIsValid) {
             thisBlockErrors.push(block.getInput(notchNumber).fieldRow[1].getText());
         }
-        blockValidationResult = thisNotchIsValid && blockValidationResult;
-        for(var j=0;j<slotContents.length;j++){
-            blockValidationResult = validateBlock(slotContents[j]) && blockValidationResult; // check each of the child blocks in turn
-        }
     }
+
     if (thisBlockErrors.length > 0) {
         block.setWarningText("These connections are not valid: '" + thisBlockErrors.join("'\n'") + "'" );
+        return false;
     } else {
         block.setWarningText(null);
+        return true;
     }
-	return blockValidationResult;
 }
 
 function getBlockTypesOfSlotContents(blockArray){
