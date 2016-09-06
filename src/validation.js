@@ -86,6 +86,7 @@ function validateBlockIfNecessary(block, event) {
 
 //get all blocks. Send each block's slots for validation. Send each child block of each slot for validation
 function validateBlock(block){
+    //console.log("validateBlock(", block.type, block.id, ")");
     var availableNotchNumbers   = block.getStatementInputNames();
     var thisBlockErrors         = [];
 
@@ -96,7 +97,7 @@ function validateBlock(block){
 
         var actualChildren = getBlockTypesOfSlotContents(slotContents);
         var thisNotchIsValid = validatorDict[block.type][notchNumber].validate(actualChildren)
-        console.log("notch", block.type, notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
+        //console.log("notch", notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
 
         if (!thisNotchIsValid) {
             var fields = block.getInput(notchNumber).fieldRow
