@@ -45,14 +45,12 @@ var magicType = {
                     }
 };
 
-
-var numberTypes=[ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
-
 var blockStructureDict;
 var validatorDict;
 
 function RNG2Blockly(rngDoc) {
     this.rngDoc = rngDoc;
+    this.numberTypes = [ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
 
     var rootElement = rngDoc.documentElement;
     var startContent = (rootElement.nodeName == "grammar")
@@ -402,7 +400,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
             // TODO currently data ignores any <param> tags that it may contain
             var type        = children[0].getAttribute("type");
-            var typeChecker = isOneOf( numberTypes , (type||'') ) ? "Blockly.FieldTextInput.numberValidator" : "null";
+            var typeChecker = isOneOf( this.numberTypes , (type||'') ) ? "Blockly.FieldTextInput.numberValidator" : "null";
 
             if (type) {
                 displayName += " (" + type + ")";
