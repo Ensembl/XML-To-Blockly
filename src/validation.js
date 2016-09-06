@@ -48,6 +48,42 @@ function validateBlocklyGraph(){
     }
 }
 
+var parentConnection = {};
+
+function validateBlockIfNecessary(block, event) {
+    var hasBlocks = blocklyWorkspace.getTopBlocks().length > 0;
+    console.log(event.toJson(), block.id, blocklyWorkspace.getTopBlocks().length, block.type, (block.getParent() ? block.getParent().type : null));
+
+    if (!hasBlocks) {
+        // This happens when the toolbox is created
+        return;
+    }
+
+    if (event.type == Blockly.Events.MOVE) {
+        if (event.newParentId) {
+            // A block is moved and attached to another one
+            if (event.newParentId == block.id) {
+                // Here we check the parent's slot
+                validateBlock(block);
+                parentConnection[event.blockId] = block;
+            }
+        } else {
+            // The block is supposed to have a parent, but the parent is gone
+            if (parentConnection.hasOwnProperty(block.id) && !block.getParent()) {
+                // The parent must be checked again
+                console.log("connection lost");
+                validateBlock(parentConnection[block.id]);
+                delete parentConnection[block.id];
+            }
+        }
+    } else if (event.type == Blockly.Events.CREATE && block.id == event.blockId) {
+        for(var i=0; i<event.ids.length; i++) {
+            var block = blocklyWorkspace.getBlockById( event.ids[i] );
+            validateBlock(block);
+        }
+    }
+}
+
 //get all blocks. Send each block's slots for validation. Send each child block of each slot for validation
 function validateBlock(block){
     var availableNotchNumbers   = block.getStatementInputNames();

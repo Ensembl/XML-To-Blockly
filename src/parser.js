@@ -174,7 +174,7 @@ function RNG2Blockly(rngDoc) {
                     + "this.setNextStatement(" + bottomText + ");"
                     + "this.setColour(" + this.hue.generate() + ");"
                     + "},"
-                    + "onchange:function(event) { if (event.type == Blockly.Events.MOVE) {validateBlock(this)} },"
+                    + "onchange:function(event) { validateBlockIfNecessary(this, event) },"
                     + "};";
 
         blockCode = blockCode.replace(/SUBSTITUTE_QUEUE_INDEX_(\d+)_/g, function replacer(match, $1) {
