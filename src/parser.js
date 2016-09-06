@@ -584,7 +584,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var blocklyCode = "";
 
     var validationConstraint = [];
-    validationDetails.push( [ nodeType, validationConstraint ] );
+    validationDetails.push( [ nodeType, validationConstraint, this.getNodeDisplayName(node) ] );
 
     if(! node.hasAttribute("visited") ) {
 
@@ -658,6 +658,9 @@ function makeSubstituteMacro(qi) {
 // Recursive method that returns a pretty name for the given Validation
 // rule, since it happens to be exactly the structure we need
 RNG2Blockly.prototype.slotLabelFromValidationRules = function(g) {
+    if (g[2]) {
+        return g[2];
+    }
     if (g[0] == "block") {
         return g[1];
     } else if (this.magicType[g[0]].hasSeparateKids ) {
