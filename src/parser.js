@@ -664,7 +664,7 @@ RNG2Blockly.prototype.slotLabelFromValidationRules = function(g) {
     if (g[0] == "block") {
         return g[1];
     } else if (this.magicType[g[0]].hasSeparateKids ) {
-        var kidLabels = g[1].map( function(x) {return x[0]=="block" ? x[1] : ("(" + this.slotLabelFromValidationRules(x) + ")");} );
+        var kidLabels = g[1].map( function(x) {return x[0]=="block" ? x[1] : ("(" + this.slotLabelFromValidationRules(x) + ")");}, this );
         return kidLabels.join(" " + this.magicType[g[0]].prettyIndicator + " ");
     } else {
         var gg = g[1][0];
