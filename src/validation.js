@@ -64,7 +64,8 @@ function validateBlock(block){
         console.log("notch", block.type, notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
 
         if (!thisNotchIsValid) {
-            thisBlockErrors.push(block.getInput(notchNumber).fieldRow[1].getText());
+            var fields = block.getInput(notchNumber).fieldRow
+            thisBlockErrors.push(fields[fields.length-1].getText());
         }
     }
 
