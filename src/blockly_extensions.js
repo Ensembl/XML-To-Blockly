@@ -61,7 +61,7 @@ function optiField_checker(){
 	var iplist=source.inputList;
 
 	//find out at which position of the inputList of source block, the checkbox is present.
-    while(iplist[it].name != checkBoxFieldName){
+    while(iplist[it].name != checkBoxFieldName) {
         it++;
     }
 
@@ -72,27 +72,17 @@ function optiField_checker(){
      * 2 : The text label for the field
      * 3 : The text/dropdown field
      */
-    if(iplist[it].fieldRow.length == 4){
-        if(this.state_==false){
-            iplist[it].fieldRow[2].setVisible(true);
-            iplist[it].fieldRow[3].setVisible(true);
-            source.render();
-        } else{
-            iplist[it].fieldRow[2].setVisible(false);
-            iplist[it].fieldRow[3].setVisible(false);
-            source.render();
-        }
-    } else{
-        it++;
-        while(iplist[it].name != checkBoxFieldName+"end_of_optiField"){
-            if(this.state_==false){
-                iplist[it].setVisible(true);
-                source.render();
-            } else{
-                iplist[it].setVisible(false);
-                source.render();
-            }
+    var flipState = ! this.state_;
+
+    if(iplist[it].fieldRow.length == 4) {   // hide an element/attribute without gaining any space
+        iplist[it].fieldRow[2].setVisible(flipState);
+        iplist[it].fieldRow[3].setVisible(flipState);
+    } else {
+        it++;   // skipping the header
+        while(iplist[it].name != checkBoxFieldName+"end_of_optiField") {    // and running until the footer
+            iplist[it].setVisible(flipState);
             it++;
         }
     }
+    source.render();
 }
