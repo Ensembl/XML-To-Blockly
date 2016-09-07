@@ -32,7 +32,7 @@ function initWorkspace() {
         toolbox: document.getElementById('toolbox'),
         comments: false,
         trashcan: true,
-         zoom: {controls: true, wheel: true},
+         zoom: {controls: true, wheel: false},
          grid: {spacing: 20},
         collapse: true
     });
