@@ -563,8 +563,8 @@ RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, 
                  + ".appendField('" + this.uni.getIndentation() + "')"
                  + ".appendField(new Blockly.FieldCheckbox(\"TRUE\", optiField_checker), '" + internalName + "_checkbox')"
                  + ( (label != "") ? ".appendField('" + label + "');" : "")
-                 + content
-                 + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);";  //hidden field to detect end of optiField
+                 + content  // the assumption here is that content is terminated by a semicolon
+                 + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);";  // this hidden input line marks the end of optiField group
 
     return code;
 };

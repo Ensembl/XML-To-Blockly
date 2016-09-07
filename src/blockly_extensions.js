@@ -74,8 +74,7 @@ function optiField_checker(){
      */
     var flipState = ! this.state_;
 
-    if(iplist[it].fieldRow.length == 4) {   // hide an element/attribute without gaining any space
-        iplist[it].fieldRow[2].setVisible(flipState);
+    if(iplist[it].fieldRow.length == 4) {   // currently that's the way to detect a single-row optifield (bit risky)
         iplist[it].fieldRow[3].setVisible(flipState);
     } else {
         it++;   // skipping the header
