@@ -54,7 +54,7 @@ Blockly.Block.prototype.getStatementInputNames = function() {
 
 
 //function to toggle hide/show optiFields
-function optiField_checker(){
+function optiField_setter(newState) {
 	var source=this.sourceBlock_;
 	var checkBoxFieldName=this.name.split("_checkbox")[0]; //the name of the checkbox's dummyInput
 	var it = 0;
@@ -72,16 +72,17 @@ function optiField_checker(){
      * 2 : The text label for the field
      * 3 : The text/dropdown field
      */
-    var flipState = ! this.state_;
 
     if(iplist[it].fieldRow.length == 4) {   // currently that's the way to detect a single-row optifield (bit risky)
-        iplist[it].fieldRow[3].setVisible(flipState);
+        iplist[it].fieldRow[3].setVisible(newState);
     } else {
         it++;   // skipping the header
         while(iplist[it].name != checkBoxFieldName+"end_of_optiField") {    // and running until the footer
-            iplist[it].setVisible(flipState);
+            iplist[it].setVisible(newState);
             it++;
         }
     }
     source.render();
+
+    return newState;
 }

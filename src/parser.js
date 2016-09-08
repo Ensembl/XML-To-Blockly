@@ -559,12 +559,15 @@ RNG2Blockly.prototype.makeBlocklyCode_DropDown = function(label, internalName, v
 };
 
 RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, content) {
+    var checkBoxName    = internalName + "_checkbox";
+    var initialState    = false;
     var code = "this.appendDummyInput('" + internalName + "')"
                  + ".appendField('" + this.uni.getIndentation() + "')"
-                 + ".appendField(new Blockly.FieldCheckbox(\"TRUE\", optiField_checker), '" + internalName + "_checkbox')"
+                 + ".appendField(new Blockly.FieldCheckbox('" + String(initialState).toUpperCase() + "', optiField_setter), '" + checkBoxName + "')"
                  + ( (label != "") ? ".appendField('" + label + "');" : "")
                  + content  // the assumption here is that content is terminated by a semicolon
-                 + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);";  // this hidden input line marks the end of optiField group
+                 + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);\n"     // this hidden input line marks the end of optiField group
+                 + "optiField_setter.call( this.getField('" + checkBoxName + "'), " + initialState + ");"; // actually set the initialState
 
     return code;
 };
