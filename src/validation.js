@@ -19,7 +19,7 @@
 
 
 XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
-    var blocks = blocklyWorkspace.getTopBlocks();
+    var blocks = this.blocklyWorkspace.getTopBlocks();
 
 	document.getElementById("XMLOutput").value = "";
     if(blocks.length == 0){
@@ -32,7 +32,7 @@ XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
         document.getElementById('validation-error-p').innerHTML = "It is compulsory to use the start block (block_0:start)";
         return false;
     } else {
-        var allBlocks = blocklyWorkspace.getAllBlocks();
+        var allBlocks = this.blocklyWorkspace.getAllBlocks();
         var blocklyValidationResult = true;
         for(var i=0; i<allBlocks.length; i++) {
             blocklyValidationResult = this.validateBlock(allBlocks[i]) && blocklyValidationResult;
@@ -51,7 +51,7 @@ XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
 var parentConnection = {};
 
 XMLToBlocklyWorkspace.prototype.validateEvent = function(event) {
-    var hasBlocks = blocklyWorkspace.getTopBlocks().length > 0;
+    var hasBlocks = this.blocklyWorkspace.getTopBlocks().length > 0;
     //console.log(event.toJson(), hasBlocks);
 
     if (!hasBlocks) {
@@ -63,7 +63,7 @@ XMLToBlocklyWorkspace.prototype.validateEvent = function(event) {
         //console.log(block.type, (block.getParent() ? block.getParent().type : null));
         if (event.newParentId) {
             // A block is moved and attached to another one
-            var parentBlock = blocklyWorkspace.getBlockById( event.newParentId );
+            var parentBlock = this.blocklyWorkspace.getBlockById( event.newParentId );
             //console.log("new parent of ", block.type, " is ", parentBlock.type);
             this.validateBlock(parentBlock);
             parentConnection[event.blockId] = parentBlock;
@@ -76,7 +76,7 @@ XMLToBlocklyWorkspace.prototype.validateEvent = function(event) {
         }
     } else if (event.type == Blockly.Events.CREATE) {
         for(var i=0; i<event.ids.length; i++) {
-            var block = blocklyWorkspace.getBlockById( event.ids[i] );
+            var block = this.blocklyWorkspace.getBlockById( event.ids[i] );
             this.validateBlock(block);
             if (block.getParent()) {
                 parentConnection[block.id] = block.getParent();

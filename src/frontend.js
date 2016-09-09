@@ -12,9 +12,8 @@
  * limitations under the License.
  */
 
-var blocklyWorkspace;
-
 function XMLToBlocklyWorkspace(){
+    this.blocklyWorkspace;
     this.blockStructureDict;
     this.validatorDict;
 }
@@ -33,7 +32,7 @@ XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
 
 //init function for initializing the Blockly block area
 XMLToBlocklyWorkspace.prototype.initWorkspace = function() {
-    blocklyWorkspace = Blockly.inject('blocklyDiv', {
+    this.blocklyWorkspace = Blockly.inject('blocklyDiv', {
         toolbox: document.getElementById('toolbox'),
         comments: false,
         trashcan: true,
@@ -41,8 +40,8 @@ XMLToBlocklyWorkspace.prototype.initWorkspace = function() {
          grid: {spacing: 20},
         collapse: true
     });
-    blocklyWorkspace.addChangeListener(Blockly.Events.disableOrphans);
-    blocklyWorkspace.addChangeListener(this.validateEvent());
+    this.blocklyWorkspace.addChangeListener(Blockly.Events.disableOrphans);
+    this.blocklyWorkspace.addChangeListener(this.validateEvent());
 }
 
 // loads the file into RNG textarea and leaves it there for potential manual edit
@@ -71,14 +70,14 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 
     eval(rng2Blockly.allCode.join(""));
 
-    blocklyWorkspace.clear();
-    blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
+    this.blocklyWorkspace.clear();
+    this.blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
     document.getElementById('saveBtn').disabled = false;
 }
 
 
 XMLToBlocklyWorkspace.prototype.generateXML = function(){
-    var xmlDoc = new XMLGenerator(this.blockStructureDict);
+    var xmlDoc = new XMLGenerator(this.blockStructureDict , this.blocklyWorkspace);
     var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
 	var output = vkbeautify.xml(XMLToString);
 	document.getElementById("XMLOutput").value = output;
