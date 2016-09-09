@@ -16,6 +16,7 @@ var blocklyWorkspace;
 
 function XMLToBlocklyWorkspace(){
     this.blockStructureDict;
+    this.validatorDict;
 }
 
 XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
@@ -31,7 +32,7 @@ XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
 }
 
 //init function for initializing the Blockly block area
-function initWorkspace() {
+XMLToBlocklyWorkspace.prototype.initWorkspace = function() {
     blocklyWorkspace = Blockly.inject('blocklyDiv', {
         toolbox: document.getElementById('toolbox'),
         comments: false,
@@ -41,7 +42,7 @@ function initWorkspace() {
         collapse: true
     });
     blocklyWorkspace.addChangeListener(Blockly.Events.disableOrphans);
-    blocklyWorkspace.addChangeListener(validateEvent);
+    blocklyWorkspace.addChangeListener(this.validateEvent());
 }
 
 // loads the file into RNG textarea and leaves it there for potential manual edit
@@ -61,8 +62,9 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
     var xmlParser = new DOMParser();
     var rngDoc = xmlParser.parseFromString(unparsedRNG, "text/xml");
 
-    this.blockStructureDict = {};   //initialize has here instead of in RNG2Blockly
-    var rng2Blockly = new RNG2Blockly(rngDoc , this.blockStructureDict);
+    this.blockStructureDict = {};   //initialize these dictionaries here instead of in RNG2Blockly
+    this.validatorDict = {};
+    var rng2Blockly = new RNG2Blockly(rngDoc , this.blockStructureDict, this.validatorDict);
 
     document.getElementById('toolbox').innerHTML = rng2Blockly.toolboxXML;
     document.getElementById('results').innerHTML = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";

@@ -35,7 +35,7 @@ XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
         var allBlocks = blocklyWorkspace.getAllBlocks();
         var blocklyValidationResult = true;
         for(var i=0; i<allBlocks.length; i++) {
-            blocklyValidationResult = validateBlock(allBlocks[i]) && blocklyValidationResult;
+            blocklyValidationResult = this.validateBlock(allBlocks[i]) && blocklyValidationResult;
         }
 
         if(blocklyValidationResult) {
@@ -50,7 +50,7 @@ XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
 
 var parentConnection = {};
 
-function validateEvent(event) {
+XMLToBlocklyWorkspace.prototype.validateEvent = function(event) {
     var hasBlocks = blocklyWorkspace.getTopBlocks().length > 0;
     //console.log(event.toJson(), hasBlocks);
 
@@ -65,19 +65,19 @@ function validateEvent(event) {
             // A block is moved and attached to another one
             var parentBlock = blocklyWorkspace.getBlockById( event.newParentId );
             //console.log("new parent of ", block.type, " is ", parentBlock.type);
-            validateBlock(parentBlock);
+            this.validateBlock(parentBlock);
             parentConnection[event.blockId] = parentBlock;
         } else if (parentConnection.hasOwnProperty(event.blockId)) {
             // A block that is supposed to have a parent generates a MOVE
             // event only if it is disconnected from it
             //console.log("disconnect kid of ", parentConnection[event.blockId].type);
-            validateBlock(parentConnection[event.blockId]);
+            this.validateBlock(parentConnection[event.blockId]);
             delete parentConnection[event.blockId];
         }
     } else if (event.type == Blockly.Events.CREATE) {
         for(var i=0; i<event.ids.length; i++) {
             var block = blocklyWorkspace.getBlockById( event.ids[i] );
-            validateBlock(block);
+            this.validateBlock(block);
             if (block.getParent()) {
                 parentConnection[block.id] = block.getParent();
             }
@@ -86,7 +86,7 @@ function validateEvent(event) {
 }
 
 //get all blocks. Send each block's slots for validation. Send each child block of each slot for validation
-function validateBlock(block){
+XMLToBlocklyWorkspace.prototype.validateBlock = function(block){
     //console.log("validateBlock(", block.type, block.id, ")");
     var availableNotchNumbers   = block.getStatementInputNames();
     var thisBlockErrors         = [];
@@ -97,7 +97,7 @@ function validateBlock(block){
         var errorContext        = block.type+", slot #"+(i+1);  // not a unique context, but will do for now; the slot# makes sense as a local base-1 number
 
         var actualChildren = getBlockTypesOfSlotContents(slotContents);
-        var thisNotchIsValid = validatorDict[block.type][notchNumber].validate(actualChildren)
+        var thisNotchIsValid = this.validatorDict[block.type][notchNumber].validate(actualChildren)
         //console.log("notch", notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
 
         if (!thisNotchIsValid) {
