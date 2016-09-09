@@ -14,7 +14,11 @@
 
 var blocklyWorkspace;
 
-function loadOurExample( example_name ){
+function XMLToBlocklyWorkspace(){
+    this.blockStructureDict;
+}
+
+XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
     var url = "examples/" + example_name;
     if ((navigator.userAgent.indexOf("Firefox") < 0) && (window.location.protocol == "file:")) {
         url = "https://raw.githubusercontent.com/Ensembl/XML-To-Blockly/gh-pages/" + url;
@@ -23,7 +27,7 @@ function loadOurExample( example_name ){
     var fileContent = syncLoadFileFromURL(url);
     document.getElementById('file-name').innerHTML = example_name;
     document.getElementById('rng_area').value = fileContent;
-    handleRNG( fileContent )
+    this.handleRNG( fileContent )
 }
 
 //init function for initializing the Blockly block area
@@ -52,12 +56,13 @@ function readFile(event) {
 }
 
 //handles xml by creating blocks as per RNG rules
-function handleRNG(unparsedRNG) {
+XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 
     var xmlParser = new DOMParser();
     var rngDoc = xmlParser.parseFromString(unparsedRNG, "text/xml");
 
-    var rng2Blockly = new RNG2Blockly(rngDoc);
+    this.blockStructureDict = {};   //initialize has here instead of in RNG2Blockly
+    var rng2Blockly = new RNG2Blockly(rngDoc , this.blockStructureDict);
 
     document.getElementById('toolbox').innerHTML = rng2Blockly.toolboxXML;
     document.getElementById('results').innerHTML = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
@@ -70,8 +75,8 @@ function handleRNG(unparsedRNG) {
 }
 
 
-function generateXML(){
-    var xmlDoc = new XMLGenerator();
+XMLToBlocklyWorkspace.prototype.generateXML = function(){
+    var xmlDoc = new XMLGenerator(this.blockStructureDict);
     var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
 	var output = vkbeautify.xml(XMLToString);
 	document.getElementById("XMLOutput").value = output;

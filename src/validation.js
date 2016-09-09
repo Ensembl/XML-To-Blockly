@@ -18,7 +18,7 @@
  */
 
 
-function validateBlocklyGraph(){
+XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
     var blocks = blocklyWorkspace.getTopBlocks();
 
 	document.getElementById("XMLOutput").value = "";
@@ -39,7 +39,7 @@ function validateBlocklyGraph(){
         }
 
         if(blocklyValidationResult) {
-            generateXML();
+            this.generateXML();
             document.getElementById('validation-error-p').innerHTML = "";
         } else {
             document.getElementById('validation-error-p').innerHTML = "not valid";

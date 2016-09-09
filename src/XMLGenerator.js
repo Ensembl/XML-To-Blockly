@@ -17,8 +17,9 @@
  * This file consists of mehods that help us in generating XML from the blocks in the editor workspace
  */
 
-function XMLGenerator(){
+function XMLGenerator(blockStructureDict){
 	this.XMLDoc = "";
+	this.blockStructureDict = blockStructureDict;
 	this.generateXMLDoc();
 }
 
@@ -29,7 +30,7 @@ function XMLGenerator(){
 XMLGenerator.prototype.generateXMLDoc = function(){
 	this.XMLDoc = document.implementation.createDocument( '', '' , null );
 	var startBlock= blocklyWorkspace.getTopBlocks()[0];
-	var structure = blockStructureDict[startBlock.type];
+	var structure = this.blockStructureDict[startBlock.type];
 	for(var i=0;i<structure.length;i++){
 		var data = this.generateXMLFromStructure( structure[i] , startBlock );
 		for(var j=0;j<data.length;j++){
@@ -73,7 +74,7 @@ XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
 		var blocksInSlot = block.getSlotContentsList(obj.internalName);
 		var dataToReturn = [];
 		for(var i=0;i<blocksInSlot.length;i++){
-			var blockStructure = blockStructureDict[ blocksInSlot[i].type ];
+			var blockStructure = this.blockStructureDict[ blocksInSlot[i].type ];
 			for(var j=0;j<blockStructure.length;j++){
 				var data = this.generateXMLFromStructure( blockStructure[j] , blocksInSlot[i] );
 				//console.log(data);

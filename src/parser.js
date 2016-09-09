@@ -12,10 +12,9 @@
  * limitations under the License.
  */
 
-var blockStructureDict;
 var validatorDict;
 
-function RNG2Blockly(rngDoc) {
+function RNG2Blockly(rngDoc, blockStructureDict) {
     this.rngDoc = rngDoc;
     this.numberTypes = [ 'int' , 'integer' , 'double' , 'float' , 'decimal' , 'number' ];
     this.magicType = {
@@ -132,7 +131,6 @@ function RNG2Blockly(rngDoc) {
         // blockOrder contains entries of codeDict sorted by the youngest queueIndex
     var blockOrder = codeDict.getAllEntries().sort( function(a,b) { return string_cmp(a.queueIndices[0],b.queueIndices[0]); } );
 
-    blockStructureDict = {};
     validatorDict = {};
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
@@ -193,6 +191,7 @@ function RNG2Blockly(rngDoc) {
         this.allCode.push(blockCode);
     }
     console.log(validatorDict);
+    console.log(blockStructureDict);
 }
 
 

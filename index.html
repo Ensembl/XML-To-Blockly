@@ -68,32 +68,32 @@
 	                <p>New to the RNG world ? Check these small examples that showcase the capabilities of RNG and our editor:</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("contact.rng");'>Example 1</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("contact.rng");'>Example 1</button>
 						A contact (for an address-book)
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("addressBook.rng");'>Example 2</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("addressBook.rng");'>Example 2</button>
 						An address-book
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("attrib.rng");'>Example 3</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("attrib.rng");'>Example 3</button>
 						Example with attributes
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("basic_value.rng");'>Example 4</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("basic_value.rng");'>Example 4</button>
 						An attribute with a choice and a dropdown menu
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("optiField_03_multiple_multi-level.rng");'>Example 5</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("optiField_03_multiple_multi-level.rng");'>Example 5</button>
 						Optional element controlled by a checkbox
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("ref_structure_ehive.rng");'>Example 6</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("ref_structure_ehive.rng");'>Example 6</button>
 						Nested structure of blocks (used to represent eHive parameters)
 					</p>
 
@@ -103,17 +103,17 @@
 					<p>Large RNG files used in the real life:</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("ehive_pipeline_schema2.rng");'>Example 1</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("ehive_pipeline_schema2.rng");'>Example 1</button>
 						eHive
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("LRG.rng");'>Example 2</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("LRG.rng");'>Example 2</button>
 						Locus Reference Genomic (LRG)
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='loadOurExample("relaxng.rng");'>Example 3</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("relaxng.rng");'>Example 3</button>
 					    Relax NG itself
 					</p>
 
@@ -129,7 +129,7 @@
 						</label>
 
 						<!-- Interpret button -->
-						<button class="btn btn-primary" id="interpretBtn" onclick="handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
+						<button class="btn btn-primary" id="interpretBtn" onclick="xmlToBlocklyWorkspace.handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
 
 					<!-- Bootstrap does not display uploaded filename in a "pretty" format by default.
 				 		 That has been done by using JavaScript to insert the filename in the label below -->
@@ -151,7 +151,7 @@
 			<div id="textareaRight" class="col-lg-6" >
                     <!-- Validate button -->
 				<p>Export the diagram to XML by clicking on this button:</p>
-                    <button class="btn btn-primary" id="saveBtn" disabled onclick="validateBlocklyGraph();">Validate and generate XML</button>
+                    <button class="btn btn-primary" id="saveBtn" disabled onclick="xmlToBlocklyWorkspace.validateBlocklyGraph()">Validate and generate XML</button>
                                                 <span class="text-danger" id="validation-error-p"></span>
 				<textarea id="XMLOutput"  rows="25" readonly></textarea>
 			</div>
@@ -171,9 +171,10 @@
 
 	<div id="results"></div>
 
-    <script>
-        initWorkspace();
-    </script>
+	<script>
+		var xmlToBlocklyWorkspace = new XMLToBlocklyWorkspace();
+		initWorkspace();
+	</script>
 
 </body>
 </html>
