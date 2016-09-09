@@ -56,9 +56,9 @@ XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
 			for(var j=0;j<data.length;j++){
 				//console.log(data[j].nodeType);
 				var type = data[j].nodeType;
-				if(type == 2){	//child is attribute
+				if(type == Node.ATTRIBUTE_NODE){	//child is attribute
 					ele.setAttributeNode(data[j]);
-				} else if(type == 3 || type == 1){	//3: text node , 1: element
+				} else if(type == Node.ELEMENT_NODE || type == Node.TEXT_NODE){	//3: text node , 1: element
 					ele.appendChild(data[j]);
 				} else{
 					alert("Don't know node type " + type + " yet");
