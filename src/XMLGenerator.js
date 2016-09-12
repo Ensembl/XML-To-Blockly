@@ -33,9 +33,9 @@ XMLGenerator.prototype.generateXMLDoc = function(){
 	var startBlock= this.blocklyWorkspace.getTopBlocks()[0];
 	var structure = this.blockStructureDict[startBlock.type];
 	for(var i=0;i<structure.length;i++){
-		var data = this.generateXMLFromStructure( structure[i] , startBlock );
-		for(var j=0;j<data.length;j++){
-			this.XMLDoc.appendChild( data[j] );
+		var inputChunks = this.generateXMLFromStructure( structure[i] , startBlock );
+		for(var j=0;j<inputChunks.length;j++){
+			this.XMLDoc.appendChild( inputChunks[j] );
 		}
 	}
 	console.log(this.XMLDoc);
@@ -52,50 +52,47 @@ XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
 		var ele = this.XMLDoc.createElement(obj.displayName);
 		var content = obj.content;
 		for(var i=0;i<content.length;i++){
-			var data = this.generateXMLFromStructure( content[i] , block );
-			for(var j=0;j<data.length;j++){
-				//console.log(data[j].nodeType);
-				var type = data[j].nodeType;
-				if(type == Node.ATTRIBUTE_NODE){	//child is attribute
-					ele.setAttributeNode(data[j]);
-				} else if(type == Node.ELEMENT_NODE || type == Node.TEXT_NODE){	//3: text node , 1: element
-					ele.appendChild(data[j]);
+			var inputChunks = this.generateXMLFromStructure( content[i] , block );
+
+			for(var j=0;j<inputChunks.length;j++){
+                var inputChunk = inputChunks[j];
+
+                if(inputChunk instanceof Attr) {
+					ele.setAttributeNode(inputChunk);
+                } else if(inputChunk instanceof Element || inputChunk instanceof Text) {
+					ele.appendChild(inputChunk);
 				} else{
-					alert("Don't know node type " + type + " yet");
+					alert("Don't know node type of " + inputChunk + " yet");
 				}
 			}
 		}
 		return [ele];
 	} else if(obj.tagName == "attribute"){
 		var attr = this.XMLDoc.createAttribute(obj.displayName);
-		var data = this.generateXMLFromStructure( obj.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
-		attr.value = data;
+		var attrValue = this.generateXMLFromStructure( obj.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
+		attr.value = attrValue;
 		return [attr];
 	} else if(obj.tagName == "slot"){
 		var blocksInSlot = block.getSlotContentsList(obj.internalName);
-		var dataToReturn = [];
+		var outputChunks = [];
 		for(var i=0;i<blocksInSlot.length;i++){
 			var blockStructure = this.blockStructureDict[ blocksInSlot[i].type ];
 			for(var j=0;j<blockStructure.length;j++){
-				var data = this.generateXMLFromStructure( blockStructure[j] , blocksInSlot[i] );
-				//console.log(data);
-				dataToReturn.push.apply( dataToReturn , data );
+				var inputChunks = this.generateXMLFromStructure( blockStructure[j] , blocksInSlot[i] );
+				outputChunks.push.apply( outputChunks , inputChunks );
 			}
 		}
-		//console.log(dataToReturn);
-		return dataToReturn;
+		return outputChunks;
 	} else if(obj.tagName == "optiField"){
 		var checkboxValue = block.getFieldValue(obj.internalName);
+        var outputChunks = [];
 		if(checkboxValue == "TRUE"){
 			var content = obj.content;
-			var dataToReturn = [];
 			for(var i=0;i<content.length;i++){
-				var data = this.generateXMLFromStructure( content[i] , block );
-				dataToReturn.push.apply(dataToReturn , data);
+				var inputChunks = this.generateXMLFromStructure( content[i] , block );
+				outputChunks.push.apply(outputChunks , inputChunks);
 			}
-			return dataToReturn;
-		} else{
-			return [];
 		}
+        return outputChunks;
 	}
 }
