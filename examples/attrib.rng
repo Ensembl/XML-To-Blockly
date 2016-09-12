@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" xmlns:blockly="whatever">
   <start>
-    <element name="book" blockly:name="My pretty name">
+    <element name="book" blockly:blockName="My pretty name">
       <attribute name="subject_name">
         <text/>
       </attribute>
