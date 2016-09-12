@@ -369,12 +369,12 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
     else if ((nodeType == "element") || (nodeType == "attribute")) {
 
-        var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
-        nodeDetails.displayName = displayName;
+        nodeDetails.xmlName = node.getAttribute("name");
 
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
         var allValueTags = "";
+        var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
 
         if( children.length == 0 ){
 

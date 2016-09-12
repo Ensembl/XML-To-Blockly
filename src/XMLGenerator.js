@@ -44,13 +44,13 @@ XMLGenerator.prototype.generateXMLDoc = function(){
 
 
 // Recursive function to generate XML
-XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
-	if(obj.tagName == "text"){
-		var textNode = this.XMLDoc.createTextNode( block.getFieldValue(obj.internalName) );
+XMLGenerator.prototype.generateXMLFromStructure = function( nodeDetails , block ){
+	if(nodeDetails.tagName == "text"){
+		var textNode = this.XMLDoc.createTextNode( block.getFieldValue(nodeDetails.internalName) );
 		return [textNode];
-	} else if(obj.tagName == "element"){
-		var ele = this.XMLDoc.createElement(obj.displayName);
-		var content = obj.content;
+	} else if(nodeDetails.tagName == "element"){
+		var ele = this.XMLDoc.createElement(nodeDetails.xmlName);
+		var content = nodeDetails.content;
 		for(var i=0;i<content.length;i++){
 			var inputChunks = this.generateXMLFromStructure( content[i] , block );
 
@@ -67,13 +67,13 @@ XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
 			}
 		}
 		return [ele];
-	} else if(obj.tagName == "attribute"){
-		var attr = this.XMLDoc.createAttribute(obj.displayName);
-		var attrValue = this.generateXMLFromStructure( obj.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
+	} else if(nodeDetails.tagName == "attribute"){
+		var attr = this.XMLDoc.createAttribute(nodeDetails.xmlName);
+		var attrValue = this.generateXMLFromStructure( nodeDetails.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
 		attr.value = attrValue;
 		return [attr];
-	} else if(obj.tagName == "slot"){
-		var blocksInSlot = block.getSlotContentsList(obj.internalName);
+	} else if(nodeDetails.tagName == "slot"){
+		var blocksInSlot = block.getSlotContentsList(nodeDetails.internalName);
 		var outputChunks = [];
 		for(var i=0;i<blocksInSlot.length;i++){
 			var blockStructure = this.blockStructureDict[ blocksInSlot[i].type ];
@@ -83,11 +83,11 @@ XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
 			}
 		}
 		return outputChunks;
-	} else if(obj.tagName == "optiField"){
-		var checkboxValue = block.getFieldValue(obj.internalName);
+	} else if(nodeDetails.tagName == "optiField"){
+		var checkboxValue = block.getFieldValue(nodeDetails.internalName);
         var outputChunks = [];
 		if(checkboxValue == "TRUE"){
-			var content = obj.content;
+			var content = nodeDetails.content;
 			for(var i=0;i<content.length;i++){
 				var inputChunks = this.generateXMLFromStructure( content[i] , block );
 				outputChunks.push.apply(outputChunks , inputChunks);
