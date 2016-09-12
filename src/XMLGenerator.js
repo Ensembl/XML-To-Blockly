@@ -58,7 +58,7 @@ XMLGenerator.prototype.generateXMLFromStructure = function( obj , block ){
                 var inputChunk = inputChunks[j];
 
                 if(inputChunk instanceof Attr) {
-					ele.setAttributeNode(inputChunk);
+					ele.setAttribute(inputChunk.name, inputChunk.value);
                 } else if(inputChunk instanceof Element || inputChunk instanceof Text) {
 					ele.appendChild(inputChunk);
 				} else{
