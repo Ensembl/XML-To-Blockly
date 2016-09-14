@@ -76,9 +76,6 @@ function RNG2Blockly(rngDoc, blockStructureDict, validatorDict) {
 
         this.uni.reset();
 
-        this.successfulOptiField            = false;    //true or false depending on whether optiField can be created or not
-        this.currentlyCreatingOptiField     = false;
-
         var xmlStructureForBlock = [];
         for(var i=0;i<children.length;i++){
             blockCode += this.goDeeper(children[i], "{}", i, xmlStructureForBlock);
@@ -336,9 +333,6 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
 
 
 RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, currentPathStructure) {
-    if(this.currentlyCreatingOptiField == true && this.successfulOptiField == false){
-        return null;
-    }
 
     var nodeType = (node == null) ? "null" : node.nodeName;
     var context = (node == null) ? undefined : node.getAttribute("context");
@@ -434,47 +428,41 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     }
 
 	else if(nodeType == "optional"){
-        if(this.currentlyCreatingOptiField){
-            this.successfulOptiField = false;
-            return null;
-        }
 
         //var context_child_idx = node.getAttribute("context_child_idx");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-        this.currentlyCreatingOptiField = true;
-        this.successfulOptiField = true;
 
         /* collect data of the children level in childrenStructureInfo and push to currentPathStructure in case optiField is created.
          * If it is not an optiField, we send currentPathStructure to handleMagicTag.
          */
         var childrenStructureInfo = [];
+        var oneLiner = children.length == 1 && !this.magicType.hasOwnProperty(children[0].nodeName);
 
-        for(var i=0;i<children.length;i++){
-            if(this.magicType.hasOwnProperty(children[i].nodeName)){
-                this.successfulOptiField = false;
-            } else if (children.length > 1) {
+        if ( oneLiner ) {
+            blocklyCode += this.goDeeper(children[0], haveAlreadySeenStr, name + "0", childrenStructureInfo);
+        } else {
+            for(var i=0;i<children.length;i++){
                 this.uni.indent( i == children.length-1 );
                 blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, childrenStructureInfo);
                 this.uni.unindent();
-            } else {
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, childrenStructureInfo);
-            }
-            if (!this.successfulOptiField) {
-                break;
             }
         }
 
-        //if optiField consists of only one child level, then we do not create a label for the optiField specifically.
-        if(this.successfulOptiField){
+        var wantOptiFieldStr = node.getAttribute("blockly:inline") || node.getAttribute("blockly:wantOptiField");
+        var wantOptiField = wantOptiFieldStr ? (wantOptiFieldStr == "true") : true; // inline optionals by default
+
+        if( wantOptiField ) {
             //addNodeDetailsToStructure = false;
             //currentPathStructure.push.apply( currentPathStructure , childrenStructureInfo );
             nodeDetails.tagName = "optiField";
             nodeDetails.internalName = name + "_checkbox";
             nodeDetails.content = childrenStructureInfo;
-            if (children.length == 1){
+                //if optiField consists of only one child level, then we do not create a label for the optiField specifically:
+            if ( oneLiner ) {
                 // FIXME: we shouldn't have to split the Blockly code
-                var xxx = blocklyCode.indexOf('.appendField(', 28); // to skip the first one
-                var childPartToBeAdded = blocklyCode.substring(xxx);
+                var first = blocklyCode.indexOf('.appendField(');
+                var second = blocklyCode.indexOf('.appendField(', first+1); // to skip the first one
+                var childPartToBeAdded = blocklyCode.substring(second);
                 blocklyCode = this.makeBlocklyCode_OptiField("", name, childPartToBeAdded);
             } else{
                 var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
@@ -487,16 +475,9 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, validationDetails, nodeDetails, true);
             this.blockValidationDict[nodeDetails.internalName] = validationDetails[0];
         }
-
-        this.currentlyCreatingOptiField = false;
-
 	}
 
     else if (this.magicType.hasOwnProperty(nodeType)) {      // interleave, zeroOrMore, oneOrMore, and some choice
-        if(this.currentlyCreatingOptiField){
-            this.successfulOptiField = false;
-            return null;
-        }
         nodeDetails.tagName = "slot";
         var validationDetails = [];
         blocklyCode = this.handleMagicTag(node, haveAlreadySeenStr, path, false, validationDetails, nodeDetails, true);
@@ -557,9 +538,9 @@ RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, 
     var checkBoxName    = internalName + "_checkbox";
     var initialState    = false;
     var code = "this.appendDummyInput('" + internalName + "')"
-                 + ".appendField('" + this.uni.getIndentation() + "')"
+                 + ".appendField('" + this.uni.getIndentation() + "?')"
                  + ".appendField(new Blockly.FieldCheckbox('" + String(initialState).toUpperCase() + "', optiField_setter), '" + checkBoxName + "')"
-                 + ( (label != "") ? ".appendField('" + label + "');" : "")
+                 + ( (label != "") ? ".appendField('" + label + "');\n" : "")
                  + content  // the assumption here is that content is terminated by a semicolon
                  + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);\n"     // this hidden input line marks the end of optiField group
                  + "optiField_setter.call( this.getField('" + checkBoxName + "'), " + initialState + ");"; // actually set the initialState
@@ -661,7 +642,7 @@ function makeSubstituteMacro(qi) {
 // rule, since it happens to be exactly the structure we need
 RNG2Blockly.prototype.slotLabelFromValidationRules = function(g) {
     if (g[2]) {
-        return g[2];
+        return g[2] + ((g[0] == 'optional') ? "?" : "");
     }
     if (g[0] == "block") {
         return g[1];

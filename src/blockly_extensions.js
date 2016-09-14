@@ -55,12 +55,13 @@ Blockly.Block.prototype.getStatementInputNames = function() {
 
 //function to toggle hide/show optiFields
 function optiField_setter(newState) {
-	var source=this.sourceBlock_;
 	var checkBoxFieldName=this.name.split("_checkbox")[0]; //the name of the checkbox's dummyInput
-	var it = 0;
-	var iplist=source.inputList;
 
-	//find out at which position of the inputList of source block, the checkbox is present.
+	var sourceBlock=this.sourceBlock_;
+	var it = 0;
+	var iplist=sourceBlock.inputList;
+
+        //find out at which position of the inputList of sourceBlock the checkbox is present.
     while(iplist[it].name != checkBoxFieldName) {
         it++;
     }
@@ -79,10 +80,16 @@ function optiField_setter(newState) {
         it++;   // skipping the header
         while(iplist[it].name != checkBoxFieldName+"end_of_optiField") {    // and running until the footer
             iplist[it].setVisible(newState);
+            if(newState && (iplist[it].type == Blockly.NEXT_STATEMENT) ) {
+                var blockList = sourceBlock.getSlotContentsList(iplist[it].name);
+                for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
+                    childBlock.render();
+                }
+            }
             it++;
         }
     }
-    source.render();
+    sourceBlock.render();
 
     return newState;
 }
