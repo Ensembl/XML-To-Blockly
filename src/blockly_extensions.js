@@ -55,30 +55,36 @@ Blockly.Block.prototype.getStatementInputNames = function() {
 
 //function to toggle hide/show optiFields
 function optiField_setter(newState) {
-	var checkBoxFieldName=this.name.split("_checkbox")[0]; //the name of the checkbox's dummyInput
+	var checkBoxFieldName   = this.name;                                // name of the checkbox field
+	var startMarker         = checkBoxFieldName.split("_checkbox")[0];  // name of the optiField's dummyInput
+    var stopMarker          = startMarker +"end_of_optiField";          // name of the closing bracket
 
 	var sourceBlock=this.sourceBlock_;
 	var it = 0;
 	var iplist=sourceBlock.inputList;
 
         //find out at which position of the inputList of sourceBlock the checkbox is present.
-    while(iplist[it].name != checkBoxFieldName) {
+    while(iplist[it].name != startMarker ) {
         it++;
     }
 
-    //if the input field has fieldRow of length, then it means that it's a single level optiField with no special label (label of the attibute/element itself is used)
-    /* fieldRow indices:
-     * 0 : The tree path made of unicode table-building characters
-     * 1 : The checkbox
-     * 2 : The text label for the field
-     * 3 : The text/dropdown field
+    /*
+     *  If the input field has fieldRow of length 4,
+     *  then it means that it's a single level optiField with no special label
+     *  (label of the attibute/element itself is used).
+     *
+     *  fieldRow indices:
+     *      0 : The tree path made of unicode table-building characters
+     *      1 : The checkbox
+     *      2 : The text label for the field
+     *      3 : The text/dropdown field
      */
 
     if(iplist[it].fieldRow.length == 4) {   // currently that's the way to detect a single-row optifield (bit risky)
         iplist[it].fieldRow[3].setVisible(newState);
     } else {
         it++;   // skipping the header
-        while(iplist[it].name != checkBoxFieldName+"end_of_optiField") {    // and running until the footer
+        while(iplist[it].name != stopMarker) {      // and running until the stopMarker
             if(iplist[it].fieldRow.length > 0) {    // skip the marker dummy input lines (they should always stay invisible)
                 iplist[it].setVisible(newState);
                 if(newState && (iplist[it].type == Blockly.NEXT_STATEMENT) ) {
