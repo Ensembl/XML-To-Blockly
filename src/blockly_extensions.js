@@ -68,7 +68,7 @@ function optiField_setter(newState) {
 
     //if the input field has fieldRow of length, then it means that it's a single level optiField with no special label (label of the attibute/element itself is used)
     /* fieldRow indices:
-     * 0 : The unicode design
+     * 0 : The tree path made of unicode table-building characters
      * 1 : The checkbox
      * 2 : The text label for the field
      * 3 : The text/dropdown field
@@ -79,11 +79,13 @@ function optiField_setter(newState) {
     } else {
         it++;   // skipping the header
         while(iplist[it].name != checkBoxFieldName+"end_of_optiField") {    // and running until the footer
-            iplist[it].setVisible(newState);
-            if(newState && (iplist[it].type == Blockly.NEXT_STATEMENT) ) {
-                var blockList = sourceBlock.getSlotContentsList(iplist[it].name);
-                for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
-                    childBlock.render();
+            if(iplist[it].fieldRow.length > 0) {    // skip the marker dummy input lines (they should always stay invisible)
+                iplist[it].setVisible(newState);
+                if(newState && (iplist[it].type == Blockly.NEXT_STATEMENT) ) {
+                    var blockList = sourceBlock.getSlotContentsList(iplist[it].name);
+                    for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
+                        childBlock.render();
+                    }
                 }
             }
             it++;
