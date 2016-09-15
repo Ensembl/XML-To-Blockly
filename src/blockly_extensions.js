@@ -53,20 +53,45 @@ Blockly.Block.prototype.getStatementInputNames = function() {
 }
 
 
-//function to toggle hide/show optiFields
-function optiField_setter(newState) {
+/**
+ * Returns the array index of an input (line) given the name of the input
+ */
+Blockly.Block.prototype.findInputIndexByName = function(inputName) {
+
+    for (var i = 0, input; input = this.inputList[i]; i++) {
+        if(input.name == inputName) {
+            return i;
+        }
+    }
+    alert("Input with name "+inputName+" has not been found!");
+}
+
+
+Blockly.FieldCheckbox.prototype.getInputIndexRange = function() {
 	var checkBoxFieldName   = this.name;                                // name of the checkbox field
 	var startMarker         = checkBoxFieldName.split("_checkbox")[0];  // name of the optiField's dummyInput
     var stopMarker          = startMarker +"end_of_optiField";          // name of the closing bracket
 
-	var sourceBlock=this.sourceBlock_;
-	var it = 0;
-	var iplist=sourceBlock.inputList;
-
+	var sourceBlock = this.sourceBlock_;
         //find out at which position of the inputList of sourceBlock the checkbox is present.
-    while(iplist[it].name != startMarker ) {
-        it++;
-    }
+    var startIndex  = sourceBlock.findInputIndexByName(startMarker);
+    var stopIndex   = sourceBlock.findInputIndexByName(stopMarker);
+
+    return {    'startIndex'    : startIndex,
+                'stopIndex'     : stopIndex
+    };
+}
+
+
+//function to toggle hide/show optiFields
+function optiField_setter(newState) {
+
+    var inputIndexRange = this.getInputIndexRange();
+    var startIndex      = inputIndexRange.startIndex;
+    var stopIndex       = inputIndexRange.stopIndex;
+
+	var sourceBlock=this.sourceBlock_;
+	var iplist=sourceBlock.inputList;
 
     /*
      *  If the input field has fieldRow of length 4,
@@ -80,21 +105,37 @@ function optiField_setter(newState) {
      *      3 : The text/dropdown field
      */
 
-    if(iplist[it].fieldRow.length == 4) {   // currently that's the way to detect a single-row optifield (bit risky)
-        iplist[it].fieldRow[3].setVisible(newState);
+    if(iplist[startIndex].fieldRow.length == 4) {   // currently that's the way to detect a one-liner optiField (bit risky)
+        iplist[startIndex].fieldRow[3].setVisible(newState);
     } else {
-        it++;   // skipping the header
-        while(iplist[it].name != stopMarker) {      // and running until the stopMarker
-            if(iplist[it].fieldRow.length > 0) {    // skip the marker dummy input lines (they should always stay invisible)
-                iplist[it].setVisible(newState);
-                if(newState && (iplist[it].type == Blockly.NEXT_STATEMENT) ) {
-                    var blockList = sourceBlock.getSlotContentsList(iplist[it].name);
-                    for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
-                        childBlock.render();
+
+        for (var currIndex = startIndex+1; currIndex < stopIndex; currIndex++) {    // scan between startMarker and stopMarker
+            if(iplist[currIndex].fieldRow.length > 0) {    // skip the marker dummy input lines (they should always stay invisible)
+                iplist[currIndex].setVisible(newState);
+
+                if(newState) {      // when switching back on, do some extra tuning:
+                    if(iplist[currIndex].type == Blockly.NEXT_STATEMENT) {                          // revive the blocks that were hidden
+                        var blockList = sourceBlock.getSlotContentsList(iplist[currIndex].name);
+                        for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
+                            childBlock.render();
+                        }
+                    } else if(iplist[currIndex].fieldRow[1] instanceof Blockly.FieldCheckbox) {     // only show the inner optiFields that are ticked:
+                        var innerCheckBoxField      = iplist[currIndex].fieldRow[1];
+
+                        if(innerCheckBoxField.getValue() == 'FALSE') {
+                            /*  NB: The following solution to fix one-liner optiFields does not work. Looking for something better...
+
+                            if(innerCheckBoxField.fieldRow.length == 4) {
+                                //innerCheckBoxField.fieldRow[3].setVisible(false);   // hide the data field of a hidden one-liner optiField
+                                alert("Ought to set invisible the last element of row "+currIndex+", but I can't");
+                            }
+                            */
+
+                            currIndex = innerCheckBoxField.getInputIndexRange().stopIndex; // skip to the end of the inner optiField range
+                        }
                     }
                 }
             }
-            it++;
         }
     }
     sourceBlock.render();
