@@ -338,11 +338,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     var context = (node == null) ? undefined : node.getAttribute("context");
     var name = getInternalName(node, path);
     var addNodeDetailsToStructure = true;
-    //internalName and displayName are added later
-    var nodeDetails = new NodeDetails(nodeType);
-    /*if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
-        currentPathStructure.push(nodeDetails);
-    }*/
+    var nodeDetails = new NodeDetails(nodeType);    // internalName, xmlName and content are added later
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
 
@@ -405,13 +401,13 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
         } else {    //we expect to reach here only if the node is an 'element' node
             var childrenStructureInfo = [];
-            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name, childrenStructureInfo);
-            if(currentPathStructure){   //since we have not introduces currentPathStructure in all goDeeper calls yet
+            blocklyCode = this.makeBlocklyCode_Label(displayName)
+                        + this.goDeeper_makeTreeWithKids(children, haveAlreadySeenStr, name, childrenStructureInfo);
+            if(currentPathStructure){   //since we have not introduced currentPathStructure in all goDeeper calls yet
                 nodeDetails.content = childrenStructureInfo;
             }
         }
     }
-
 
 	else if(nodeType == "group"){
         addNodeDetailsToStructure = false;
@@ -421,7 +417,8 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
         var displayName = this.getNodeDisplayName(node);
 
         if (displayName) {
-            blocklyCode = this.goDeeper_makeTreeWithKids(displayName, children, haveAlreadySeenStr, name, currentPathStructure);
+            blocklyCode = this.makeBlocklyCode_Label(displayName)
+                        + this.goDeeper_makeTreeWithKids(children, haveAlreadySeenStr, name, currentPathStructure);
         } else {
             blocklyCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name, currentPathStructure);
         }
@@ -429,44 +426,33 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
 	else if(nodeType == "optional"){
 
-        //var context_child_idx = node.getAttribute("context_child_idx");
-        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
-
-        /* collect data of the children level in childrenStructureInfo and push to currentPathStructure in case optiField is created.
-         * If it is not an optiField, we send currentPathStructure to handleMagicTag.
-         */
-        var childrenStructureInfo = [];
-        var oneLiner = children.length == 1 && !this.magicType.hasOwnProperty(children[0].nodeName);
-
-        if ( oneLiner ) {
-            blocklyCode += this.goDeeper(children[0], haveAlreadySeenStr, name + "0", childrenStructureInfo);
-        } else {
-            for(var i=0;i<children.length;i++){
-                this.uni.indent( i == children.length-1 );
-                blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, name + i, childrenStructureInfo);
-                this.uni.unindent();
-            }
-        }
-
+            // check if the user has requested/blocked an optiField for this optional:
         var wantOptiFieldStr = node.getAttribute("blockly:inline") || node.getAttribute("blockly:wantOptiField");
         var wantOptiField = wantOptiFieldStr ? (wantOptiFieldStr == "true") : true; // inline optionals by default
 
         if( wantOptiField ) {
-            //addNodeDetailsToStructure = false;
-            //currentPathStructure.push.apply( currentPathStructure , childrenStructureInfo );
+            var childrenStructureInfo = [];
+            var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+            var oneLiner = children.length == 1 && !this.magicType.hasOwnProperty(children[0].nodeName);
+
             nodeDetails.tagName = "optiField";
             nodeDetails.internalName = name + "_checkbox";
             nodeDetails.content = childrenStructureInfo;
+
                 //if optiField consists of only one child level, then we do not create a label for the optiField specifically:
             if ( oneLiner ) {
+                var preOptiFieldCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name, childrenStructureInfo);
+
                 // FIXME: we shouldn't have to split the Blockly code
-                var first = blocklyCode.indexOf('.appendField(');
-                var second = blocklyCode.indexOf('.appendField(', first+1); // to skip the first one
-                var childPartToBeAdded = blocklyCode.substring(second);
+                var first = preOptiFieldCode.indexOf('.appendField(');
+                var second = preOptiFieldCode.indexOf('.appendField(', first+1); // to skip the first one
+                var childPartToBeAdded = preOptiFieldCode.substring(second);
                 blocklyCode = this.makeBlocklyCode_OptiField("", name, childPartToBeAdded);
             } else{
+                var preOptiFieldCode = this.goDeeper_makeTreeWithKids(children, haveAlreadySeenStr, name, childrenStructureInfo);
+
                 var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
-                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, blocklyCode);
+                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, preOptiFieldCode);
             }
 
         } else{
@@ -494,8 +480,8 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     return blocklyCode + "\n";
 }
 
-RNG2Blockly.prototype.goDeeper_makeTreeWithKids = function(headerName, children, haveAlreadySeenStr, path, currentPathStructure) {
-    var blocklyCode = this.makeBlocklyCode_Label(headerName);
+RNG2Blockly.prototype.goDeeper_makeTreeWithKids = function(children, haveAlreadySeenStr, path, currentPathStructure) {
+    var blocklyCode = "";
     for(var i=0;i<children.length;i++){
         this.uni.indent( i == children.length-1 );
         blocklyCode += this.goDeeper(children[i], haveAlreadySeenStr, path + "_" + i, currentPathStructure);
