@@ -16,6 +16,7 @@ function XMLToBlocklyWorkspace(){
     this.blocklyWorkspace;
     this.blockStructureDict;
     this.validatorDict;
+    this.rng2Blockly;
 }
 
 XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
@@ -63,12 +64,12 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 
     this.blockStructureDict = {};   //initialize these dictionaries here instead of in RNG2Blockly
     this.validatorDict = {};
-    var rng2Blockly = new RNG2Blockly(rngDoc , this.blockStructureDict, this.validatorDict);
+    this.rng2Blockly = new RNG2Blockly(rngDoc , this.blockStructureDict, this.validatorDict);
 
-    document.getElementById('toolbox').innerHTML = rng2Blockly.toolboxXML;
-    document.getElementById('results').innerHTML = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
+    document.getElementById('toolbox').innerHTML = this.rng2Blockly.toolboxXML;
+    document.getElementById('results').innerHTML = "<pre>" + this.rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
 
-    eval(rng2Blockly.allCode.join(""));
+    eval(this.rng2Blockly.allCode.join(""));
 
     this.blocklyWorkspace.clear();
     this.blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
@@ -81,4 +82,39 @@ XMLToBlocklyWorkspace.prototype.generateXML = function(){
     var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
 	var output = vkbeautify.xml(XMLToString);
 	document.getElementById("XMLOutput").value = output;
+}
+
+
+XMLToBlocklyWorkspace.prototype.saveWork = function(){
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyAsV5_3mh22NgE44pOM1044-KRZf-qjTzg",
+        //authDomain: "my-playground-15a8d.firebaseapp.com",
+        databaseURL: "https://my-playground-15a8d.firebaseio.com",
+        //storageBucket: "my-playground-15a8d.appspot.com",
+        //messagingSenderId: "91241653928"
+    };
+    try{
+        firebase.initializeApp(config);
+    }
+    catch(e){
+        console.log("Firebase has already been initialized");
+    }
+    //firebase.database().ref().push("Hello there");
+    var workspace = Blockly.Xml.workspaceToDom(this.blocklyWorkspace);
+    workspace = Blockly.Xml.domToText(workspace);
+    console.log(workspace);
+    var dataToStore = {
+        'projectName'     :   "Project" + Math.floor((Math.random() * 100) + 1),    //temporarily use random numbers to store project names
+
+        'projectData'     :   {
+            'workspace'     :   workspace,
+            'toolbox'       :   this.rng2Blockly.toolboxXML,
+            'blockXML'      :   this.rng2Blockly.allCode.join(""),
+            'blockStructureDict':this.blockStructureDict,
+            'validatorDict' :   this.validatorDict
+        }
+    };
+
+    firebase.database().ref().push(dataToStore);
 }
