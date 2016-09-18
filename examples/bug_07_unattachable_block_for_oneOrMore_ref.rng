@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+		<start>
+			<element name="grouper">
+				<ref name="A"/>
+
+				<oneOrMore>
+					<ref name="A"/>
+				</oneOrMore>
+			</element>
+		</start>
+
+		<define name="A">
+			<choice>
+				<element name="A_Child">
+					<attribute name="A_Child_Attr"/>
+				</element>
+			</choice>
+		</define>
+</grammar>
