@@ -2,7 +2,9 @@
 	<grammar xmlns="http://relaxng.org/ns/structure/1.0">
 		<start>
 			<element name="grouper">
-				<ref name="A"/>
+				<element name="ele">
+					<ref name="A"/>
+				</element>
 
 				<oneOrMore>
 					<ref name="A"/>
@@ -14,6 +16,10 @@
 			<choice>
 				<element name="A_Child">
 					<attribute name="A_Child_Attr"/>
+				</element>
+
+				<element name="A_Child_2">
+					<attribute name="A_Child_2_Attr"/>
 				</element>
 			</choice>
 		</define>
