@@ -555,7 +555,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var validationConstraint = [];
     validationDetails.push( [ nodeType, validationConstraint, this.getNodeDisplayName(node) ] );
 
-    if(! node.hasAttribute("visited") ) {
+    if(! node.hasAttribute("visiting_lock") ) {
 
             //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
         var stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
@@ -563,14 +563,14 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
         var wantBottomNotch = bottomNotchOverride || this.magicType[nodeType].hasBottomNotch;
         var bottomListStr   = wantBottomNotch ? topListStr : "[]";
 
-            node.setAttribute("visited", "true");
+            node.setAttribute("visiting_lock", "true");
 
             if( this.magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
                 for(var i=0;i<children.length;i++){
                     var currentChild = children[i];
 
                     if(this.magicType.hasOwnProperty(currentChild.nodeName)){
-                        this.handleMagicTag(currentChild, haveAlreadySeenStr, name + i, wantBottomNotch, validationConstraint, nodeDetails, false);
+                        blocklyCode += this.handleMagicTag(currentChild, haveAlreadySeenStr, name + i, wantBottomNotch, validationConstraint, nodeDetails, false);
 
                     } else {
                         var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
@@ -582,7 +582,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 			} else {      //current node is oneOrMore, zeroOrMore, optional
 
                 if (children.length == 1 && this.magicType.hasOwnProperty(children[0].nodeName)) {
-                    this.handleMagicTag(children[0], haveAlreadySeenStr, name + "0", wantBottomNotch, validationConstraint, nodeDetails, false);
+                    blocklyCode = this.handleMagicTag(children[0], haveAlreadySeenStr, name + "0", wantBottomNotch, validationConstraint, nodeDetails, false);
 
                 } else {
                     var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(children.length == 1 ? children[0] : node);
@@ -591,24 +591,15 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                 }
             }
             var slotSignature = this.slotLabelFromValidationRules( validationDetails[0] );
-            node.setAttribute("slotSignature", slotSignature);
-            node.setAttribute("stagedSlotNumber", stagedSlotNumber);
-            node.setAttribute("slotValidationRules", JSON.stringify(validationDetails[0]));
             if (canCreateInputStatements) {
-                blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
+                blocklyCode += this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             }
 
-    } else if (!node.hasAttribute("slotValidationRules")) {
+            node.removeAttribute("visiting_lock");
+
+    } else {
 			alert("circular ref loop detected because of "+node.nodeName);
             blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
-    } else {
-            console.log(node.nodeName + " " + context + "_" + node.nodeName.substring(0,3) + context_child_idx + " has been visited already, skipping");
-
-            var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
-            var slotSignature = node.getAttribute("slotSignature");
-            var slotValidationRules = node.getAttribute("slotValidationRules");
-            blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
-            validationConstraint.push( JSON.parse(slotValidationRules) );
 	}
 
 	return blocklyCode;
