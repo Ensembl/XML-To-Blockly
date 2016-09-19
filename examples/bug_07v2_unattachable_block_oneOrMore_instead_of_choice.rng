@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+		<start>
+			<element name="grouper">
+				<element name="ele">
+					<ref name="A"/>
+				</element>
+
+				<oneOrMore>
+					<ref name="A"/>
+				</oneOrMore>
+			</element>
+		</start>
+
+		<define name="A">
+			<oneOrMore>
+				<element name="A_Child">
+					<attribute name="A_Child_Attr"/>
+				</element>
+
+				<element name="A_Child_2">
+					<attribute name="A_Child_2_Attr"/>
+				</element>
+			</oneOrMore>
+		</define>
+</grammar>
