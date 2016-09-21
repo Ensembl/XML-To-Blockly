@@ -555,10 +555,25 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var validationConstraint = [];
     validationDetails.push( [ nodeType, validationConstraint, this.getNodeDisplayName(node) ] );
 
-    if(! node.hasAttribute("visiting_lock") ) {
+    var stagedSlotNumber;
+
+    if( node.hasAttribute("visiting_lock") ) {                                      // visiting in progress:
+        alert("circular ref loop detected because of "+node.nodeName);
+        blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
+
+    } else if( stagedSlotNumber = node.getAttribute("stagedSlotNumber") ) {         // visited in the past:
+        var slotSignature = node.getAttribute("slotSignature");
+        var slotValidationRules = node.getAttribute("slotValidationRules");
+        if (canCreateInputStatements) {
+            blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
+        }
+        validationConstraint.push( JSON.parse(slotValidationRules) );
+
+    } else {                                                                        // never visited before:
+
+        stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
 
             //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
-        var stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
         var topListStr      = '["'+stagedSlotNumber+'"]';
         var wantBottomNotch = bottomNotchOverride || this.magicType[nodeType].hasBottomNotch;
         var bottomListStr   = wantBottomNotch ? topListStr : "[]";
@@ -591,15 +606,15 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                 }
             }
             var slotSignature = this.slotLabelFromValidationRules( validationDetails[0] );
+            node.setAttribute("stagedSlotNumber", stagedSlotNumber);
+            node.setAttribute("slotSignature", slotSignature);
+            node.setAttribute("slotValidationRules", JSON.stringify(validationDetails[0]));
+
             if (canCreateInputStatements) {
                 blocklyCode += this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             }
 
             node.removeAttribute("visiting_lock");
-
-    } else {
-			alert("circular ref loop detected because of "+node.nodeName);
-            blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
 	}
 
 	return blocklyCode;
