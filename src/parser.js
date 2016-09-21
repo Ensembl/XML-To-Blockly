@@ -555,13 +555,13 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var validationConstraint = [];
     validationDetails.push( [ nodeType, validationConstraint, this.getNodeDisplayName(node) ] );
 
-    var stagedSlotNumber;
-
     if( node.hasAttribute("visiting_lock") ) {                                      // visiting in progress:
         alert("circular ref loop detected because of "+node.nodeName);
         blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
 
-    } else if( stagedSlotNumber = node.getAttribute("stagedSlotNumber") ) {         // visited in the past:
+    } else if( node.hasAttribute("visitedQueueIndex") && (node.getAttribute("visitedQueueIndex") != this.currentQueueIndex) ) { // visited during creating a different block:
+
+        var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
         var slotSignature = node.getAttribute("slotSignature");
         var slotValidationRules = node.getAttribute("slotValidationRules");
         if (canCreateInputStatements) {
@@ -571,7 +571,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
     } else {                                                                        // never visited before:
 
-        stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
+        var stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
 
             //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
         var topListStr      = '["'+stagedSlotNumber+'"]';
@@ -605,12 +605,14 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                     this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
                 }
             }
-            var slotSignature = this.slotLabelFromValidationRules( validationDetails[0] );
-            node.setAttribute("stagedSlotNumber", stagedSlotNumber);
-            node.setAttribute("slotSignature", slotSignature);
-            node.setAttribute("slotValidationRules", JSON.stringify(validationDetails[0]));
 
             if (canCreateInputStatements) {
+                var slotSignature = this.slotLabelFromValidationRules( validationDetails[0] );
+                node.setAttribute("stagedSlotNumber", stagedSlotNumber);
+                node.setAttribute("slotSignature", slotSignature);
+                node.setAttribute("slotValidationRules", JSON.stringify(validationDetails[0]));
+                node.setAttribute("visitedQueueIndex", this.currentQueueIndex);
+
                 blocklyCode += this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             }
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+		<start>
+			
+                 <choice>
+		    <element name="parent1">
+					<ref name="A"/>
+		    </element>
+
+                       <element name="parent2">
+				<oneOrMore>
+					<ref name="A"/>
+				</oneOrMore>
+			</element>
+                   </choice>
+		</start>
+
+		<define name="A">
+			<choice>
+				<element name="A_Child_1">
+					<attribute name="A_Child_Attr"/>
+				</element>
+
+				<element name="A_Child_2">
+					<attribute name="A_Child_2_Attr"/>
+				</element>
+			</choice>
+		</define>
+</grammar>
