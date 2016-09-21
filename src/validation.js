@@ -87,25 +87,23 @@ XMLToBlocklyWorkspace.prototype.validateEvent = function(event) {
 
 //get all blocks. Send each block's slots for validation. Send each child block of each slot for validation
 XMLToBlocklyWorkspace.prototype.validateBlock = function(block){
-    //console.log("validateBlock(", block.type, block.id, ")");
-    var availableNotchNumbers   = block.getStatementInputNames();
-    var thisBlockErrors         = [];
+    var availableSlotNames  = block.getStatementInputNames();
+    var thisBlockErrors     = [];
 
-    for(var i=0; i<availableNotchNumbers.length; i++) {
-        var notchNumber         = availableNotchNumbers[i];
-        var slotContents        = block.getSlotContentsList(notchNumber);
-        var errorContext        = block.type+", slot #"+(i+1);  // not a unique context, but will do for now; the slot# makes sense as a local base-1 number
+    for(var i=0; i<availableSlotNames.length; i++) {
+        var slotName        = availableSlotNames[i];
+        var slotContents    = block.getSlotContentsList(slotName);
 
-        var actualChildren = getBlockTypesOfSlotContents(slotContents);
-        var thisNotchIsValid = this.validatorDict[block.type][notchNumber].validate(actualChildren)
-        //console.log("notch", notchNumber, actualChildren, validatorDict[block.type][notchNumber], thisNotchIsValid );
+        var actualChildrenTypes = slotContents.map( function(childBlock) {return childBlock.type} );
+        var thisSlotIsValid     = this.validatorDict[block.type][slotName].validate(actualChildrenTypes)
 
-        if (!thisNotchIsValid) {
-            var fields = block.getInput(notchNumber).fieldRow;
-            if (actualChildren.length) {
-                thisBlockErrors.push("The list '" + actualChildren.join(",") + "' does not match the pattern '" + fields[fields.length-1].getText() + "'");
+        if (!thisSlotIsValid) {
+            var fields  = block.getInput(slotName).fieldRow;
+            var pattern = fields[fields.length-1].getText();
+            if (actualChildrenTypes.length) {
+                thisBlockErrors.push("The list '" + actualChildrenTypes.join(",") + "' does not match the pattern '" + pattern + "'");
             } else {
-                thisBlockErrors.push("The connection '" + fields[fields.length-1].getText() + "' cannot be left empty");
+                thisBlockErrors.push("The connection '" + pattern + "' cannot be left empty");
             }
         }
     }
@@ -119,10 +117,3 @@ XMLToBlocklyWorkspace.prototype.validateBlock = function(block){
     }
 }
 
-function getBlockTypesOfSlotContents(blockArray){
-	var ans = [];
-	for(var i=0; i<blockArray.length; i++){
-		ans.push( blockArray[i].type );
-	}
-	return ans;
-}

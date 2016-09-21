@@ -174,10 +174,10 @@ function RNG2Blockly(rngDoc, blockStructureDict, validatorDict) {
             return queueIndex_2_blockType[$1];
         } ));
         validatorDict[blockType] = {};
-        var keys = Object.keys(blockValidationDict);
-        for(var i=0; i<keys.length; i++) {
-            var k = keys[i];
-            validatorDict[blockType][k] = new Validator(blockValidationDict[k]);
+        var slotNames = Object.keys(blockValidationDict);
+        for(var i=0; i<slotNames.length; i++) {
+            var slotName = slotNames[i];
+            validatorDict[blockType][slotName] = new Validator(blockValidationDict[slotName]);
         }
 
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
