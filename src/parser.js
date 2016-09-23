@@ -558,16 +558,28 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var stagedSlotNumber;
 
     if( node.hasAttribute("visiting_lock") ) {                                      // visiting in progress:
-        if(this.magicType[nodeType].hasLoopRisk){
+        if( this.magicType[nodeType].hasLoopRisk ) {
             alert("circular ref loop detected because of "+node.nodeName);
             blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
-        } else{
+        } else {
             stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
             var topListStr      = '["'+stagedSlotNumber+'"]';
             var wantBottomNotch = bottomNotchOverride || this.magicType[nodeType].hasBottomNotch;
             var bottomListStr   = wantBottomNotch ? topListStr : "[]";
 
-            this.pushToQueue(name , children , topListStr , bottomListStr);
+            if( this.magicType[nodeType].hasSeparateKids ) {     //current node is choice or interleave
+                for(var i=0;i<children.length;i++){
+                    var currentChild = children[i];
+
+                    var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(currentChild);
+                    childValidationRules.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
+                    this.pushToQueue(childBlockName, [currentChild], topListStr, bottomListStr);
+                }
+            } else {
+                var childBlockName = this.getNodeDisplayNameOrQueueIndexMacro(children.length == 1 ? children[0] : node);
+                childValidationRules.push( [ "block", makeSubstituteMacro(this._nextQueueIndex) ] );
+                this.pushToQueue(childBlockName, children, topListStr, bottomListStr);
+            }
         }
 
     } else if( canCreateInputStatements && (stagedSlotNumber = node.getAttribute("stagedSlotNumber")) ) { // such a slot and set of child blocks has been requested previously, reuse
@@ -650,12 +662,12 @@ RNG2Blockly.prototype.slotLabelFromValidationRules = function(g) {
     }
     if (g[0] == "block") {
         return g[1];
-    } else if (this.magicType[g[0]].hasSeparateKids ) {
+    } else if( this.magicType[g[0]].hasSeparateKids ) {
         var kidLabels = g[1].map( function(x) {return x[0]=="block" ? x[1] : ("(" + this.slotLabelFromValidationRules(x) + ")");}, this );
         return kidLabels.join(" " + this.magicType[g[0]].prettyIndicator + " ");
     } else {
-        var gg = g[1][0];
-        return (gg[0] == "block" ? gg[1] : ("(" + this.slotLabelFromValidationRules(gg) + ")")) + this.magicType[g[0]].prettyIndicator;
+        var childRule = g[1][0];
+        return (childRule[0] == "block" ? childRule[1] : ("(" + this.slotLabelFromValidationRules(childRule) + ")")) + this.magicType[g[0]].prettyIndicator;
     }
 }
 
