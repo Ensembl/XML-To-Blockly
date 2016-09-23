@@ -558,8 +558,17 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var stagedSlotNumber;
 
     if( node.hasAttribute("visiting_lock") ) {                                      // visiting in progress:
-        alert("circular ref loop detected because of "+node.nodeName);
-        blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
+        if(this.magicType[nodeType].hasLoopRisk){
+            alert("circular ref loop detected because of "+node.nodeName);
+            blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
+        } else{
+            stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
+            var topListStr      = '["'+stagedSlotNumber+'"]';
+            var wantBottomNotch = bottomNotchOverride || this.magicType[nodeType].hasBottomNotch;
+            var bottomListStr   = wantBottomNotch ? topListStr : "[]";
+
+            this.pushToQueue(name , children , topListStr , bottomListStr);
+        }
 
     } else if( canCreateInputStatements && (stagedSlotNumber = node.getAttribute("stagedSlotNumber")) ) { // such a slot and set of child blocks has been requested previously, reuse
 
