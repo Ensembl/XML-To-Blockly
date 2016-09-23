@@ -555,24 +555,24 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var childValidationRules    = [];
     var tagValidationRule       = [ nodeType, childValidationRules, this.getNodeDisplayName(node) ];
 
+    var stagedSlotNumber;
+
     if( node.hasAttribute("visiting_lock") ) {                                      // visiting in progress:
         alert("circular ref loop detected because of "+node.nodeName);
         blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
 
-    } else if( node.hasAttribute("visitedQueueIndex") && (node.getAttribute("visitedQueueIndex") != this.currentQueueIndex) ) { // visited during creating a different block:
+    } else if( canCreateInputStatements && (stagedSlotNumber = node.getAttribute("stagedSlotNumber")) ) { // such a slot and set of child blocks has been requested previously, reuse
 
-        var stagedSlotNumber = node.getAttribute("stagedSlotNumber");
         var slotSignature = node.getAttribute("slotSignature");
         var slotValidationRules = node.getAttribute("slotValidationRules");
-        if (canCreateInputStatements) {
-            blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
-        }
+
+        blocklyCode = this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
         //childValidationRules.push( JSON.parse(slotValidationRules) );
         tagValidationRule   = JSON.parse(slotValidationRules);  // Matthieu, isn't this more correct than the above?
 
     } else {                                                                        // never visited before:
 
-        var stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
+        stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
 
             //each block created here will have a top notch. It may or may not have a bottom notch depending on nodeType
         var topListStr      = '["'+stagedSlotNumber+'"]';
@@ -607,12 +607,11 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
                 }
             }
 
-            if (canCreateInputStatements) {
+            if (canCreateInputStatements) {     // only the outermost nested magic tag will produce a slot and record it
                 var slotSignature = this.slotLabelFromValidationRules( tagValidationRule );
                 node.setAttribute("stagedSlotNumber", stagedSlotNumber);
                 node.setAttribute("slotSignature", slotSignature);
                 node.setAttribute("slotValidationRules", JSON.stringify( tagValidationRule ) );
-                node.setAttribute("visitedQueueIndex", this.currentQueueIndex);
 
                 blocklyCode += this.makeBlocklyCode_StatementInput(slotSignature, stagedSlotNumber, nodeDetails);
             }
