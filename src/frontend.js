@@ -79,7 +79,6 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 XMLToBlocklyWorkspace.prototype.generateXML = function(){
     var xmlDoc = new XMLGenerator(this.blockStructureDict , this.blocklyWorkspace);
     if(xmlDoc.errorText) {
-        console.log("Caught the following errorText: "+xmlDoc.errorText);
         document.getElementById('validation-error-p').innerHTML = xmlDoc.errorText;
         document.getElementById("XMLOutput").value = "";
     } else {
