@@ -78,7 +78,14 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 
 XMLToBlocklyWorkspace.prototype.generateXML = function(){
     var xmlDoc = new XMLGenerator(this.blockStructureDict , this.blocklyWorkspace);
-    var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
-	var output = vkbeautify.xml(XMLToString);
-	document.getElementById("XMLOutput").value = output;
+    if(xmlDoc.errorText) {
+        console.log("Caught the following errorText: "+xmlDoc.errorText);
+        document.getElementById('validation-error-p').innerHTML = xmlDoc.errorText;
+        document.getElementById("XMLOutput").value = "";
+    } else {
+        var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
+        var output = vkbeautify.xml(XMLToString);
+        document.getElementById('validation-error-p').innerHTML = "";
+        document.getElementById("XMLOutput").value = output;
+    }
 }

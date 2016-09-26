@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <zeroOrMore>
+       <element name="label">
+              <text/>
+        </element>
+    </zeroOrMore>
+    <zeroOrMore>
+       <element name="schmabel">
+              <text/>
+        </element>
+    </zeroOrMore>
+  </start>
+</grammar>

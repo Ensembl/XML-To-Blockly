@@ -17,29 +17,29 @@
  * This file consists of mehods that help us in generating XML from the blocks in the editor workspace
  */
 
-function XMLGenerator(blockStructureDict , blocklyWorkspace){
-	this.XMLDoc = "";
-	this.blocklyWorkspace = blocklyWorkspace;
-	this.blockStructureDict = blockStructureDict;
-	this.generateXMLDoc();
-}
-
 
 /* Entry point for generating XML.
- * Initializes final XML document and initiates call for XML generation
  */
-XMLGenerator.prototype.generateXMLDoc = function(){
+function XMLGenerator(blockStructureDict , blocklyWorkspace){
+	this.blockStructureDict = blockStructureDict;
 	this.XMLDoc = document.implementation.createDocument( '', '' , null );
-	var startBlock= this.blocklyWorkspace.getTopBlocks()[0];
+	var startBlock= blocklyWorkspace.getTopBlocks()[0];
 	var structure = this.blockStructureDict[startBlock.type];
+
+    var outputChunks = [];
 	for(var i=0;i<structure.length;i++){
 		var inputChunks = this.generateXMLFromStructure( structure[i] , startBlock );
-		for(var j=0;j<inputChunks.length;j++){
-			this.XMLDoc.appendChild( inputChunks[j] );
-		}
+        outputChunks.push.apply( outputChunks , inputChunks );
 	}
-	console.log(this.XMLDoc);
-	return;
+
+    if(outputChunks.length == 1) {  // expected number of top-level elements generated is 1
+        this.XMLDoc.appendChild( outputChunks[0] );
+        console.log(this.XMLDoc);
+    } else if(outputChunks.length == 0) {
+        this.errorText = "Empty XML has been generated";
+    } else {
+        this.errorText = "Attempting to create "+outputChunks.length+" top elements. Per XML standard we only support one."
+    }
 }
 
 

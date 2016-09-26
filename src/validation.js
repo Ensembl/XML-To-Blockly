@@ -40,7 +40,6 @@ XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
 
         if(blocklyValidationResult) {
             this.generateXML();
-            document.getElementById('validation-error-p').innerHTML = "";
         } else {
             document.getElementById('validation-error-p').innerHTML = "not valid";
         }
