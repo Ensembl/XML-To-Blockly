@@ -33,8 +33,12 @@ function XMLGenerator(blockStructureDict , blocklyWorkspace){
 	}
 
     if(outputChunks.length == 1) {  // expected number of top-level elements generated is 1
-        this.XMLDoc.appendChild( outputChunks[0] );
-        console.log(this.XMLDoc);
+        var topLevelChunk = outputChunks[0];
+        if(topLevelChunk instanceof Element) {
+            this.XMLDoc.appendChild( topLevelChunk );
+        } else {
+            this.errorText = "Attempting to add a non-Element (Attr? Text?) as the top node. Per XML standard we do not support this."
+        }
     } else if(outputChunks.length == 0) {
         this.errorText = "Empty XML has been generated";
     } else {
