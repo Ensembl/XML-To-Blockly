@@ -141,9 +141,6 @@ function RNG2Blockly(rngDoc, blockStructureDict, validatorDict) {
         blockTypeToDisplayNameMapper[blockType] = dictEntry.blockDisplayName;
         blockStructureDict[blockType]           = blockStructure;
     }
-    console.log(JSON.stringify(queueIndex_2_blockType));
-    console.log(JSON.stringify(blockTypeToDisplayNameMapper));
-    console.log(blockStructureDict);
 
     for (var blockOrderIndex=0; blockOrderIndex<blockOrder.length; blockOrderIndex++){
         var dictEntry       = blockOrder[blockOrderIndex];
@@ -183,8 +180,6 @@ function RNG2Blockly(rngDoc, blockStructureDict, validatorDict) {
         blockCode = blockCode.replace(/\n{2,}/g, "\n");
         this.allCode.push(blockCode);
     }
-    console.log(validatorDict);
-    console.log(blockStructureDict);
 }
 
 
