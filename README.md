@@ -35,6 +35,52 @@ The project submitted to Google is not specific to eHive and the proposed editor
 7. [x] Javascript code to export of the diagram to XML.
 8. [ ] Javascript code to import of an XML to the Blockly workspace
 
+# Supported RNG elements
+
+This table lists the XML patterns from http://relaxng.org/spec-20011203.html that are understood by the parser
+
+|  |  | XML pattern | Supported ? |
+|---|---|---|---|
+| pattern | ::= | \<element name="QName"> pattern+ \</element> | :white_check_mark: |
+|         |     | \| \<element> nameClass pattern+ \</element> | :x: |
+|         |     | \| \<attribute name="QName"> [pattern] \</attribute> | :white_check_mark: |
+|         |     | \| \<attribute> nameClass [pattern] \</attribute> | :x: |
+|         |     | \| \<group> pattern+ \</group> | :white_check_mark: |
+|         |     | \| \<interleave> pattern+ \</interleave> | :white_check_mark: |
+|         |     | \| \<choice> pattern+ \</choice> | :white_check_mark: |
+|         |     | \| \<optional> pattern+ \</optional> | :white_check_mark: |
+|         |     | \| \<zeroOrMore> pattern+ \</zeroOrMore> | :white_check_mark: |
+|         |     | \| \<oneOrMore> pattern+ \</oneOrMore> | :white_check_mark: |
+|         |     | \| \<list> pattern+ \</list> | :x: |
+|         |     | \| \<mixed> pattern+ \</mixed> | :x: |
+|         |     | \| \<ref name="NCName"/> | :white_check_mark: |
+|         |     | \| \<parentRef name="NCName"/> | :x: |
+|         |     | \| \<empty/> | :x: |
+|         |     | \| \<text/> | :white_check_mark: |
+|         |     | \| \<value [type="NCName"]> string \</value> | :x: |
+|         |     | \| \<data type="NCName"> param* [exceptPattern] \</data> | :white_check_mark: (some, see below)|
+|         |     | \| \<notAllowed/> | :x: |
+|         |     | \| \<externalRef href="anyURI"/> | :x: |
+|         |     | \| \<grammar> grammarContent* \</grammar> | :white_check_mark: |
+| param	|  ::=  |	\<param name="NCName"> string \</param> | :x: |
+| exceptPattern	|  ::= | 	\<except> pattern+ \</except> | :x: |
+| grammarContent	|  ::=  |	start | :white_check_mark: |
+|         |     | \| define | :white_check_mark: |
+|         |     | \| \<div> grammarContent* \</div> | :x: |
+|         |     | \| \<include href="anyURI"> includeContent* \</include> | :x: |
+| includeContent	|  ::= | 	start | :x: |
+|         |     | \| define | :x: |
+|         |     | \| \<div> includeContent* \</div> | :x: |
+| start	|  ::=  |	\<start [combine="method"]> pattern \</start> | :white_check_mark: (but not the _combine_ option) |
+| define	 | ::=  |	\<define name="NCName" [combine="method"]> pattern+ \</define> | :white_check_mark: |
+| method	|  ::= | 	choice | :x: |
+|         |     | \| interleave | :x: |
+| nameClass	 | ::=  |	\<name> QName \</name> | :x: |
+|         |     | \| \<anyName> [exceptNameClass] \</anyName> | :x: |
+|         |     | \| \<nsName> [exceptNameClass] \</nsName> | :x: |
+|         |     | \| \<choice> nameClass+ \</choice> | :x: |
+| exceptNameClass	 | ::=  |	\<except> nameClass+ \</except> | :x: |
+
 # RNG to Blockly mapping
 
 Here is how RNG patterns are mapped to Blockly content.
