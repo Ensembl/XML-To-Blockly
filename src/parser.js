@@ -370,6 +370,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
 
             if (nodeType == "element") {
                 blocklyCode = this.makeBlocklyCode_Label(displayName);
+                nodeDetails.content = [];
             } else {
                 blocklyCode = this.makeBlocklyCode_TextField(displayName, name);
                 nodeDetails.appendContentAtChildLevel("text" , name);
@@ -789,7 +790,5 @@ function NodeDetails(tagName){
 
 
 NodeDetails.prototype.appendContentAtChildLevel = function(tagName, internalName) {
-    var nodeContent = [ { 'tagName' : tagName , 'internalName' : internalName } ];
-    this.content = nodeContent;
-    return;
-};
+    this.content = [ { 'tagName' : tagName , 'internalName' : internalName } ];
+}
