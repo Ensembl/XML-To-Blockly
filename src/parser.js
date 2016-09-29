@@ -354,16 +354,23 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     else if ((nodeType == "element") || (nodeType == "attribute")) {
 
         nodeDetails.xmlName = node.getAttribute("name");
+        haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
+        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
-        if(! nodeDetails.xmlName) {
-            var errorMsg = "An "+nodeType+" has no name! Substituting with NONAME";
+        if( !nodeDetails.xmlName && (children.length > 0) && (children[0].nodeName == 'name') ) {   // we may still recover the name from alternative syntax
+            var nameNode = children.shift();    // it has to be removed from the list of children
+            nodeDetails.xmlName = nameNode.textContent;
+
+            node.setAttribute("name", nodeDetails.xmlName);
+        }
+
+        if( !nodeDetails.xmlName ) {    // still could not recover the name, complain
+            var errorMsg = "An "+nodeType+" has no name!";
             alert( errorMsg );
             this.errorBuffer.push( errorMsg );
             nodeDetails.xmlName = 'NONAME';
         }
 
-        haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
-        var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
         var allValueTags = "";
         var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
 
@@ -745,7 +752,7 @@ function getInternalName(node, path){
 //RNG specification only allows these strings to be composed of whitespace
 //except inside <value>
 function removeRedundantText(node) {
-    _removeNodesRecursively(node, function(n, p) {return n.nodeName == "#text" && p.nodeName != "value"});
+     _removeNodesRecursively(node, function(n, p) {return n.nodeName == "#text" && p.nodeName != "value" && p.nodeName != "name"});
 }
 
 // Remove #comment nodes because they we want to exclude them from children.length

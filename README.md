@@ -42,9 +42,9 @@ This table lists the XML patterns from http://relaxng.org/spec-20011203.html tha
 |  |  | XML pattern | Supported ? |
 |---|---|---|---|
 | pattern | ::= | \<element name="QName"> pattern+ \</element> | :white_check_mark: |
-|         |     | \| \<element> nameClass pattern+ \</element> | :x: |
+|         |     | \| \<element> nameClass pattern+ \</element> | :white_check_mark: (only \<name> QName \</name> is supported) |
 |         |     | \| \<attribute name="QName"> [pattern] \</attribute> | :white_check_mark: |
-|         |     | \| \<attribute> nameClass [pattern] \</attribute> | :x: |
+|         |     | \| \<attribute> nameClass [pattern] \</attribute> | :white_check_mark: (only \<name> QName \</name> is supported) |
 |         |     | \| \<group> pattern+ \</group> | :white_check_mark: |
 |         |     | \| \<interleave> pattern+ \</interleave> | :white_check_mark: |
 |         |     | \| \<choice> pattern+ \</choice> | :white_check_mark: |
@@ -75,7 +75,7 @@ This table lists the XML patterns from http://relaxng.org/spec-20011203.html tha
 | define	 | ::=  |	\<define name="NCName" [combine="method"]> pattern+ \</define> | :white_check_mark: |
 | method	|  ::= | 	choice | :x: |
 |         |     | \| interleave | :x: |
-| nameClass	 | ::=  |	\<name> QName \</name> | :x: |
+| nameClass	 | ::=  |	\<name> QName \</name> | :white_check_mark: |
 |         |     | \| \<anyName> [exceptNameClass] \</anyName> | :x: |
 |         |     | \| \<nsName> [exceptNameClass] \</nsName> | :x: |
 |         |     | \| \<choice> nameClass+ \</choice> | :x: |
