@@ -42,9 +42,9 @@ This table lists the XML patterns from http://relaxng.org/spec-20011203.html tha
 |  |  | XML pattern | Supported ? |
 |---|---|---|---|
 | pattern | ::= | \<element name="QName"> pattern+ \</element> | :white_check_mark: |
-|         |     | \| \<element> nameClass pattern+ \</element> | :white_check_mark: (only \<name> QName \</name> is supported) |
+|         |     | \| \<element> nameClass pattern+ \</element> | :white_check_mark: (only \<name> QName \</name>) |
 |         |     | \| \<attribute name="QName"> [pattern] \</attribute> | :white_check_mark: |
-|         |     | \| \<attribute> nameClass [pattern] \</attribute> | :white_check_mark: (only \<name> QName \</name> is supported) |
+|         |     | \| \<attribute> nameClass [pattern] \</attribute> | :white_check_mark: (only \<name> QName \</name> ) |
 |         |     | \| \<group> pattern+ \</group> | :white_check_mark: |
 |         |     | \| \<interleave> pattern+ \</interleave> | :white_check_mark: |
 |         |     | \| \<choice> pattern+ \</choice> | :white_check_mark: |
