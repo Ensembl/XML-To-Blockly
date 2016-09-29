@@ -63,6 +63,8 @@ function RNG2Blockly(rngDoc, blockStructureDict, validatorDict) {
     this.pushToQueue("start", this.substitutedNodeList(startContent, "{}", "START"), "[]", "[]"); // initialize the queue
     this.uni = new UnicodeIndenter();
 
+    this.errorBuffer = [];
+
     while(this.blockRequestQueue.length>0) {     // keep consuming from the head and pushing to the tail
         var blockRequest        = this.blockRequestQueue.shift();
 

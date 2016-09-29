@@ -50,7 +50,7 @@ function readFile(event) {
     var reader = new FileReader();
     reader.readAsText(filename);
     reader.onload = function(e){
-        document.getElementById("file-name").innerHTML = filename.name;
+        document.getElementById('file-name').innerHTML = filename.name;
         document.getElementById('rng_area').value = e.target.result;
     }
 }
@@ -65,8 +65,9 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
     this.validatorDict = {};
     var rng2Blockly = new RNG2Blockly(rngDoc , this.blockStructureDict, this.validatorDict);
 
-    document.getElementById('toolbox').innerHTML = rng2Blockly.toolboxXML;
-    document.getElementById('results').innerHTML = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
+    document.getElementById('parsing-error-p').innerHTML    = rng2Blockly.errorBuffer.join("<br/>\n");
+    document.getElementById('toolbox').innerHTML            = rng2Blockly.toolboxXML;
+    document.getElementById('results').innerHTML            = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
 
     eval(rng2Blockly.allCode.join(""));
 
@@ -80,11 +81,11 @@ XMLToBlocklyWorkspace.prototype.generateXML = function(){
     var xmlDoc = new XMLGenerator(this.blockStructureDict , this.blocklyWorkspace);
     if(xmlDoc.errorText) {
         document.getElementById('validation-error-p').innerHTML = xmlDoc.errorText;
-        document.getElementById("XMLOutput").value = "";
+        document.getElementById('XMLOutput').value = "";
     } else {
         var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
         var output = vkbeautify.xml(XMLToString);
         document.getElementById('validation-error-p').innerHTML = "";
-        document.getElementById("XMLOutput").value = output;
+        document.getElementById('XMLOutput').value = output;
     }
 }
