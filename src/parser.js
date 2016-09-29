@@ -302,7 +302,9 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
             var nodeName = currChild.getAttribute("name");
 
             if(currChildHasSeen.hasOwnProperty(nodeName)) {
-                alert("A definition loop detected in the RNG ("+nodeName+"), therefore the corresponding system of Blocks is not constructable");
+                var errorMsg = "A definition loop detected in the RNG ("+nodeName+"), therefore the corresponding system of Blocks is not constructable";
+                alert( errorMsg );
+                this.errorBuffer.push( errorMsg );
                 return [];
 
             } else {
@@ -331,21 +333,16 @@ RNG2Blockly.prototype.substitutedNodeList = function(children, haveAlreadySeenSt
 
 RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, currentPathStructure) {
 
-    var nodeType = (node == null) ? "null" : node.nodeName;
-    var context = (node == null) ? undefined : node.getAttribute("context");
-    var name = getInternalName(node, path);
-    var addNodeDetailsToStructure = true;
+    var nodeType    = node.nodeName;
+    var context     = node.getAttribute("context");
+    var name        = getInternalName(node, path);
     var nodeDetails = new NodeDetails(nodeType);    // internalName, xmlName and content are added later
+    var addNodeDetailsToStructure = true;
 
 	var blocklyCode = ""; // Contains data sent by all the children merged together one after the other.
 
-    if(nodeType == "null") {
 
-        blocklyCode = this.makeBlocklyCode_UnindentedLabel("*** CIRCULAR REFERENCE ***");   // FIXME: can we escape directly out of the recursion in JS?
-
-    }
-
-	else if(nodeType == "text") {
+	if(nodeType == "text") {
         nodeDetails.internalName = name;
 
         var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
@@ -357,6 +354,13 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     else if ((nodeType == "element") || (nodeType == "attribute")) {
 
         nodeDetails.xmlName = node.getAttribute("name");
+
+        if(! nodeDetails.xmlName) {
+            var errorMsg = "An "+nodeType+" has no name! Substituting with NONAME";
+            alert( errorMsg );
+            this.errorBuffer.push( errorMsg );
+            nodeDetails.xmlName = 'NONAME';
+        }
 
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
@@ -557,7 +561,10 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
 
     if( node.hasAttribute("visiting_lock") ) {                                      // visiting in progress:
         if( this.magicType[nodeType].hasLoopRisk ) {
-            alert("circular ref loop detected because of "+node.nodeName);
+            var errorMsg = "circular ref loop detected because of "+node.nodeName;
+            alert( errorMsg );
+            this.errorBuffer.push( errorMsg );
+
             blocklyCode = this.makeBlocklyCode_UnindentedLabel("***Circular Reference***");
         } else {
             stagedSlotNumber= makeQueueIndexMacro(this.currentQueueIndex) + "." + this.localSlotNumber;
