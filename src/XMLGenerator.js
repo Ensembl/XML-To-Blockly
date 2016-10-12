@@ -49,9 +49,12 @@ function XMLGenerator(blockStructureDict , blocklyWorkspace){
 
 // Recursive function to generate XML
 XMLGenerator.prototype.generateXMLFromStructure = function( nodeDetails , block ){
+    var outputChunks = [];
+
 	if(nodeDetails.tagName == "text"){
 		var textNode = this.XMLDoc.createTextNode( block.getFieldValue(nodeDetails.internalName) );
-		return [textNode];
+        outputChunks.push( textNode );
+
 	} else if(nodeDetails.tagName == "element"){
 		var ele = this.XMLDoc.createElement(nodeDetails.xmlName);
 		var content = nodeDetails.content;
@@ -70,15 +73,16 @@ XMLGenerator.prototype.generateXMLFromStructure = function( nodeDetails , block 
 				}
 			}
 		}
-		return [ele];
+        outputChunks.push( ele );
+
 	} else if(nodeDetails.tagName == "attribute"){
 		var attr = this.XMLDoc.createAttribute(nodeDetails.xmlName);
 		var attrValue = this.generateXMLFromStructure( nodeDetails.content[0] , block )[0].nodeValue;	//Should we be sending content[0] directly and assuming that the array received is of length 1?
 		attr.value = attrValue;
-		return [attr];
+        outputChunks.push( attr );
+
 	} else if(nodeDetails.tagName == "slot"){
 		var blocksInSlot = block.getSlotContentsList(nodeDetails.internalName);
-		var outputChunks = [];
 		for(var i=0;i<blocksInSlot.length;i++){
 			var blockStructure = this.blockStructureDict[ blocksInSlot[i].type ];
 			for(var j=0;j<blockStructure.length;j++){
@@ -86,17 +90,16 @@ XMLGenerator.prototype.generateXMLFromStructure = function( nodeDetails , block 
 				outputChunks.push.apply( outputChunks , inputChunks );
 			}
 		}
-		return outputChunks;
-	} else if(nodeDetails.tagName == "optiField"){
-		var checkboxValue = block.getFieldValue(nodeDetails.internalName);
-        var outputChunks = [];
-		if(checkboxValue == "TRUE"){
-			var content = nodeDetails.content;
-			for(var i=0;i<content.length;i++){
-				var inputChunks = this.generateXMLFromStructure( content[i] , block );
-				outputChunks.push.apply(outputChunks , inputChunks);
-			}
-		}
-        return outputChunks;
+
+	} else if(   (nodeDetails.tagName == "collapsible")
+             || ((nodeDetails.tagName == "optiField") && (block.getFieldValue(nodeDetails.internalName) == "TRUE"))
+             ){
+        var content = nodeDetails.content;
+        for(var i=0;i<content.length;i++){
+            var inputChunks = this.generateXMLFromStructure( content[i] , block );
+            outputChunks.push.apply(outputChunks , inputChunks);
+        }
 	}
+
+    return outputChunks;
 }
