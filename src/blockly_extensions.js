@@ -84,7 +84,7 @@ Blockly.FieldCheckbox.prototype.getInputIndexRange = function() {
 
 
 //function to toggle hide/show optiFields
-function optiField_setter(newState) {
+function collapsiField_setter(newState) {
 
     var inputIndexRange = this.getInputIndexRange();
     var startIndex      = inputIndexRange.startIndex;
@@ -108,6 +108,10 @@ function optiField_setter(newState) {
     if(iplist[startIndex].fieldRow.length == 4) {   // currently that's the way to detect a one-liner optiField (bit risky)
         iplist[startIndex].fieldRow[3].setVisible(newState);
     } else {
+        var labelField  = iplist[startIndex].fieldRow[0];
+        if(labelField.getValue().match(/\[\w+\]/)) {
+            labelField.setValue(labelField.getValue().replace(/\[\w+\]/, "["+(newState?"less":"more")+"]"));
+        }
 
         for (var currIndex = startIndex+1; currIndex < stopIndex; currIndex++) {    // scan between startMarker and stopMarker
             var currInput = iplist[currIndex];

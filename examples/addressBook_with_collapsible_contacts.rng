@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" xmlns:blockly="http://blockly.com/">
+  <start>
+   <element name="addressBook">
+   <oneOrMore>
+    <element name="contact">
+      <element name="name">
+        <text/>
+      </element>
+      <element name="phone_number">
+        <text/>
+      </element>
+      <group blockly:collapsible="true">
+        <element name="email">
+          <element name="username">
+            <text/>
+          </element>
+        <element name="hostname">
+          <text/>
+        </element>
+      </element>
+      </group>
+    </element>
+   </oneOrMore>
+   </element>
+  </start>
+</grammar>

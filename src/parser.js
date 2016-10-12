@@ -419,17 +419,36 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
     }
 
 	else if(nodeType == "group"){
-        addNodeDetailsToStructure = false;
         haveAlreadySeenStr = node.getAttribute("haveAlreadySeen");
         var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
 
-        var displayName = this.getNodeDisplayName(node);
+            // check if the user has requested/blocked an optiField for this optional:
+        var wantCollapsibleStr  = node.getAttribute("blockly:collapsible");
+        var wantCollapsible     = wantCollapsibleStr ? (wantCollapsibleStr == "true") : false;
 
-        if (displayName) {
-            blocklyCode = this.makeBlocklyCode_Label(displayName)
-                        + this.goDeeper_makeTreeWithKids(children, haveAlreadySeenStr, name, currentPathStructure);
+        addNodeDetailsToStructure = wantCollapsible;
+
+        if(wantCollapsible) {
+            var childrenStructureInfo = [];
+
+            nodeDetails.tagName = "collapsible";
+            nodeDetails.internalName = name + "_checkbox";
+            nodeDetails.content = childrenStructureInfo;
+
+            var preOptiFieldCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name, currentPathStructure);
+
+            var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
+            blocklyCode = this.makeBlocklyCode_collapsiField("[more]", "", name, ";\n"+preOptiFieldCode);
+
         } else {
-            blocklyCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name, currentPathStructure);
+            var displayName = this.getNodeDisplayName(node);
+
+            if (displayName) {
+                blocklyCode = this.makeBlocklyCode_Label(displayName)
+                            + this.goDeeper_makeTreeWithKids(children, haveAlreadySeenStr, name, currentPathStructure);
+            } else {
+                blocklyCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name, currentPathStructure);
+            }
         }
     }
 
@@ -456,12 +475,12 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
                 var first = preOptiFieldCode.indexOf('.appendField(');
                 var second = preOptiFieldCode.indexOf('.appendField(', first+1); // to skip the first one
                 var childPartToBeAdded = preOptiFieldCode.substring(second);
-                blocklyCode = this.makeBlocklyCode_OptiField("", name, childPartToBeAdded);
+                blocklyCode = this.makeBlocklyCode_collapsiField(this.uni.getIndentation()+"?", "", name, childPartToBeAdded);
             } else{
                 var preOptiFieldCode = this.goDeeper_makeTreeWithKids(children, haveAlreadySeenStr, name, childrenStructureInfo);
 
                 var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
-                blocklyCode = this.makeBlocklyCode_OptiField(displayName, name, preOptiFieldCode);
+                blocklyCode = this.makeBlocklyCode_collapsiField(this.uni.getIndentation()+"?", displayName, name, ";\n"+preOptiFieldCode);
             }
 
         } else{
@@ -529,26 +548,26 @@ RNG2Blockly.prototype.makeBlocklyCode_DropDown = function(label, internalName, v
     return "this.appendDummyInput().appendField('" + this.uni.getIndentation() + "').appendField('" + label + "').appendField(new Blockly.FieldDropdown([" + values + "]),'" + internalName + "');";
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_OptiField = function(label, internalName, content) {
+RNG2Blockly.prototype.makeBlocklyCode_collapsiField = function(preCBlabel, postCBlabel, internalName, content) {
     var checkBoxName    = internalName + "_checkbox";
     var initialState    = false;
     var code = "this.appendDummyInput('" + internalName + "')"
-                 + ".appendField('" + this.uni.getIndentation() + "?')"
-                 + ".appendField(new Blockly.FieldCheckbox('" + String(initialState).toUpperCase() + "', optiField_setter), '" + checkBoxName + "')"
-                 + ( (label != "") ? ".appendField('" + label + "');\n" : "")
+                 + ".appendField('" + preCBlabel + "')"
+                 + ".appendField(new Blockly.FieldCheckbox('" + String(initialState).toUpperCase() + "', collapsiField_setter), '" + checkBoxName + "')"
+                 + ( (postCBlabel != "") ? ".appendField('" + postCBlabel + "')" : "")
                  + content  // the assumption here is that content is terminated by a semicolon
                  + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);\n"     // this hidden input line marks the end of optiField group
-                 + "optiField_setter.call( this.getField('" + checkBoxName + "'), " + initialState + ");"; // actually set the initialState
+                 + "collapsiField_setter.call( this.getField('" + checkBoxName + "'), " + initialState + ");"; // actually set the initialState
 
     return code;
 };
+
 
 RNG2Blockly.prototype.makeBlocklyCode_StatementInput = function(slotSignature, slotRuleToMatchWithIncomingNotch, nodeDetails) {
     var internalSlotName = 'slot_' + this.localSlotNumber++;
     nodeDetails.internalName = internalSlotName;
     return "this.appendStatementInput('" + internalSlotName + "').setCheck(['" + slotRuleToMatchWithIncomingNotch + "']).appendField('" + this.uni.getIndentation() + "').appendField('" + slotSignature + "');";
 };
-
 
 
     //creates a notch in its parent block with a label for the magic block that has called it. Then creates a separate block for every child.
