@@ -124,8 +124,8 @@
                                         <p>Load and edit an RNG file here:</p>
 						<!-- Button for uploading file -->
 						<label class="btn btn-primary leftMargin" for="file">
-	    					<input id="file" type="file" style="display:none;" onchange="javascript:readFile(event)">
-	    					Upload file
+                            <input id="file" type="file" style="display:none;" onclick="javascript:document.getElementById('file').value=''" onchange="javascript:readFile(event)">
+                            Upload file
 						</label>
 
 						<!-- Interpret button -->
