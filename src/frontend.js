@@ -41,7 +41,7 @@ XMLToBlocklyWorkspace.prototype.initWorkspace = function() {
         collapse: true
     });
     this.blocklyWorkspace.addChangeListener(Blockly.Events.disableOrphans);
-    this.blocklyWorkspace.addChangeListener(this.validateEvent);
+    this.blocklyWorkspace.addChangeListener( this.validateEvent.bind(this) );
 }
 
 // loads the file into RNG textarea and leaves it there for potential manual edit
