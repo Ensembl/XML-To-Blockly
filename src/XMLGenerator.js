@@ -24,11 +24,11 @@ function XMLGenerator(blockStructureDict , blocklyWorkspace){
 	this.blockStructureDict = blockStructureDict;
 	this.XMLDoc = document.implementation.createDocument( '', '' , null );
 	var startBlock= blocklyWorkspace.getTopBlocks()[0];
-	var structure = this.blockStructureDict[startBlock.type];
+	var startBlockStructure = this.blockStructureDict[startBlock.type];
 
     var outputChunks = [];
-	for(var i=0;i<structure.length;i++){
-		var inputChunks = this.generateXMLFromStructure( structure[i] , startBlock );
+	for(var i=0;i<startBlockStructure.length;i++){
+		var inputChunks = this.generateXMLFromStructure( startBlockStructure[i] , startBlock );
         outputChunks.push.apply( outputChunks , inputChunks );
 	}
 
@@ -82,11 +82,11 @@ XMLGenerator.prototype.generateXMLFromStructure = function( nodeDetails , block 
         outputChunks.push( attr );
 
 	} else if(nodeDetails.tagName == "slot"){
-		var blocksInSlot = block.getSlotContentsList(nodeDetails.internalName);
-		for(var i=0;i<blocksInSlot.length;i++){
-			var blockStructure = this.blockStructureDict[ blocksInSlot[i].type ];
-			for(var j=0;j<blockStructure.length;j++){
-				var inputChunks = this.generateXMLFromStructure( blockStructure[j] , blocksInSlot[i] );
+		var childBlocksInSlot = block.getSlotContentsList(nodeDetails.internalName);
+		for(var i=0;i<childBlocksInSlot.length;i++){
+			var childBlockStructure = this.blockStructureDict[ childBlocksInSlot[i].type ];
+			for(var j=0;j<childBlockStructure.length;j++){
+				var inputChunks = this.generateXMLFromStructure( childBlockStructure[j] , childBlocksInSlot[i] );
 				outputChunks.push.apply( outputChunks , inputChunks );
 			}
 		}
