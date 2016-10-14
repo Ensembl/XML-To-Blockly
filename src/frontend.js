@@ -149,8 +149,40 @@ XMLToBlocklyWorkspace.prototype.validateBlock = function(block){
 
     var thisBlockErrors     = [];
 
-    var blockStructure = this.blockStructureDict[block.type];
-    this.validateStructure(block, blockStructure, thisBlockErrors); // since blockStructure is recursive, we have to traverse it with a recursive function
+    function validateStructure(blockValidator, nodeStructure ){     // since blockStructure is recursive, we have to traverse it with a recursive function
+
+        for(var i=0;i<nodeStructure.length;i++){
+            var nodeDetails = nodeStructure[i];
+
+            if(nodeDetails.tagName == "slot"){
+                var slotName        = nodeDetails.internalName;
+                var slotContents    = block.getSlotContentsList(slotName);
+
+                var actualChildrenTypes = slotContents.map( function(childBlock) {return childBlock.type} );
+                var thisSlotIsValid     = blockValidator[slotName].validate(actualChildrenTypes)
+
+                if (!thisSlotIsValid) {
+                    var fields  = block.getInput(slotName).fieldRow;
+                    var pattern = fields[fields.length-1].getText();
+                    if (actualChildrenTypes.length) {
+                        thisBlockErrors.push("The list '" + actualChildrenTypes.join(",") + "' does not match the pattern '" + pattern + "'");
+                    } else {
+                        thisBlockErrors.push("The connection '" + pattern + "' cannot be left empty");
+                    }
+                }
+
+            } else if(   (nodeDetails.tagName == "collapsible")
+                     || ((nodeDetails.tagName == "optiField") && (block.getFieldValue(nodeDetails.internalName) == "TRUE"))
+                     ||  (nodeDetails.tagName == "element")
+                     ||  (nodeDetails.tagName == "attribute")
+                     ){
+                validateStructure(blockValidator, nodeDetails.content);
+
+            } // ToDo: here is an opportunity to validate specific simple data types
+        }
+    }
+
+    validateStructure(this.validatorDict[block.type], this.blockStructureDict[block.type]);
 
     if (thisBlockErrors.length > 0) {
         block.setWarningText( thisBlockErrors.join("\n") );
@@ -158,39 +190,6 @@ XMLToBlocklyWorkspace.prototype.validateBlock = function(block){
     } else {
         block.setWarningText(null);
         return true;
-    }
-}
-
-
-XMLToBlocklyWorkspace.prototype.validateStructure = function(block, nodeStructure, thisBlockErrors){
-    for(var i=0;i<nodeStructure.length;i++){
-        var nodeDetails = nodeStructure[i];
-
-        if(nodeDetails.tagName == "slot"){
-            var slotName        = nodeDetails.internalName;
-            var slotContents    = block.getSlotContentsList(slotName);
-
-            var actualChildrenTypes = slotContents.map( function(childBlock) {return childBlock.type} );
-            var thisSlotIsValid     = this.validatorDict[block.type][slotName].validate(actualChildrenTypes)
-
-            if (!thisSlotIsValid) {
-                var fields  = block.getInput(slotName).fieldRow;
-                var pattern = fields[fields.length-1].getText();
-                if (actualChildrenTypes.length) {
-                    thisBlockErrors.push("The list '" + actualChildrenTypes.join(",") + "' does not match the pattern '" + pattern + "'");
-                } else {
-                    thisBlockErrors.push("The connection '" + pattern + "' cannot be left empty");
-                }
-            }
-
-        } else if(   (nodeDetails.tagName == "collapsible")
-                 || ((nodeDetails.tagName == "optiField") && (block.getFieldValue(nodeDetails.internalName) == "TRUE"))
-                 ||  (nodeDetails.tagName == "element")
-                 ||  (nodeDetails.tagName == "attribute")
-                 ){
-            this.validateStructure(block, nodeDetails.content, thisBlockErrors);
-
-        } // ToDo: here is an opportunity to validate specific simple data types
     }
 }
 
