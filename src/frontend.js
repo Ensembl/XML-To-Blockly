@@ -12,26 +12,11 @@
  * limitations under the License.
  */
 
-function XMLToBlocklyWorkspace(){
-    this.blocklyWorkspace;
+
+function XMLToBlocklyWorkspace() {
     this.blockStructureDict;
     this.validatorDict;
-}
 
-XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
-    var url = "examples/" + example_name;
-    if ((navigator.userAgent.indexOf("Firefox") < 0) && (window.location.protocol == "file:")) {
-        url = "https://raw.githubusercontent.com/Ensembl/XML-To-Blockly/gh-pages/" + url;
-    }
-    console.log(url);
-    var fileContent = syncLoadFileFromURL(url);
-    document.getElementById('file-name').innerHTML = example_name;
-    document.getElementById('rng_area').value = fileContent;
-    this.handleRNG( fileContent )
-}
-
-//init function for initializing the Blockly block area
-XMLToBlocklyWorkspace.prototype.initWorkspace = function() {
     this.blocklyWorkspace = Blockly.inject('blocklyDiv', {
         toolbox: document.getElementById('toolbox'),
         comments: false,
@@ -44,6 +29,21 @@ XMLToBlocklyWorkspace.prototype.initWorkspace = function() {
     this.blocklyWorkspace.addChangeListener( this.validateEvent.bind(this) );
 }
 
+
+// loads an example RNG file from our gitHub repository and automatically runs the parser
+XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
+    var url = "examples/" + example_name;
+    if ((navigator.userAgent.indexOf("Firefox") < 0) && (window.location.protocol == "file:")) {
+        url = "https://raw.githubusercontent.com/Ensembl/XML-To-Blockly/gh-pages/" + url;
+    }
+    console.log(url);
+    var fileContent = syncLoadFileFromURL(url);
+    document.getElementById('file-name').innerHTML = example_name;
+    document.getElementById('rng_area').value = fileContent;
+    this.handleRNG( fileContent )
+}
+
+
 // loads the file into RNG textarea and leaves it there for potential manual edit
 function readFile(event) {
     var filename = event.target.files[0];
@@ -54,6 +54,7 @@ function readFile(event) {
         document.getElementById('rng_area').value = e.target.result;
     }
 }
+
 
 //handles xml by creating blocks as per RNG rules
 XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
