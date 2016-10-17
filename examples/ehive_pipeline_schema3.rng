@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="ehive_pipeline_config" xmlns:blockly="http://blockly.com/">
+
+    <start>
+        <ref name="pipeline"/>
+    </start>
+
+    <define name="pipeline">
+        <element name="pipeline">
+            <ref name="optional_parameter_list"/>
+
+            <optional>
+                <element name="resource_mapping">
+                    <zeroOrMore>
+                        <element name="resource_description">
+                            <attribute name="resource_class_name"/>
+
+                            <group blockly:collapsible="true">
+                                <attribute name="meadow_type"/>
+                                <element name="submission_cmd_args">
+                                    <text/>
+                                </element>
+                                <optional>
+                                    <element name="worker_cmd_args">
+                                        <text/>
+                                    </element>
+                                </optional>
+                            </group>
+
+                        </element>
+                    </zeroOrMore>
+                </element>
+            </optional>
+
+            <optional>
+                <element name="pipeline_analyses">
+                    <ref name="chain"/>
+                </element>
+            </optional>
+        </element>
+    </define>
+
+    <define name="optional_parameter_list">
+        <optional>
+            <element name="parameters">
+                <ref name="param_elements"/>
+            </element>
+        </optional>
+    </define>
+
+    <define name="param_elements">
+            <zeroOrMore>
+                <element name="param">
+                    <attribute name="name"/>
+                    <ref name="structure"/>
+                </element>
+            </zeroOrMore>
+    </define>
+
+    <define name="hash_elements">
+            <zeroOrMore>
+                <element name="pair">
+                    <attribute name="key"/>
+                    <ref name="structure"/>
+                </element>
+            </zeroOrMore>
+    </define>
+
+    <define name="structure">
+        <choice>
+            <element name="hash">
+                <ref name="hash_elements"/>
+            </element>
+            <element name="array">
+                <zeroOrMore>
+                    <element name="item">
+                        <ref name="structure"/>
+                    </element>
+                </zeroOrMore>
+            </element>
+            <text blockly:blockName="scalar_value"/>
+        </choice>
+    </define>
+
+    <define name="chain">
+        <zeroOrMore blockly:blockName="chain_of_analyses">
+            <ref name="analysis"/>
+        </zeroOrMore>
+    </define>
+
+    <define name="analysis">
+        <element name="analysis">
+            <attribute name="logic_name"/>
+            <attribute name="module"/>
+
+            <group blockly:collapsible="true">
+
+                <ref name="optional_parameter_list"/>
+
+                <optional>
+                    <attribute name="analysis_capacity"/>
+                </optional>
+                <optional>
+                    <attribute name="can_be_empty"/>
+                </optional>
+                <optional>
+                    <attribute name="failed_job_tolerance"/>
+                </optional>
+                <optional>
+                    <attribute name="max_retry_count"/>
+                </optional>
+                <optional>
+                    <attribute name="meadow_type"/>
+                </optional>
+                <optional>
+                    <attribute name="priority"/>
+                </optional>
+                <optional>
+                    <attribute name="hive_capacity"/>
+                </optional>
+                <optional>
+                    <attribute name="batch_size"/>
+                </optional>
+                <optional>
+                    <attribute name="rc_name"/>
+                </optional>
+
+                <element name="wait_for_analyses">
+                    <zeroOrMore>
+                        <element name="wait_for">
+                            <attribute name="condition_analysis"/>
+                        </element>
+                    </zeroOrMore>
+                </element>
+
+                <element name="independent_flows">
+                    <ref name="optional_flows_with_chain"/>
+                </element>
+
+                <element name="fan_flows">
+                    <ref name="optional_flows_with_chain"/>
+                </element>
+
+                <group blockly:collapsible="true">
+
+                    <element name="funnel_flow">
+                        <ref name="flow_parameters"/>
+                    </element>
+
+                </group>
+
+            </group>
+
+        </element>
+    </define>
+
+    <define name="optional_flows_with_chain">
+        <zeroOrMore>
+            <element name="flow">
+                <ref name="flow_parameters"/>
+
+                <ref name="chain"/>
+            </element>
+        </zeroOrMore>
+    </define>
+
+    <define name="flow_parameters">
+        <optional>
+            <element name="template">
+                <ref name="structure"/>
+            </element>
+        </optional>
+
+        <optional>
+            <attribute name="branch"/>
+        </optional>
+    </define>
+
+</grammar>
