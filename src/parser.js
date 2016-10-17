@@ -575,7 +575,7 @@ RNG2Blockly.prototype.handleMagicTag = function(node, haveAlreadySeenStr, path, 
     var nodeType = node.nodeName;
 	var context = node.getAttribute("context");
     var context_child_idx = node.getAttribute("context_child_idx");
-    var children = this.substitutedNodeList(node.childNodes, haveAlreadySeenStr, context);
+    var children = this.substitutedNodeList(node.childNodes, "{}", context);
 	var name = getInternalName(node, path);	//the second part gives strings like CHO_, INT_ and so on.
 
     var blocklyCode = "";
