@@ -57,71 +57,66 @@
 			<div class="col-lg-6">
 
 		<ul class="nav nav-tabs">
-			<li class="active"><a data-toggle="tab" href="#toy_examples">Test RNG files</a></li>
-			<li><a data-toggle="tab" href="#examples">Sample RNG files</a></li>
+			<li class="active"><a data-toggle="tab" href="#examples">Load an RNG demo example</a></li>
 			<li><a data-toggle="tab" href="#editor">RNG Editor</a></li>
 			<li><a data-toggle="tab" href="#blockly_code">Blockly JS-code generated from RNG</a></li>
 			<!-- <li><a data-toggle="tab" href="#xmlGeneration">XML Generation</a></li> -->
 		</ul>
 			<div class="tab-content">
-				<div id="toy_examples" class="tab-pane fade in active">
-	                <p>New to the RNG world ? Check these small examples that showcase the capabilities of RNG and our editor:</p>
+				<div id="examples" class="tab-pane fade in active">
+                    <p>The following buttons load some ready-made RNG files into the next tab (RNG Editor) for you to play:</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("contact.rng");'>Example 1</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("contact.rng");'>Small example 1</button>
 						A contact (for an address-book)
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("addressBook.rng");'>Example 2</button>
-						An address-book
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("addressBook.rng");'>Small example 2</button>
+						An address-book as a collection of contacts
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("attrib.rng");'>Example 3</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("addressBook_with_collapsible_contacts.rng");'>Small example 3</button>
+						An address-book with contacts that have a collapsible section
+					</p>
+
+					<p>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("attrib.rng");'>Small example 4</button>
 						Example with attributes
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("basic_value.rng");'>Example 4</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("basic_value.rng");'>Small example 5</button>
 						An attribute with a choice and a dropdown menu
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("optiField_03_multiple_multi-level.rng");'>Example 5</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("optiField_03_multiple_multi-level.rng");'>Small example 6</button>
 						Optional element controlled by a checkbox
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("ref_structure_ehive.rng");'>Example 6</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("ref_structure_ehive.rng");'>Small example 7</button>
 						Nested structure of blocks (used to represent eHive parameters)
 					</p>
 
-	    		</div>
-
-				<div id="examples" class="tab-pane fade">
-					<p>Large RNG files used in the real life:</p>
-
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("ehive_pipeline_schema2.rng");'>Example 1</button>
-						eHive
-					</p>
-
-					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("LRG.rng");'>Example 2</button>
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("LRG.rng");'>Real-life example 1</button>
 						Locus Reference Genomic (LRG)
 					</p>
 
 					<p>
-						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("relaxng.rng");'>Example 3</button>
-					    Relax NG itself
+						<button type="button" class="btn btn-primary" onclick='xmlToBlocklyWorkspace.loadOurExample("ehive_pipeline_schema3.rng");'>Real-life example 2</button>
+						eHive
 					</p>
 
 	    		</div>
 
 
 				<div id="editor" class="tab-pane fade">
-                                        <p>Load and edit an RNG file here:</p>
+                        <p>Load and edit an RNG file here:</p>
+
 						<!-- Button for uploading file -->
 						<label class="btn btn-primary leftMargin" for="file">
                             <input id="file" type="file" style="display:none;" onclick="javascript:document.getElementById('file').value=''" onchange="javascript:readFile(event)">
@@ -130,7 +125,7 @@
 
 						<!-- Interpret button -->
 						<button class="btn btn-primary" id="interpretBtn" onclick="xmlToBlocklyWorkspace.handleRNG( document.getElementById('rng_area').value )">Interpret RNG from the textarea below</button>
-                                                <span class="text-danger" id="parsing-error-p"></span>
+                        <span class="text-danger" id="parsing-error-p"></span>
 
 					<!-- Bootstrap does not display uploaded filename in a "pretty" format by default.
 				 		 That has been done by using JavaScript to insert the filename in the label below -->
@@ -145,6 +140,7 @@
 
 
                 <div id="blockly_code" class="tab-pane fade">
+                    <p>In this area we generate JS-code to produce a system of Blockly blocks from the RNG grammar in the previous tab:</p>
 
                     <div id="blockly_code_area"></div>
 
