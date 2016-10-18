@@ -150,7 +150,7 @@ function performPageOperations(input){
 	document.getElementById('rng_area').value = input;
 	var btn = document.getElementById('interpretBtn');
 	btn.click();
-	var results = document.getElementById('results').innerHTML;
+	var results = document.getElementById('blockly_code_area').innerHTML;
 	results = results.replace(new RegExp('<pre>', 'g'), '');
 	results = results.split('</pre>');
 	results.splice(results.length-1, 1);	//after splitting, the last tag is an empty one, so remove it

@@ -40,7 +40,7 @@ XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
     var fileContent = syncLoadFileFromURL(url);
     document.getElementById('file-name').innerHTML = example_name;
     document.getElementById('rng_area').value = fileContent;
-    this.handleRNG( fileContent )
+    this.handleRNG( fileContent );
 }
 
 
@@ -68,7 +68,7 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 
     document.getElementById('parsing-error-p').innerHTML    = rng2Blockly.errorBuffer.join("<br/>\n");
     document.getElementById('toolbox').innerHTML            = rng2Blockly.toolboxXML;
-    document.getElementById('results').innerHTML            = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
+    document.getElementById('blockly_code_area').innerHTML  = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
 
     eval(rng2Blockly.allCode.join(""));
 

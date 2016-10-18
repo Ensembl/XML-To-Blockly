@@ -60,6 +60,7 @@
 			<li class="active"><a data-toggle="tab" href="#toy_examples">Test RNG files</a></li>
 			<li><a data-toggle="tab" href="#examples">Sample RNG files</a></li>
 			<li><a data-toggle="tab" href="#editor">RNG Editor</a></li>
+			<li><a data-toggle="tab" href="#blockly_code">Blockly JS-code generated from RNG</a></li>
 			<!-- <li><a data-toggle="tab" href="#xmlGeneration">XML Generation</a></li> -->
 		</ul>
 			<div class="tab-content">
@@ -142,6 +143,14 @@
 					</div>
 	    		</div>
 
+
+                <div id="blockly_code" class="tab-pane fade">
+
+                    <div id="blockly_code_area"></div>
+
+                </div>
+
+
 				<!--<div id="xmlGeneration" class="tab-pane fade">
 	    			<p> XML generation content </p>
 	    		</div> -->
@@ -167,9 +176,6 @@
 
 	</div>
 
-
-
-	<div id="results"></div>
 
 	<script>
 		var xmlToBlocklyWorkspace = new XMLToBlocklyWorkspace();
