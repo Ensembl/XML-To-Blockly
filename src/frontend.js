@@ -30,6 +30,12 @@ function XMLToBlocklyWorkspace() {
 }
 
 
+// switch over to the #editor tab
+XMLToBlocklyWorkspace.prototype.bringUpEditor = function(){
+    $('.nav a[href="#editor"]').tab("show");
+}
+
+
 // loads an example RNG file from our gitHub repository and automatically runs the parser
 XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
     var url = "examples/" + example_name;
@@ -42,7 +48,7 @@ XMLToBlocklyWorkspace.prototype.loadOurExample = function( example_name ){
     document.getElementById('rng_area').value = fileContent;
     this.handleRNG( fileContent );
 
-    $('.nav a[href="#editor"]').tab("show");    // switch over to the #editor tab
+    this.bringUpEditor();
 }
 
 
