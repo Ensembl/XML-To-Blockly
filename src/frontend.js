@@ -76,7 +76,9 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 
     this.blocklyWorkspace.clear();
     this.blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
-    document.getElementById('saveBtn').disabled = false;
+
+    document.getElementById('blocklycode_tab_header').className = "";   // remove the "disabled" class
+    document.getElementById('xmlgen_tab_header').className = "";        // remove the "disabled" class
 }
 
 

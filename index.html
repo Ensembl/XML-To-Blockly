@@ -53,17 +53,16 @@
 	<div>
 		<h1>Graphical RNG Editor Using Blockly (<a href=https://github.com/Ensembl/XML-To-Blockly>code in gitHub</a>)</h1>
 
-		<row>
-			<div class="col-lg-6">
+        <div>
 
 		<ul class="nav nav-tabs">
 			<li class="active"><a data-toggle="tab" href="#examples">Load an RNG demo example</a></li>
 			<li><a data-toggle="tab" href="#editor">RNG Editor</a></li>
-			<li><a data-toggle="tab" href="#blockly_code">Blockly JS-code generated from RNG</a></li>
-			<!-- <li><a data-toggle="tab" href="#xmlGeneration">XML Generation</a></li> -->
+			<li id="blocklycode_tab_header" class="disabled"><a data-toggle="tab" href="#blockly_code">Blockly JS-code generated from RNG</a></li>
+			<li id="xmlgen_tab_header" class="disabled"><a data-toggle="tab" href="#xml_generator">Diagram validation and export into XML</a></li>
 		</ul>
 			<div class="tab-content">
-				<div id="examples" class="tab-pane fade in active">
+				<div role="tabpanel" id="examples" class="tab-pane fade in active">
                     <p>The following buttons load some ready-made RNG files into the next tab (RNG Editor) for you to play:</p>
 
 					<p>
@@ -114,7 +113,7 @@
 	    		</div>
 
 
-				<div id="editor" class="tab-pane fade">
+				<div role="tabpanel" id="editor" class="tab-pane fade">
                         <p>Load and edit an RNG file here:</p>
 
 						<!-- Button for uploading file -->
@@ -139,7 +138,7 @@
 	    		</div>
 
 
-                <div id="blockly_code" class="tab-pane fade">
+                <div role="tabpanel" id="blockly_code" class="tab-pane fade">
                     <p>In this area we generate JS-code to produce a system of Blockly blocks from the RNG grammar in the previous tab:</p>
 
                     <div id="blockly_code_area"></div>
@@ -147,19 +146,18 @@
                 </div>
 
 
-				<!--<div id="xmlGeneration" class="tab-pane fade">
+				<div role="tabpanel" id="xml_generator" class="tab-pane fade">
 	    			<p> XML generation content </p>
-	    		</div> -->
+
+                    <span class="text-danger" id="validation-error-p"></span>
+
+                    <textarea id="XMLOutput"  rows="25" readonly></textarea>
+                </div>
+
 			</div>
-			</div>
-		</row>
-			<div id="textareaRight" class="col-lg-6" >
-                    <!-- Validate button -->
-				<p>Export the diagram to XML by clicking on this button:</p>
-                    <button class="btn btn-primary" id="saveBtn" disabled onclick="xmlToBlocklyWorkspace.validateBlocklyGraph()">Validate and generate XML</button>
-                                                <span class="text-danger" id="validation-error-p"></span>
-				<textarea id="XMLOutput"  rows="25" readonly></textarea>
-			</div>
+
+        </div>
+
 
 		<!-- Div for blockly workspace and toolbox -->
 		<div>
@@ -175,6 +173,10 @@
 
 	<script>
 		var xmlToBlocklyWorkspace = new XMLToBlocklyWorkspace();
+
+        $('.nav a[href="#xml_generator"]').click(function (e) {
+            xmlToBlocklyWorkspace.validateBlocklyGraph();
+        });
 	</script>
 
 </body>
