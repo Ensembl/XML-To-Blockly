@@ -124,7 +124,7 @@
                             <button class="btn btn-primary leftMargin" id="interpretBtn" onclick="xmlToBlocklyWorkspace.handleRNG( document.getElementById('rng_area').value )">
                                 Create Blockly blocks from RNG below
                             </button>
-                            <span class="text-danger" id="parsing-error-p"></span>
+                            <span class="text-danger" id="parsing_error_area"></span>
                         </p>
 
 					<!-- Textareas for RNG file editing and XML generation -->
@@ -146,9 +146,9 @@
 				<div role="tabpanel" id="xml_generator" class="tab-pane fade">
 	    			<p> XML generation content </p>
 
-                    <span class="text-danger" id="validation-error-p"></span>
+                    <span class="text-danger" id="validation_error_area"></span>
 
-                    <textarea id="XMLOutput"  rows="25" readonly></textarea>
+                    <textarea id="xml_output_area"  rows="25" readonly></textarea>
                 </div>
 
 			</div>

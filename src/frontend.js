@@ -74,7 +74,7 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
     this.validatorDict = {};
     var rng2Blockly = new RNG2Blockly(rngDoc , this.blockStructureDict, this.validatorDict);
 
-    document.getElementById('parsing-error-p').innerHTML    = rng2Blockly.errorBuffer.join("<br/>\n");
+    document.getElementById('parsing_error_area').innerHTML = rng2Blockly.errorBuffer.join("<br/>\n");
     document.getElementById('toolbox').innerHTML            = rng2Blockly.toolboxXML;
     document.getElementById('blockly_code_area').innerHTML  = "<pre>" + rng2Blockly.allCode.join("</pre><pre>") + "</pre>";
 
@@ -91,15 +91,15 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
 XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
     var blocks = this.blocklyWorkspace.getTopBlocks();
 
-	document.getElementById("XMLOutput").value = "";
+	document.getElementById('xml_output_area').value = "";
     if(blocks.length == 0){
-        document.getElementById('validation-error-p').innerHTML = "Workspace is empty";
+        document.getElementById('validation_error_area').innerHTML = "Workspace is empty";
         return false;
     } else if(blocks.length > 1){
-        document.getElementById('validation-error-p').innerHTML = "Only the start block is allowed to be placed directly in the workspace";
+        document.getElementById('validation_error_area').innerHTML = "Only the start block is allowed to be placed directly in the workspace";
         return false;
 	} else if(blocks[0].type != "block_0"){
-        document.getElementById('validation-error-p').innerHTML = "It is compulsory to use the start block (block_0:start)";
+        document.getElementById('validation_error_area').innerHTML = "It is compulsory to use the start block (block_0:start)";
         return false;
     } else {
         var allBlocks = this.blocklyWorkspace.getAllBlocks();
@@ -111,7 +111,7 @@ XMLToBlocklyWorkspace.prototype.validateBlocklyGraph = function(){
         if(blocklyValidationResult) {
             this.generateXML();
         } else {
-            document.getElementById('validation-error-p').innerHTML = "not valid";
+            document.getElementById('validation_error_area').innerHTML = "not valid";
         }
         return blocklyValidationResult;
     }
@@ -208,12 +208,12 @@ XMLToBlocklyWorkspace.prototype.validateBlock = function(block){
 XMLToBlocklyWorkspace.prototype.generateXML = function(){
     var xmlDoc = new XMLGenerator(this.blockStructureDict , this.blocklyWorkspace);
     if(xmlDoc.errorText) {
-        document.getElementById('validation-error-p').innerHTML = xmlDoc.errorText;
-        document.getElementById('XMLOutput').value = "";
+        document.getElementById('validation_error_area').innerHTML = xmlDoc.errorText;
+        document.getElementById('xml_output_area').value = "";
     } else {
         var XMLToString = new XMLSerializer().serializeToString(xmlDoc.XMLDoc);
         var output = vkbeautify.xml(XMLToString);
-        document.getElementById('validation-error-p').innerHTML = "";
-        document.getElementById('XMLOutput').value = output;
+        document.getElementById('validation_error_area').innerHTML = "";
+        document.getElementById('xml_output_area').value = output;
     }
 }
