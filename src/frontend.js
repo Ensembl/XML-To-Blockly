@@ -83,8 +83,12 @@ XMLToBlocklyWorkspace.prototype.handleRNG = function(unparsedRNG) {
     this.blocklyWorkspace.clear();
     this.blocklyWorkspace.updateToolbox( document.getElementById('toolbox') );
 
-    document.getElementById('blocklycode_tab_header').className = "";   // remove the "disabled" class
-    document.getElementById('xmlgen_tab_header').className = "";        // remove the "disabled" class
+    [ 'blocklycode_tab_header', 'xmlgen_tab_header' ].forEach(function(tabName) {
+        var element = document.getElementById(tabName);
+        if( element ) {
+            element.className = ""; // remove the "disabled" class
+        }
+    });
 }
 
 
