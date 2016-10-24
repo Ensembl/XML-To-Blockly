@@ -438,7 +438,7 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
             var preOptiFieldCode = this.goDeeper_iterateOverKids(children, haveAlreadySeenStr, name, currentPathStructure);
 
             var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
-            blocklyCode = this.makeBlocklyCode_collapsiField("[more]", "", name, ";\n"+preOptiFieldCode);
+            blocklyCode = this.makeBlocklyCode_collapsiGroup("[more]", "", name, ";\n"+preOptiFieldCode);
 
         } else {
             var displayName = this.getNodeDisplayName(node);
@@ -475,12 +475,12 @@ RNG2Blockly.prototype.goDeeper = function(node, haveAlreadySeenStr, path, curren
                 var first = preOptiFieldCode.indexOf('.appendField(');
                 var second = preOptiFieldCode.indexOf('.appendField(', first+1); // to skip the first one
                 var childPartToBeAdded = preOptiFieldCode.substring(second);
-                blocklyCode = this.makeBlocklyCode_collapsiField(this.uni.getIndentation()+"?", "", name, childPartToBeAdded);
+                blocklyCode = this.makeBlocklyCode_collapsiGroup(this.uni.getIndentation()+"?", "", name, childPartToBeAdded);
             } else{
                 var preOptiFieldCode = this.goDeeper_makeTreeWithKids(children, haveAlreadySeenStr, name, childrenStructureInfo);
 
                 var displayName = this.getNodeDisplayNameOrDefaultLabel(node);
-                blocklyCode = this.makeBlocklyCode_collapsiField(this.uni.getIndentation()+"?", displayName, name, ";\n"+preOptiFieldCode);
+                blocklyCode = this.makeBlocklyCode_collapsiGroup(this.uni.getIndentation()+"?", displayName, name, ";\n"+preOptiFieldCode);
             }
 
         } else{
@@ -548,16 +548,16 @@ RNG2Blockly.prototype.makeBlocklyCode_DropDown = function(label, internalName, v
     return "this.appendDummyInput().appendField('" + this.uni.getIndentation() + "').appendField('" + label + "').appendField(new Blockly.FieldDropdown([" + values + "]),'" + internalName + "');";
 };
 
-RNG2Blockly.prototype.makeBlocklyCode_collapsiField = function(preCBlabel, postCBlabel, internalName, content) {
+RNG2Blockly.prototype.makeBlocklyCode_collapsiGroup = function(preCBlabel, postCBlabel, internalName, content) {
     var checkBoxName    = internalName + "_checkbox";
     var initialState    = false;
     var code = "this.appendDummyInput('" + internalName + "')"
                  + ".appendField('" + preCBlabel + "')"
-                 + ".appendField(new Blockly.FieldCheckbox('" + String(initialState).toUpperCase() + "', collapsiField_setter), '" + checkBoxName + "')"
+                 + ".appendField(new Blockly.FieldCheckbox('" + String(initialState).toUpperCase() + "', collapsiGroup_setter), '" + checkBoxName + "')"
                  + ( (postCBlabel != "") ? ".appendField('" + postCBlabel + "')" : "")
                  + content  // the assumption here is that content is terminated by a semicolon
-                 + "this.appendDummyInput('" + internalName + "end_of_optiField').setVisible(false);\n"     // this hidden input line marks the end of optiField group
-                 + "collapsiField_setter.call( this.getField('" + checkBoxName + "'), " + initialState + ");"; // actually set the initialState
+                 + "this.getInput('" + internalName + "').end_of_collapsiGroup_index_ = this.inputList.length-1;\n"     // hide the stopIndex in the header line
+                 + "collapsiGroup_setter.call( this.getField('" + checkBoxName + "'), " + initialState + ");"; // actually set the initialState
 
     return code;
 };

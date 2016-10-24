@@ -69,13 +69,12 @@ Blockly.Block.prototype.findInputIndexByName = function(inputName) {
 
 Blockly.FieldCheckbox.prototype.getInputIndexRange = function() {
 	var checkBoxFieldName   = this.name;                                // name of the checkbox field
-	var startMarker         = checkBoxFieldName.split("_checkbox")[0];  // name of the optiField's dummyInput
-    var stopMarker          = startMarker +"end_of_optiField";          // name of the closing bracket
+	var startMarker         = checkBoxFieldName.split("_checkbox")[0];  // name of the collapsiGroup's dummyInput
+	var sourceBlock         = this.sourceBlock_;
 
-	var sourceBlock = this.sourceBlock_;
         //find out at which position of the inputList of sourceBlock the checkbox is present.
     var startIndex  = sourceBlock.findInputIndexByName(startMarker);
-    var stopIndex   = sourceBlock.findInputIndexByName(stopMarker);
+    var stopIndex   = sourceBlock.getInput(startMarker).end_of_collapsiGroup_index_;
 
     return {    'startIndex'    : startIndex,
                 'stopIndex'     : stopIndex
@@ -83,8 +82,8 @@ Blockly.FieldCheckbox.prototype.getInputIndexRange = function() {
 }
 
 
-//function to toggle hide/show optiFields
-function collapsiField_setter(newState) {
+//function to toggle hide/show collapsiGroup
+function collapsiGroup_setter(newState) {
 
     var inputIndexRange = this.getInputIndexRange();
     var startIndex      = inputIndexRange.startIndex;
@@ -95,7 +94,7 @@ function collapsiField_setter(newState) {
 
     /*
      *  If the input field has fieldRow of length 4,
-     *  then it means that it's a single level optiField with no special label
+     *  then it means that it's a single level collapsiGroup with no special label
      *  (label of the attibute/element itself is used).
      *
      *  fieldRow indices:
@@ -105,7 +104,7 @@ function collapsiField_setter(newState) {
      *      3 : The text/dropdown field
      */
 
-    if(iplist[startIndex].fieldRow.length == 4) {   // currently that's the way to detect a one-liner optiField (bit risky)
+    if(iplist[startIndex].fieldRow.length == 4) {   // currently that's the way to detect a one-liner collapsiGroup (bit risky)
         iplist[startIndex].fieldRow[3].setVisible(newState);
     } else {
         var labelField  = iplist[startIndex].fieldRow[0];
@@ -113,7 +112,7 @@ function collapsiField_setter(newState) {
             labelField.setValue(labelField.getValue().replace(/\[\w+\]/, "["+(newState?"less":"more")+"]"));
         }
 
-        for (var currIndex = startIndex+1; currIndex < stopIndex; currIndex++) {    // scan between startMarker and stopMarker
+        for (var currIndex = startIndex+1; currIndex <= stopIndex; currIndex++) {    // scan between startMarker and stopMarker
             var currInput = iplist[currIndex];
             if(currInput.fieldRow.length > 0) {    // skip the marker dummy input lines (they should always stay invisible)
                 currInput.setVisible(newState);
@@ -124,15 +123,15 @@ function collapsiField_setter(newState) {
                         for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
                             childBlock.render();
                         }
-                    } else if(currInput.fieldRow[1] instanceof Blockly.FieldCheckbox) {     // only show the inner optiFields that are ticked:
+                    } else if(currInput.fieldRow[1] instanceof Blockly.FieldCheckbox) {     // only show the inner collapsiGroup that are ticked:
                         var innerCheckBoxField      = currInput.fieldRow[1];
 
                         if(innerCheckBoxField.getValue() == 'FALSE') {
                             if(currInput.fieldRow.length == 4) {
-                                currInput.fieldRow[3].setVisible(false);                    // hide only the data field of a one-liner optiField
+                                currInput.fieldRow[3].setVisible(false);                    // hide only the data field of a one-liner collapsiGroup
                             }
 
-                            currIndex = innerCheckBoxField.getInputIndexRange().stopIndex;  // skip to the end of the inner optiField range
+                            currIndex = innerCheckBoxField.getInputIndexRange().stopIndex+1;  // skip to the end of the inner collapsiGroup range
                         }
                     }
                 }
