@@ -114,25 +114,24 @@ function collapsiGroup_setter(newState) {
 
         for (var currIndex = startIndex+1; currIndex <= stopIndex; currIndex++) {    // scan between startMarker and stopMarker
             var currInput = iplist[currIndex];
-            if(currInput.fieldRow.length > 0) {    // skip the marker dummy input lines (they should always stay invisible)
-                currInput.setVisible(newState);
 
-                if(newState) {      // when switching back on, do some extra tuning:
-                    if(currInput.type == Blockly.NEXT_STATEMENT) {                          // revive the blocks that were hidden
-                        var blockList = sourceBlock.getSlotContentsList(currInput.name);
-                        for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
-                            childBlock.render();
+            currInput.setVisible(newState);
+
+            if(newState) {      // when switching back on, do some extra tuning:
+                if(currInput.type == Blockly.NEXT_STATEMENT) {                          // revive the blocks that were hidden
+                    var blockList = sourceBlock.getSlotContentsList(currInput.name);
+                    for (var i = 0, childBlock; childBlock = blockList[i]; i++) {
+                        childBlock.render();
+                    }
+                } else if(currInput.fieldRow[1] instanceof Blockly.FieldCheckbox) {     // only show the inner collapsiGroup that are ticked:
+                    var innerCheckBoxField      = currInput.fieldRow[1];
+
+                    if(innerCheckBoxField.getValue() == 'FALSE') {
+                        if(currInput.fieldRow.length == 4) {
+                            currInput.fieldRow[3].setVisible(false);                    // hide only the data field of a one-liner collapsiGroup
                         }
-                    } else if(currInput.fieldRow[1] instanceof Blockly.FieldCheckbox) {     // only show the inner collapsiGroup that are ticked:
-                        var innerCheckBoxField      = currInput.fieldRow[1];
 
-                        if(innerCheckBoxField.getValue() == 'FALSE') {
-                            if(currInput.fieldRow.length == 4) {
-                                currInput.fieldRow[3].setVisible(false);                    // hide only the data field of a one-liner collapsiGroup
-                            }
-
-                            currIndex = innerCheckBoxField.getInputIndexRange().stopIndex+1;  // skip to the end of the inner collapsiGroup range
-                        }
+                        currIndex = innerCheckBoxField.getInputIndexRange().stopIndex;  // skip to the end of the inner collapsiGroup range
                     }
                 }
             }

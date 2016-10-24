@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" xmlns:blockly="http://blockly.com/">
+  <start>
+
+      <group blockly:collapsible="true">
+        <optional>
+            <element name="template">
+                     <element name="internal">
+                          <text/>
+                      </element>
+            </element>
+        </optional>
+
+        <optional>
+            <attribute name="branch"/>
+        </optional>      
+      </group>
+
+  </start>
+</grammar>
