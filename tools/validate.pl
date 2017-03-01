@@ -25,7 +25,7 @@ my ($xml_file, $schema_file) = @ARGV;
 my $class = ($schema_file=~/.rng$/) ? 'RelaxNG' : 'Schema';
 
 my $schema = "XML::LibXML::$class"->new(location => $schema_file);
-my $parser = XML::LibXML->new;
+my $parser = XML::LibXML->new(line_numbers => 1);
 
 my $dom = $parser->parse_file($xml_file);
 eval { $schema->validate( $dom ) };
