@@ -31,7 +31,7 @@ my $dom = $parser->parse_file($xml_file);
 eval { $schema->validate( $dom ) };
 
 if($@) {
-    print "$class validation failed: $@\n";
+    print "$class validation failed:\n$@\n";
 } else {
     print "$class validation succeeded\n";
 }
