@@ -734,10 +734,11 @@ function allChildrenValueTags(node){
 	for(var i=0;i<children.length;i++){
 		if(children[i].nodeName == "value"){
 			var value=children[i].textContent;
+			var display_name = children[i].getAttribute("blockly:blockName") || value;
 			if(allValues==""){
-				allValues="['"+value+"','"+value+"']";
+				allValues="['"+display_name+"','"+value+"']";
 			}else{
-				allValues=allValues+",['"+value+"','"+value+"']";
+				allValues=allValues+",['"+display_name+"','"+value+"']";
 			}
 		}else{
 			return false;
