@@ -18,8 +18,14 @@ The project submitted to Google is not specific to eHive and the proposed editor
 # How to use
 
 1. Open https://ensembl.github.io/XML-To-Blockly/ in your web browser.
-2. Click on the 'Choose file' and open a Relax NG file. This will create a list of blocks in the toolbox.
+2. Select one of the examples or click on the 'Choose file' and open your own Relax NG file. This will create a list of blocks in the toolbox.
 3. Play with the blocks to create a diagram that follows the specification.
+4. Export the diagram as XML by clicking on the "Diagram validation and
+   export into XML" tab.
+
+We also provide a [full-size
+editor](https://ensembl.github.io/XML-To-Blockly/bloxml.html) which can be
+configured to [automatically load an RNG file](https://ensembl.github.io/XML-To-Blockly/bloxml.html?url=https%3A%2F%2Fraw.githubusercontent.com%2FEnsembl%2FXML-To-Blockly%2Fgh-pages%2Fexamples%2Fehive_pipeline_schema3.rng).
 
 # Current state
 
