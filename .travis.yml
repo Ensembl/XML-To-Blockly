@@ -12,3 +12,11 @@ branches:
     - gh-pages
     - /^experimental.*$/
 
+notifications:
+  slack:
+    rooms:
+      # coregithub
+      - secure: AqyK+AYvclA3tAj5c2Cn3B+GHILq5E3nGOKKQOL3rp5Z5na9yYM2dOoGBHYhtW/0KtgeQOrdy+LqcoMTkqWmyo//pi7zKty/azmgHDo53Tc5iCcwzY7pOpjiDxZV/zIbe264NFZixwBz05PcZviAovfeSy5SnBJTE0Xu1SCbvgFhQRFnI1S5o/caMREeMUHdpJTzIfJtbXsh0/9rI3dXGvvc/yO0fN1C/pGnmpT1YZ+/vNxY78f21JhI215uwCKfYAu4RcINnom53EBLZV9wAZLnKoaxWuBCrKRGPJIUtKhFGzNvW6Q0jHoU5jSwGxZeLaTntWzimcbbnNpJjRFK/CZIezk74lAYuNXlmsJIUFzIdbSazfpZ5ru806sOO9DD98L70P1Y9CnKXwRyNbsm3HmwNB/0lC+UULufno6c5n1SDY9hS6Gdsy6Oh3DHI3XusG9yLuLE5s3TCYTq98pw+rJcEyxNimC8tmaNYZyX9mrLs1vctFfHFMMgA6/SSnZUb73ZSZul5ipGSOrgJz8Y/fIkeiq29mrCqKe5CtJgYKgq8TH2Phnm4Jpc6iN9kzpEw0bnxdBDEtdJh+n9frD5m9WGNhLTGrBtW18ZY92LcaNw89YaU8Uaq1FTzKnIe2Cxm57mg1YKl8FtvF8X58pC/H1avTugrdf4cixEVaB7N7o=
+      # ehive-commits
+      - secure: qD0Uz22Vx6UM85u0trSaHKb9Pc/NE8u0ij6l+zSKmuFUaHaNY8eXhvHE0y3nerd+kthV78SgcIgbMVE6WVJC/uvmT32UjrVAw9KvSoHlzPmxTqGTer/5DH0HgZVaxq6MCrYpYiAzHlb0ebaYC0ZUalQCSef+AvkUVV5zqhC1/oSyaRSMX+z04s+w+DMpp+udCbAvRRI41d79N7W1vZpUr6qWu/oE3vfptqi1OoAKYLTXmLDz4Fnx8zBHydN2FdRd2g/G2yVBQBVLV/mL545x5XDduubijxnM8sBZ0gE+uKU3fkTzrxnBaUsXd/xLOKwtt5or/dNmqYitmauVyFiqrbX1VkJbHklzrA34ONSq0KVRLtELaaJ4dT4Z/RV8iktOhClmqeWDAxNtRkNCO5EdINrbyRBc+06QiY+rNHCep3YA1UZ65jxM3orAaTissYYFSWNkS1Mmrdtnqx9J9z7yfQav3mSQkDFSurCJUltw66IIXg8fydErDEhXIthkJ0z05FOTUcPWJx2T6vP0UnArtjJs2lp66frN54f/ckNCY/FD+COtakLMlgivZVM59aEofaClLVeSbNj5FyNoc4KYgO/LrT2e+gIcaUumc61pZqnlBYuYicEmyJiLnLGvp/5vWyHcdgjpD+Y1OYggoZfUrcipSAyjmhsDGtkskbB7Q/E=
+    on_failure: change
