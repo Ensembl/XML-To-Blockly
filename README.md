@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/Ensembl/XML-To-Blockly.svg?branch=gh-pages)](https://travis-ci.org/Ensembl/XML-To-Blockly)
 
+**WARNING: This repository and its contents are now deprecated and are only kept for reference**
+
 # Introduction
 
 This [project](https://ensembl.github.io/XML-To-Blockly/) is funded by the 2016 edition of the [Google Summer of Code program](https://summerofcode.withgoogle.com/).
